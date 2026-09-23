@@ -1,0 +1,334 @@
+<!DOCTYPE html><html lang="en"><head>
+<meta charset="utf-8">
+<meta content="width=device-width, initial-scale=1.0" name="viewport">
+<title>Daily Execution Ledger - Add Task</title>
+<!-- Google Fonts: Space Grotesk & Space Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect">
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap" rel="stylesheet">
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary-container": "#63646c",
+            "primary-fixed": "#e2e2e2",
+            "surface": "#f9f9f9",
+            "surface-container-low": "#f3f3f4",
+            "error": "#ba1a1a",
+            "on-primary-fixed-variant": "#474747",
+            "tertiary-container": "#1a1c1d",
+            "surface-dim": "#dadada",
+            "surface-bright": "#f9f9f9",
+            "tertiary": "#000000",
+            "secondary-fixed": "#e3e1ec",
+            "on-primary-fixed": "#1b1b1b",
+            "on-tertiary-container": "#838485",
+            "surface-container-highest": "#e2e2e2",
+            "secondary-container": "#e3e1ec",
+            "surface-container-high": "#e8e8e8",
+            "surface-variant": "#e2e2e2",
+            "secondary": "#5d5e66",
+            "on-tertiary": "#ffffff",
+            "on-tertiary-fixed": "#1a1c1d",
+            "outline-variant": "#cfc4c5",
+            "error-container": "#ffdad6",
+            "on-tertiary-fixed-variant": "#454748",
+            "background": "#f9f9f9",
+            "outline": "#7e7576",
+            "surface-tint": "#5e5e5e",
+            "inverse-on-surface": "#f0f1f1",
+            "on-error": "#ffffff",
+            "inverse-primary": "#c6c6c6",
+            "on-secondary-fixed": "#1a1b22",
+            "surface-container": "#eeeeee",
+            "secondary-fixed-dim": "#c6c5cf",
+            "surface-container-lowest": "#ffffff",
+            "on-surface-variant": "#4c4546",
+            "on-error-container": "#93000a",
+            "inverse-surface": "#2f3131",
+            "on-background": "#1a1c1c",
+            "on-secondary-fixed-variant": "#46464e",
+            "primary-fixed-dim": "#c6c6c6",
+            "primary-container": "#1b1b1b",
+            "on-surface": "#1a1c1c",
+            "primary": "#000000",
+            "on-primary-container": "#848484",
+            "tertiary-fixed": "#e2e2e3",
+            "tertiary-fixed-dim": "#c6c6c7",
+            "on-secondary": "#ffffff",
+            "on-primary": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0px",
+            "none": "0px",
+            "lg": "0px",
+            "xl": "0px",
+            "full": "0px"
+          },
+          "spacing": {
+            "space-xl": "2rem",
+            "gutter": "0px",
+            "space-xs": "0.25rem",
+            "space-lg": "1.5rem",
+            "space-sm": "0.5rem",
+            "space-md": "1rem",
+            "margin": "0px"
+          },
+          "fontFamily": {
+            "body-lg": ["Space Grotesk", "sans-serif"],
+            "body-md": ["Space Grotesk", "sans-serif"],
+            "label-sm": ["Space Mono", "monospace"],
+            "body-sm": ["Space Grotesk", "sans-serif"],
+            "label-md": ["Space Mono", "monospace"],
+            "index-indicator": ["Space Mono", "monospace"],
+            "headline-md": ["Space Grotesk", "sans-serif"],
+            "label-lg": ["Space Mono", "monospace"],
+            "display": ["Space Grotesk", "sans-serif"],
+            "headline-sm": ["Space Grotesk", "sans-serif"],
+            "headline-lg": ["Space Grotesk", "sans-serif"]
+          },
+          "fontSize": {
+            "body-lg": ["16px", { "lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "letterSpacing": "0.08em", "fontWeight": "400" }],
+            "body-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400" }],
+            "label-md": ["11px", { "lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "400" }],
+            "index-indicator": ["11px", { "lineHeight": "11px", "letterSpacing": "0.1em", "fontWeight": "700" }],
+            "headline-md": ["22px", { "lineHeight": "26px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+            "label-lg": ["13px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700" }],
+            "display": ["40px", { "lineHeight": "44px", "letterSpacing": "-0.04em", "fontWeight": "700" }],
+            "headline-sm": ["18px", { "lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+            "headline-lg": ["28px", { "lineHeight": "32px", "letterSpacing": "-0.03em", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    * {
+      border-radius: 0px !important;
+      box-shadow: none !important;
+    }
+    .material-symbols-outlined {
+      font-family: 'Material Symbols Outlined';
+      font-weight: normal;
+      font-style: normal;
+      font-size: 18px;
+      line-height: 1;
+      display: inline-block;
+      text-transform: none;
+      letter-spacing: normal;
+      word-wrap: normal;
+      white-space: nowrap;
+      direction: ltr;
+    }
+    /* Technical crosshatch scrim */
+    .stipple-scrim {
+      background-color: rgba(26, 28, 28, 0.72);
+      background-image: radial-gradient(#000000 0.75px, transparent 0.75px);
+      background-size: 4px 4px;
+    }
+  </style>
+</head>
+<body class="bg-surface text-primary min-h-screen flex justify-center selection:bg-primary selection:text-on-primary">
+<!-- Mobile Frame Container -->
+<div class="relative w-full max-w-md min-h-screen bg-background border-x border-primary flex flex-col overflow-hidden">
+<!-- ============================================================ -->
+<!-- UNDERLYING DIMMED HOME SCREEN (Context: Daily To-Do & Focus)   -->
+<!-- ============================================================ -->
+<div class="flex-1 flex flex-col opacity-25 filter blur-[0.5px] pointer-events-none select-none">
+<!-- Shared TopAppBar Anchor (Dimmed) -->
+<header class="flex justify-between items-center w-full px-space-md py-space-sm border-b border-primary bg-surface">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+<span class="text-headline-sm font-headline-sm tracking-widest text-primary">TODAY / 01</span>
+</div>
+<button class="w-7 h-7 flex items-center justify-center border border-primary text-primary">
+<span class="material-symbols-outlined">add</span>
+</button>
+</header>
+<!-- Structural Matrix Backdrop -->
+<div class="p-space-md border-b border-primary">
+<span class="text-label-sm font-label-sm uppercase text-secondary">INDEX // DAILY LEDGER</span>
+<h1 class="text-headline-lg font-headline-lg uppercase tracking-tight mt-1">
+          EXECUTE <span class="font-normal font-label-lg text-secondary">/ 04 REMAINING</span>
+</h1>
+</div>
+<!-- Task Grid Cells (Underlying) -->
+<div class="grid grid-cols-1 divide-y divide-primary border-b border-primary">
+<div class="p-space-md bg-surface flex flex-col space-y-1">
+<div class="flex justify-between">
+<span class="text-index-indicator font-index-indicator text-secondary">01/ CRITICAL</span>
+<span class="text-label-sm font-label-sm">09:00</span>
+</div>
+<p class="text-headline-sm font-headline-sm uppercase">Review System Architecture Specs</p>
+</div>
+<div class="p-space-md bg-primary text-on-primary flex flex-col space-y-1">
+<div class="flex justify-between">
+<span class="text-index-indicator font-index-indicator text-on-primary-container">02/ IN PROGRESS</span>
+<span class="text-label-sm font-label-sm text-on-primary">11:30</span>
+</div>
+<p class="text-headline-sm font-headline-sm uppercase">Prototype Matrix Layout Engine</p>
+</div>
+<div class="p-space-md bg-surface-container-low flex flex-col space-y-1 line-through">
+<div class="flex justify-between">
+<span class="text-index-indicator font-index-indicator text-secondary">[OK] COMPLETE</span>
+<span class="text-label-sm font-label-sm">08:00</span>
+</div>
+<p class="text-headline-sm font-headline-sm uppercase text-secondary">Synchronize Repositories</p>
+</div>
+</div>
+</div>
+<!-- ============================================================ -->
+<!-- MODAL SCRIM OVERLAY (Technical Dimmer)                        -->
+<!-- ============================================================ -->
+<div aria-hidden="true" class="absolute inset-0 stipple-scrim z-40 transition-opacity"></div>
+<!-- ============================================================ -->
+<!-- ADD TASK BOTTOM SHEET MODAL (0px radius, 1px/2px hard lines)  -->
+<!-- ============================================================ -->
+<div class="absolute bottom-0 left-0 right-0 z-50 bg-surface border-t-2 border-primary flex flex-col max-h-[92vh] overflow-y-auto">
+<!-- Modal Structural Header -->
+<div class="flex items-center justify-between px-space-md py-space-sm border-b border-primary bg-surface-container-lowest sticky top-0 z-10">
+<div class="flex items-center space-x-2">
+<span class="material-symbols-outlined text-primary">add_box</span>
+<span class="text-label-lg font-label-lg uppercase tracking-wider text-primary">[+] NEW TASK ENTRY</span>
+</div>
+<button class="px-2 py-1 border border-primary bg-surface hover:bg-primary hover:text-on-primary transition-none flex items-center space-x-1" title="Close Modal" type="button">
+<span class="text-label-sm font-label-sm">[X]</span>
+<span class="text-label-sm font-label-sm uppercase">CLOSE</span>
+</button>
+</div>
+<!-- Matrix Form Body -->
+<form class="flex flex-col divide-y divide-primary">
+<!-- 01: Task Name Input Block -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col space-y-2">
+<div class="flex justify-between items-center">
+<label class="text-label-sm font-label-sm uppercase text-secondary" for="task-title">
+              01 // TASK NAME // WHAT NEEDS DOING?
+            </label>
+<span class="text-label-sm font-label-sm text-primary font-bold">REQ*</span>
+</div>
+<div class="relative border border-primary bg-surface px-space-md py-space-sm flex items-center focus-within:border-2 focus-within:border-primary">
+<input autofocus="" class="w-full bg-transparent border-0 p-0 text-body-lg font-body-lg text-primary placeholder:text-secondary focus:ring-0 uppercase tracking-tight" id="task-title" placeholder="e.g. SCHEDULE ARCHITECTURE AUDIT" type="text" value="Deploy v2.4 core matrix engine">
+<span class="inline-block w-2.5 h-4 bg-primary ml-1 animate-pulse" title="Cursor"></span>
+</div>
+</div>
+<!-- 02: Category Selector Grid -->
+<div class="p-space-md bg-surface flex flex-col space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase text-secondary">02 // TAXONOMY CATEGORY</span>
+<span class="text-index-indicator font-index-indicator text-secondary">SELECT ONE</span>
+</div>
+<div class="grid grid-cols-3 gap-0 border-t border-l border-primary">
+<button class="p-space-sm border-r border-b border-primary bg-surface hover:bg-primary hover:text-on-primary text-left text-label-sm font-label-sm uppercase" type="button">
+              [ PERSONAL ]
+            </button>
+<button class="p-space-sm border-r border-b border-primary bg-primary text-on-primary text-left text-label-sm font-label-sm uppercase font-bold" type="button">
+              [ WORK ] ■
+            </button>
+<button class="p-space-sm border-r border-b border-primary bg-surface hover:bg-primary hover:text-on-primary text-left text-label-sm font-label-sm uppercase" type="button">
+              [ CLIENT ]
+            </button>
+<button class="p-space-sm border-r border-b border-primary bg-surface hover:bg-primary hover:text-on-primary text-left text-label-sm font-label-sm uppercase" type="button">
+              [ SYSTEM ]
+            </button>
+<button class="p-space-sm border-r border-b border-primary bg-surface hover:bg-primary hover:text-on-primary text-left text-label-sm font-label-sm uppercase" type="button">
+              [ RESEARCH ]
+            </button>
+<button class="p-space-sm border-r border-b border-primary bg-surface-container-high hover:bg-primary hover:text-on-primary text-left text-label-sm font-label-sm uppercase" type="button">
+              [ + CUSTOM ]
+            </button>
+</div>
+</div>
+<!-- 03: Date & Time Matrix Split -->
+<div class="grid grid-cols-2 divide-x divide-primary bg-surface-container-lowest">
+<!-- Due Date Cell -->
+<div class="p-space-md flex flex-col space-y-1.5">
+<span class="text-label-sm font-label-sm uppercase text-secondary">03A // TARGET DATE</span>
+<div class="flex items-center justify-between border border-primary p-2 bg-surface">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-secondary uppercase">ISO 2026-04-14</span>
+<span class="text-body-md font-body-md font-bold uppercase text-primary">TODAY, APR 14</span>
+</div>
+<span class="material-symbols-outlined text-primary">calendar_today</span>
+</div>
+</div>
+<!-- Time Cell -->
+<div class="p-space-md flex flex-col space-y-1.5">
+<span class="text-label-sm font-label-sm uppercase text-secondary">03B // EXEC TIME</span>
+<div class="flex items-center justify-between border border-primary p-2 bg-surface">
+<div class="flex flex-col">
+<span class="text-label-sm font-label-sm text-secondary uppercase">24-HR LOCAL</span>
+<span class="text-body-md font-body-md font-bold uppercase text-primary">15:00 HRS</span>
+</div>
+<span class="material-symbols-outlined text-primary">schedule</span>
+</div>
+</div>
+</div>
+<!-- 04: Priority Matrix Segmented Level -->
+<div class="p-space-md bg-surface flex flex-col space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase text-secondary">04 // PRIORITY SEVERITY</span>
+<span class="text-index-indicator font-index-indicator text-primary font-bold">STATE: LVL-3</span>
+</div>
+<div class="grid grid-cols-3 divide-x divide-primary border border-primary text-center">
+<button class="py-space-sm px-1 bg-surface hover:bg-surface-container-highest text-label-sm font-label-sm uppercase" type="button">
+              LOW [01]
+            </button>
+<button class="py-space-sm px-1 bg-surface hover:bg-surface-container-highest text-label-sm font-label-sm uppercase" type="button">
+              MEDIUM [02]
+            </button>
+<button class="py-space-sm px-1 bg-primary text-on-primary font-bold text-label-sm font-label-sm uppercase" type="button">
+              HIGH [03] ■
+            </button>
+</div>
+</div>
+<!-- 05: Subtasks / Step Ledger Checklist -->
+<div class="p-space-md bg-surface-container-lowest flex flex-col space-y-2">
+<div class="flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase text-secondary">05 // SUB-EXECUTION NODES</span>
+<span class="text-label-sm font-label-sm text-secondary">2 ITEMS</span>
+</div>
+<!-- Subtasks List Items -->
+<div class="border border-primary divide-y divide-primary">
+<div class="p-2 flex items-center justify-between bg-surface">
+<div class="flex items-center space-x-2">
+<div class="w-4 h-4 border border-primary bg-primary text-on-primary flex items-center justify-center text-[10px] font-mono leading-none">X</div>
+<span class="text-body-sm font-body-sm uppercase text-primary">Verify docker containers</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary">DONE</span>
+</div>
+<div class="p-2 flex items-center justify-between bg-surface">
+<div class="flex items-center space-x-2">
+<div class="w-4 h-4 border border-primary bg-surface flex items-center justify-center"></div>
+<span class="text-body-sm font-body-sm uppercase text-primary">Run benchmark validation</span>
+</div>
+<span class="text-label-sm font-label-sm text-secondary">PENDING</span>
+</div>
+<!-- Add Subtask Inset Trigger -->
+<button class="w-full p-2 bg-surface-container-low hover:bg-primary hover:text-on-primary text-left text-label-sm font-label-sm uppercase flex items-center space-x-2 transition-none" type="button">
+<span class="material-symbols-outlined text-[16px]">add</span>
+<span>+ ADD SUBTASK NODE</span>
+</button>
+</div>
+</div>
+<!-- Terminal Form Action Bar -->
+<div class="p-space-md bg-surface border-t border-primary flex flex-col space-y-2">
+<button class="w-full py-space-sm px-space-md bg-primary text-on-primary border border-primary hover:bg-surface hover:text-primary active:invert transition-none text-label-lg font-label-lg uppercase tracking-wider flex items-center justify-center space-x-2" type="button">
+<span>COMMIT &amp; SAVE TASK</span>
+<span class="font-mono text-label-sm font-label-sm">-&gt; [ENTER]</span>
+</button>
+<button class="w-full py-space-sm px-space-md bg-surface text-primary border border-primary hover:bg-primary hover:text-on-primary active:invert transition-none text-label-md font-label-md uppercase tracking-wider text-center" type="button">
+            DISCARD CHANGES
+          </button>
+</div>
+</form>
+</div>
+</div>
+</body></html>

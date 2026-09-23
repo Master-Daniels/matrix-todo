@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Keep notification assets from R8 resource shrinking in release builds.
+     Without this, raw chimes / icons can be stripped and notifications
+     silently lose their sound (or never show). See
+     https://pub.dev/packages/flutter_local_notifications#release-build-configuration -->
+<resources xmlns:tools="http://schemas.android.com/tools"
+    tools:keep="@raw/nudge_chime,@raw/overdue_tone,@mipmap/ic_launcher,@drawable/*" />

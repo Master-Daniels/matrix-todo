@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta content="width=device-width, initial-scale=1.0" name="viewport">
+	<title>UPCOMING // TIMELINE - Blueprint Task Matrix</title>
+	<!-- Google Fonts: Space Grotesk & Space Mono -->
+	<link href="https://fonts.googleapis.com" rel="preconnect">
+	<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect">
+	<link
+		href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&amp;family=Space+Mono:ital,wght@0,400;0,700;1,400&amp;display=swap"
+		rel="stylesheet">
+	<!-- Material Symbols Outlined -->
+	<link
+		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&amp;display=swap"
+		rel="stylesheet">
+	<link
+		href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+		rel="stylesheet">
+	<!-- Tailwind CSS CDN with Container Queries & Forms plugins -->
+	<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+	<script id="tailwind-config">
+		tailwind.config = {
+			darkMode: "class",
+			theme: {
+				extend: {
+					"colors": {
+						"on-secondary-container": "#63646c",
+						"primary-fixed": "#e2e2e2",
+						"surface": "#f9f9f9",
+						"surface-container-low": "#f3f3f4",
+						"error": "#ba1a1a",
+						"on-primary-fixed-variant": "#474747",
+						"tertiary-container": "#1a1c1d",
+						"surface-dim": "#dadada",
+						"surface-bright": "#f9f9f9",
+						"tertiary": "#000000",
+						"secondary-fixed": "#e3e1ec",
+						"on-primary-fixed": "#1b1b1b",
+						"on-tertiary-container": "#838485",
+						"surface-container-highest": "#e2e2e2",
+						"secondary-container": "#e3e1ec",
+						"surface-container-high": "#e8e8e8",
+						"surface-variant": "#e2e2e2",
+						"secondary": "#5d5e66",
+						"on-tertiary": "#ffffff",
+						"on-tertiary-fixed": "#1a1c1d",
+						"outline-variant": "#cfc4c5",
+						"error-container": "#ffdad6",
+						"on-tertiary-fixed-variant": "#454748",
+						"background": "#f9f9f9",
+						"outline": "#7e7576",
+						"surface-tint": "#5e5e5e",
+						"inverse-on-surface": "#f0f1f1",
+						"on-error": "#ffffff",
+						"inverse-primary": "#c6c6c6",
+						"on-secondary-fixed": "#1a1b22",
+						"surface-container": "#eeeeee",
+						"secondary-fixed-dim": "#c6c5cf",
+						"surface-container-lowest": "#ffffff",
+						"on-surface-variant": "#4c4546",
+						"on-error-container": "#93000a",
+						"inverse-surface": "#2f3131",
+						"on-background": "#1a1c1c",
+						"on-secondary-fixed-variant": "#46464e",
+						"primary-fixed-dim": "#c6c6c6",
+						"primary-container": "#1b1b1b",
+						"on-surface": "#1a1c1c",
+						"primary": "#000000",
+						"on-primary-container": "#848484",
+						"tertiary-fixed": "#e2e2e3",
+						"tertiary-fixed-dim": "#c6c6c7",
+						"on-secondary": "#ffffff",
+						"on-primary": "#ffffff"
+					},
+					"borderRadius": {
+						"DEFAULT": "0px",
+						"lg": "0px",
+						"xl": "0px",
+						"full": "0px"
+					},
+					"spacing": {
+						"space-xl": "2rem",
+						"gutter": "0px",
+						"space-xs": "0.25rem",
+						"space-lg": "1.5rem",
+						"space-sm": "0.5rem",
+						"space-md": "1rem",
+						"margin": "0px"
+					},
+					"fontFamily": {
+						"body-lg": ["Space Grotesk", "sans-serif"],
+						"body-md": ["Space Grotesk", "sans-serif"],
+						"label-sm": ["Space Mono", "monospace"],
+						"body-sm": ["Space Grotesk", "sans-serif"],
+						"label-md": ["Space Mono", "monospace"],
+						"index-indicator": ["Space Mono", "monospace"],
+						"headline-md": ["Space Grotesk", "sans-serif"],
+						"label-lg": ["Space Mono", "monospace"],
+						"display": ["Space Grotesk", "sans-serif"],
+						"headline-sm": ["Space Grotesk", "sans-serif"],
+						"headline-lg": ["Space Grotesk", "sans-serif"]
+					},
+					"fontSize": {
+						"body-lg": ["16px", {"lineHeight": "22px", "letterSpacing": "0em", "fontWeight": "400"}],
+						"body-md": ["14px", {"lineHeight": "20px", "letterSpacing": "0em", "fontWeight": "400"}],
+						"label-sm": ["10px", {"lineHeight": "12px", "letterSpacing": "0.08em", "fontWeight": "400"}],
+						"body-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.01em", "fontWeight": "400"}],
+						"label-md": ["11px", {"lineHeight": "14px", "letterSpacing": "0.06em", "fontWeight": "400"}],
+						"index-indicator": ["11px", {"lineHeight": "11px", "letterSpacing": "0.1em", "fontWeight": "700"}],
+						"headline-md": ["22px", {"lineHeight": "26px", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+						"label-lg": ["13px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "700"}],
+						"display": ["40px", {"lineHeight": "44px", "letterSpacing": "-0.04em", "fontWeight": "700"}],
+						"headline-sm": ["18px", {"lineHeight": "22px", "letterSpacing": "-0.01em", "fontWeight": "600"}],
+						"headline-lg": ["28px", {"lineHeight": "32px", "letterSpacing": "-0.03em", "fontWeight": "600"}]
+					}
+				}
+			}
+		}
+	</script>
+	<style>
+		* {
+			border-radius: 0px !important;
+			-webkit-font-smoothing: antialiased;
+			box-sizing: border-box;
+		}
+
+		.material-symbols-outlined {
+			font-family: 'Material Symbols Outlined';
+			font-weight: normal;
+			font-style: normal;
+			font-size: 20px;
+			line-height: 1;
+			letter-spacing: normal;
+			text-transform: none;
+			display: inline-block;
+			white-space: nowrap;
+			word-wrap: normal;
+			direction: ltr;
+		}
+
+		/* Custom blueprint strike-through animation */
+		.task-completed {
+			background-color: #f3f3f4;
+			text-decoration: line-through;
+			color: #7e7576;
+		}
+	</style>
+	<style>
+		body {
+			min-height: max(884px, 100dvh);
+		}
+	</style>
+</head>
+
+<body
+	class="bg-background text-on-background min-h-screen flex flex-col font-body-md selection:bg-primary selection:text-on-primary">
+	<!-- TOP APP BAR -->
+	<header class="bg-surface sticky top-0 z-40 border-b border-primary">
+		<div class="flex justify-between items-center w-full px-space-md py-space-sm max-w-full">
+			<div class="flex items-center gap-space-sm">
+				<button
+					class="p-1 hover:bg-primary hover:text-on-primary active:invert transition-none flex items-center justify-center border border-transparent hover:border-primary"
+					title="Select Timeline">
+					<span class="material-symbols-outlined" data-icon="calendar_today">calendar_today</span>
+				</button>
+				<div class="flex flex-col">
+					<span
+						class="font-index-indicator text-index-indicator text-secondary uppercase tracking-widest">INDEX
+						// 02</span>
+					<h1 class="font-headline-sm text-headline-sm uppercase tracking-widest text-primary font-bold">
+						UPCOMING // TIMELINE</h1>
+				</div>
+			</div>
+			<div class="flex items-center divide-x divide-primary border border-primary">
+				<div
+					class="hidden sm:flex px-space-sm py-1 font-label-sm text-label-sm text-secondary bg-surface-container-low items-center">
+					<span>WEEK 16 // 2026</span>
+				</div>
+				<button
+					class="px-space-sm py-1 flex items-center justify-center bg-surface hover:bg-primary hover:text-on-primary transition-none"
+					title="Quick Add Task">
+					<span class="material-symbols-outlined" data-icon="add">add</span>
+				</button>
+			</div>
+		</div>
+		<!-- CALENDAR / TIMELINE 7-DAY CONTINUOUS STRIP -->
+		<div class="w-full border-t border-primary overflow-x-auto select-none scrollbar-none bg-surface">
+			<div class="grid grid-cols-7 min-w-[560px] divide-x divide-primary border-b border-primary text-center">
+				<!-- Mon 13 -->
+				<div
+					class="p-space-xs flex flex-col items-center justify-between py-space-sm hover:bg-primary hover:text-on-primary group cursor-pointer transition-none">
+					<span class="font-label-sm text-label-sm text-secondary group-hover:text-on-primary">MON</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">13</span>
+					<span
+						class="font-index-indicator text-index-indicator text-secondary group-hover:text-on-primary">[01]</span>
+				</div>
+				<!-- Tue 14 [TODAY - INVERTED BLACK] -->
+				<div
+					class="bg-primary text-on-primary p-space-xs flex flex-col items-center justify-between py-space-sm cursor-pointer transition-none relative">
+					<div
+						class="absolute top-0 right-0 bg-error text-on-error font-label-sm text-[8px] px-1 py-0 uppercase">
+						NOW</div>
+					<span class="font-label-sm text-label-sm text-surface-variant font-bold">TUE</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">14</span>
+					<span class="font-index-indicator text-index-indicator text-on-primary font-bold">[TODAY]</span>
+				</div>
+				<!-- Wed 15 -->
+				<div
+					class="p-space-xs flex flex-col items-center justify-between py-space-sm bg-surface-container-low hover:bg-primary hover:text-on-primary group cursor-pointer transition-none border-t-2 border-t-primary">
+					<span
+						class="font-label-sm text-label-sm text-primary font-bold group-hover:text-on-primary">WED</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">15</span>
+					<span
+						class="font-index-indicator text-index-indicator text-primary font-bold group-hover:text-on-primary">[03]</span>
+				</div>
+				<!-- Thu 16 -->
+				<div
+					class="p-space-xs flex flex-col items-center justify-between py-space-sm hover:bg-primary hover:text-on-primary group cursor-pointer transition-none">
+					<span class="font-label-sm text-label-sm text-secondary group-hover:text-on-primary">THU</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">16</span>
+					<span
+						class="font-index-indicator text-index-indicator text-secondary group-hover:text-on-primary">[02]</span>
+				</div>
+				<!-- Fri 17 -->
+				<div
+					class="p-space-xs flex flex-col items-center justify-between py-space-sm hover:bg-primary hover:text-on-primary group cursor-pointer transition-none">
+					<span class="font-label-sm text-label-sm text-secondary group-hover:text-on-primary">FRI</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">17</span>
+					<span
+						class="font-index-indicator text-index-indicator text-secondary group-hover:text-on-primary">[02]</span>
+				</div>
+				<!-- Sat 18 -->
+				<div
+					class="p-space-xs flex flex-col items-center justify-between py-space-sm hover:bg-primary hover:text-on-primary group cursor-pointer transition-none bg-surface-container-lowest">
+					<span class="font-label-sm text-label-sm text-secondary group-hover:text-on-primary">SAT</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">18</span>
+					<span
+						class="font-index-indicator text-index-indicator text-secondary group-hover:text-on-primary">[01]</span>
+				</div>
+				<!-- Sun 19 -->
+				<div
+					class="p-space-xs flex flex-col items-center justify-between py-space-sm hover:bg-primary hover:text-on-primary group cursor-pointer transition-none bg-surface-container-lowest">
+					<span class="font-label-sm text-label-sm text-secondary group-hover:text-on-primary">SUN</span>
+					<span class="font-display text-[18px] leading-none my-1 font-bold">19</span>
+					<span
+						class="font-index-indicator text-index-indicator text-secondary group-hover:text-on-primary">[--]</span>
+				</div>
+			</div>
+		</div>
+	</header>
+	<!-- MAIN BLUEPRINT CONTENT CANVAS -->
+	<main class="flex-1 pb-24 w-full max-w-full">
+		<!-- METRIC / KPI MATRIX BANNER -->
+		<div
+			class="grid grid-cols-2 md:grid-cols-4 border-b border-primary divide-x divide-primary bg-surface-container-lowest">
+			<div class="p-space-md flex flex-col justify-between">
+				<span class="font-index-indicator text-index-indicator text-secondary uppercase">METRIC // 01</span>
+				<div class="my-space-xs">
+					<span class="font-display text-display leading-none">08</span>
+				</div>
+				<span class="font-label-sm text-label-sm text-primary uppercase font-bold">TOTAL SCHEDULED</span>
+			</div>
+			<div class="p-space-md flex flex-col justify-between">
+				<span class="font-index-indicator text-index-indicator text-secondary uppercase">METRIC // 02</span>
+				<div class="my-space-xs">
+					<span class="font-display text-display leading-none">03</span>
+				</div>
+				<span class="font-label-sm text-label-sm text-primary uppercase font-bold">DUE TOMORROW</span>
+			</div>
+			<div class="p-space-md flex flex-col justify-between border-t md:border-t-0 border-primary">
+				<span class="font-index-indicator text-index-indicator text-secondary uppercase">METRIC // 03</span>
+				<div class="my-space-xs">
+					<span class="font-display text-display leading-none text-secondary">00</span>
+				</div>
+				<span class="font-label-sm text-label-sm text-secondary uppercase font-bold">OVERDUE BLOCKS</span>
+			</div>
+			<div
+				class="p-space-md flex flex-col justify-between border-t md:border-t-0 border-primary bg-surface-container-low">
+				<span class="font-index-indicator text-index-indicator text-secondary uppercase">ALLOCATION // 04</span>
+				<div class="my-space-xs flex items-baseline gap-1">
+					<span class="font-display text-display leading-none">72</span><span
+						class="font-label-md text-label-md">%</span>
+				</div>
+				<span class="font-label-sm text-label-sm text-primary uppercase font-bold">EXECUTION CAPACITY</span>
+			</div>
+		</div>
+		<!-- SECTION 1: TOMORROW // WED APR 15 -->
+		<section class="w-full">
+			<!-- Section Header Ledger -->
+			<div
+				class="flex items-center justify-between px-space-md py-space-sm bg-primary text-on-primary border-b border-primary">
+				<div class="flex items-center gap-2">
+					<span class="font-index-indicator text-index-indicator text-inverse-primary">[01]</span>
+					<h2 class="font-headline-sm text-headline-sm tracking-widest uppercase">TOMORROW // WED APR 15</h2>
+				</div>
+				<span
+					class="font-label-lg text-label-lg border border-on-primary px-2 py-0.5 bg-surface text-primary uppercase">3
+					TASKS</span>
+			</div>
+			<!-- Task Items Matrix List -->
+			<div class="divide-y divide-primary border-b border-primary">
+				<!-- Task Item 1 -->
+				<div
+					class="flex flex-col md:flex-row items-stretch bg-surface hover:bg-surface-container-low transition-none group">
+					<!-- Leading Time/Index Cell -->
+					<div
+						class="flex items-center justify-between md:justify-center md:w-48 px-space-md py-space-sm border-b md:border-b-0 md:border-r border-primary bg-surface-container-lowest">
+						<div class="flex items-center gap-2">
+							<span class="font-index-indicator text-index-indicator text-secondary">01/</span>
+							<span
+								class="font-label-sm text-label-sm bg-primary text-on-primary px-2 py-0.5 uppercase">WORK</span>
+						</div>
+						<span class="font-label-md text-label-md font-bold tracking-tight text-primary">10:00 AM</span>
+					</div>
+					<!-- Task Body & Actions -->
+					<div class="flex-1 flex items-center justify-between p-space-md gap-4">
+						<div class="flex items-center gap-space-md flex-1">
+							<label class="cursor-pointer flex items-center">
+								<input
+									class="w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+									type="checkbox">
+							</label>
+							<div>
+								<p class="font-headline-sm text-headline-sm text-primary tracking-tight">Quarterly
+									review presentation</p>
+								<div class="flex items-center gap-3 mt-1">
+									<span class="font-label-sm text-label-sm text-secondary">SLIDES //
+										Q1-RESULTS.PDF</span>
+									<span
+										class="font-label-sm text-label-sm text-secondary uppercase border-l border-outline-variant pl-2">ROOM
+										4B // HYBRID</span>
+								</div>
+							</div>
+						</div>
+						<div class="flex items-center gap-2">
+							<span
+								class="hidden sm:inline-block font-label-sm text-label-sm text-secondary group-hover:text-primary">PRIORITY:
+								HIGH</span>
+							<button
+								class="w-8 h-8 flex items-center justify-center border border-primary hover:bg-primary hover:text-on-primary active:invert transition-none"
+								title="Quick Options">
+								<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<!-- Task Item 2 -->
+				<div
+					class="flex flex-col md:flex-row items-stretch bg-surface hover:bg-surface-container-low transition-none group">
+					<!-- Leading Time/Index Cell -->
+					<div
+						class="flex items-center justify-between md:justify-center md:w-48 px-space-md py-space-sm border-b md:border-b-0 md:border-r border-primary bg-surface-container-lowest">
+						<div class="flex items-center gap-2">
+							<span class="font-index-indicator text-index-indicator text-secondary">02/</span>
+							<span
+								class="font-label-sm text-label-sm border border-primary text-primary px-2 py-0.5 uppercase">PERSONAL</span>
+						</div>
+						<span class="font-label-md text-label-md font-bold tracking-tight text-primary">01:00 PM</span>
+					</div>
+					<!-- Task Body & Actions -->
+					<div class="flex-1 flex items-center justify-between p-space-md gap-4">
+						<div class="flex items-center gap-space-md flex-1">
+							<label class="cursor-pointer flex items-center">
+								<input
+									class="w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+									type="checkbox">
+							</label>
+							<div>
+								<p class="font-headline-sm text-headline-sm text-primary tracking-tight">Pick up dry
+									cleaning &amp; pharmacy</p>
+								<div class="flex items-center gap-3 mt-1">
+									<span class="font-label-sm text-label-sm text-secondary">METRO ROUTE 04</span>
+									<span
+										class="font-label-sm text-label-sm text-secondary uppercase border-l border-outline-variant pl-2">TICKET
+										#8491</span>
+								</div>
+							</div>
+						</div>
+						<div class="flex items-center gap-2">
+							<button
+								class="w-8 h-8 flex items-center justify-center border border-primary hover:bg-primary hover:text-on-primary active:invert transition-none"
+								title="Quick Options">
+								<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+							</button>
+						</div>
+					</div>
+				</div>
+				<!-- Task Item 3 -->
+				<div
+					class="flex flex-col md:flex-row items-stretch bg-surface hover:bg-surface-container-low transition-none group">
+					<!-- Leading Time/Index Cell -->
+					<div
+						class="flex items-center justify-between md:justify-center md:w-48 px-space-md py-space-sm border-b md:border-b-0 md:border-r border-primary bg-surface-container-lowest">
+						<div class="flex items-center gap-2">
+							<span class="font-index-indicator text-index-indicator text-secondary">03/</span>
+							<span
+								class="font-label-sm text-label-sm bg-surface-container-highest text-primary border border-primary px-2 py-0.5 uppercase">HOME</span>
+						</div>
+						<span class="font-label-md text-label-md font-bold tracking-tight text-primary">06:30 PM</span>
+					</div>
+					<!-- Task Body & Actions -->
+					<div class="flex-1 flex items-center justify-between p-space-md gap-4">
+						<div class="flex items-center gap-space-md flex-1">
+							<label class="cursor-pointer flex items-center">
+								<input
+									class="w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+									type="checkbox">
+							</label>
+							<div>
+								<p class="font-headline-sm text-headline-sm text-primary tracking-tight">Fix kitchen
+									sink leak</p>
+								<div class="flex items-center gap-3 mt-1">
+									<span class="font-label-sm text-label-sm text-secondary">REPLACE O-RING SEAL // 14MM
+										WRENCH</span>
+								</div>
+							</div>
+						</div>
+						<div class="flex items-center gap-2">
+							<button
+								class="w-8 h-8 flex items-center justify-center border border-primary hover:bg-primary hover:text-on-primary active:invert transition-none"
+								title="Quick Options">
+								<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+		</section>
+		<!-- SECTION 2: LATER THIS WEEK // APR 16 - 19 -->
+		<section class="w-full">
+			<!-- Section Header Ledger -->
+			<div
+				class="flex items-center justify-between px-space-md py-space-sm bg-surface-container-highest border-b border-primary">
+				<div class="flex items-center gap-2">
+					<span class="font-index-indicator text-index-indicator text-secondary">[02]</span>
+					<h2 class="font-headline-sm text-headline-sm tracking-widest uppercase text-primary font-bold">LATER
+						THIS WEEK // APR 16 - 19</h2>
+				</div>
+				<span
+					class="font-label-lg text-label-lg border border-primary px-2 py-0.5 bg-surface text-primary uppercase font-bold">5
+					TASKS</span>
+			</div>
+			<!-- Bento-style 2-Column Grid of Structural Cells -->
+			<div class="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:gap-0 border-b border-primary">
+				<!-- Grid Cell 1: THU 16 -->
+				<div
+					class="p-space-md bg-surface border-b md:border-r border-primary flex flex-col justify-between hover:bg-surface-container-low transition-none">
+					<div>
+						<div
+							class="flex items-center justify-between pb-space-sm border-b border-outline-variant mb-space-sm">
+							<span
+								class="font-label-sm text-label-sm font-bold uppercase bg-primary text-on-primary px-2 py-0.5">THU
+								APR 16</span>
+							<span class="font-index-indicator text-index-indicator text-secondary">[TAG: CLIENT]</span>
+						</div>
+						<div class="flex items-start gap-space-sm">
+							<input
+								class="mt-1 w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+								type="checkbox">
+							<div class="flex-1">
+								<h3 class="font-headline-sm text-headline-sm text-primary">Deploy staging build v2.4.0
+								</h3>
+								<p class="font-body-sm text-body-sm text-secondary mt-1">Run end-to-end integration
+									tests on Docker instance before handover.</p>
+							</div>
+						</div>
+					</div>
+					<div
+						class="flex items-center justify-between pt-space-md mt-space-md border-t border-dashed border-outline">
+						<span class="font-label-sm text-label-sm text-secondary uppercase">TIME: 11:30 AM</span>
+						<span
+							class="font-label-sm text-label-sm border border-primary px-1.5 py-0.5 uppercase">SYSTEMS</span>
+					</div>
+				</div>
+				<!-- Grid Cell 2: THU 16 -->
+				<div
+					class="p-space-md bg-surface border-b border-primary flex flex-col justify-between hover:bg-surface-container-low transition-none">
+					<div>
+						<div
+							class="flex items-center justify-between pb-space-sm border-b border-outline-variant mb-space-sm">
+							<span
+								class="font-label-sm text-label-sm font-bold uppercase bg-primary text-on-primary px-2 py-0.5">THU
+								APR 16</span>
+							<span class="font-index-indicator text-index-indicator text-secondary">[TAG: FINANCE]</span>
+						</div>
+						<div class="flex items-start gap-space-sm">
+							<input
+								class="mt-1 w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+								type="checkbox">
+							<div class="flex-1">
+								<h3 class="font-headline-sm text-headline-sm text-primary">Reconcile quarterly hardware
+									invoices</h3>
+								<p class="font-body-sm text-body-sm text-secondary mt-1">Validate server procurement
+									line items against signed purchase orders.</p>
+							</div>
+						</div>
+					</div>
+					<div
+						class="flex items-center justify-between pt-space-md mt-space-md border-t border-dashed border-outline">
+						<span class="font-label-sm text-label-sm text-secondary uppercase">TIME: 04:00 PM</span>
+						<span
+							class="font-label-sm text-label-sm border border-primary px-1.5 py-0.5 uppercase">ADMIN</span>
+					</div>
+				</div>
+				<!-- Grid Cell 3: FRI 17 -->
+				<div
+					class="p-space-md bg-surface border-b md:border-b-0 md:border-r border-primary flex flex-col justify-between hover:bg-surface-container-low transition-none">
+					<div>
+						<div
+							class="flex items-center justify-between pb-space-sm border-b border-outline-variant mb-space-sm">
+							<span
+								class="font-label-sm text-label-sm font-bold uppercase bg-surface-container-highest text-primary border border-primary px-2 py-0.5">FRI
+								APR 17</span>
+							<span class="font-index-indicator text-index-indicator text-secondary">[TAG: DESIGN]</span>
+						</div>
+						<div class="flex items-start gap-space-sm">
+							<input
+								class="mt-1 w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+								type="checkbox">
+							<div class="flex-1">
+								<h3 class="font-headline-sm text-headline-sm text-primary"> component library audit</h3>
+								<p class="font-body-sm text-body-sm text-secondary mt-1">Standardize all 1px monolithic
+									boundary rules across mobile templates.</p>
+							</div>
+						</div>
+					</div>
+					<div
+						class="flex items-center justify-between pt-space-md mt-space-md border-t border-dashed border-outline">
+						<span class="font-label-sm text-label-sm text-secondary uppercase">TIME: 09:00 AM</span>
+						<span
+							class="font-label-sm text-label-sm border border-primary px-1.5 py-0.5 uppercase">SPEC</span>
+					</div>
+				</div>
+				<!-- Grid Cell 4: FRI 17 -->
+				<div
+					class="p-space-md bg-surface border-b md:border-b-0 border-primary flex flex-col justify-between hover:bg-surface-container-low transition-none">
+					<div>
+						<div
+							class="flex items-center justify-between pb-space-sm border-b border-outline-variant mb-space-sm">
+							<span
+								class="font-label-sm text-label-sm font-bold uppercase bg-surface-container-highest text-primary border border-primary px-2 py-0.5">FRI
+								APR 17</span>
+							<span class="font-index-indicator text-index-indicator text-secondary">[TAG:
+								WORKSHOP]</span>
+						</div>
+						<div class="flex items-start gap-space-sm">
+							<input
+								class="mt-1 w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+								type="checkbox">
+							<div class="flex-1">
+								<h3 class="font-headline-sm text-headline-sm text-primary">Bi-weekly sprint
+									retrospective</h3>
+								<p class="font-body-sm text-body-sm text-secondary mt-1">Review velocity markers and
+									calibrate structural task backlog for Q2.</p>
+							</div>
+						</div>
+					</div>
+					<div
+						class="flex items-center justify-between pt-space-md mt-space-md border-t border-dashed border-outline">
+						<span class="font-label-sm text-label-sm text-secondary uppercase">TIME: 03:30 PM</span>
+						<span
+							class="font-label-sm text-label-sm border border-primary px-1.5 py-0.5 uppercase">TEAM</span>
+					</div>
+				</div>
+			</div>
+			<!-- Single Wide Row Cell: SAT 18 -->
+			<div
+				class="p-space-md bg-surface-container-lowest border-b border-primary flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+				<div class="flex items-center gap-space-sm">
+					<span class="font-label-sm text-label-sm font-bold uppercase border border-primary px-2 py-0.5">SAT
+						APR 18</span>
+					<input
+						class="w-[18px] h-[18px] rounded-none border border-primary text-primary focus:ring-0 focus:ring-offset-0 cursor-pointer accent-primary"
+						type="checkbox">
+					<span class="font-headline-sm text-headline-sm text-primary">Equipment calibration &amp; studio
+						cable dressing</span>
+				</div>
+				<div class="flex items-center gap-space-sm">
+					<span class="font-label-sm text-label-sm text-secondary uppercase">[PERSONAL / WORKSHOP]</span>
+					<span class="font-index-indicator text-index-indicator text-primary font-bold">10:00 AM</span>
+				</div>
+			</div>
+		</section>
+		<!-- SECTION 3: NEXT WEEK & BEYOND -->
+		<section class="w-full">
+			<!-- Section Header Accordion Bar -->
+			<div
+				class="flex items-center justify-between px-space-md py-space-sm bg-surface-container-low border-b border-primary cursor-pointer hover:bg-surface-container-highest transition-none">
+				<div class="flex items-center gap-2">
+					<span class="font-index-indicator text-index-indicator text-secondary">[03]</span>
+					<h2 class="font-headline-sm text-headline-sm tracking-widest uppercase text-primary font-bold">NEXT
+						WEEK &amp; BEYOND</h2>
+				</div>
+				<div class="flex items-center gap-3">
+					<span
+						class="font-label-lg text-label-lg border border-primary px-2 py-0.5 bg-surface text-primary uppercase font-bold">14
+						TASKS</span>
+					<span class="material-symbols-outlined text-primary font-bold"
+						data-icon="expand_more">expand_more</span>
+				</div>
+			</div>
+			<!-- Expandable Preview Quadrants -->
+			<div
+				class="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-primary border-b border-primary bg-surface">
+				<div class="p-space-md flex flex-col justify-between">
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<span class="font-label-sm text-label-sm text-secondary uppercase">MON APR 20 - WED
+								22</span>
+							<span class="font-index-indicator text-index-indicator text-primary">06 TASKS</span>
+						</div>
+						<p class="font-body-md text-body-md text-primary font-medium">Enterprise Cloud Infrastructure
+							Migration</p>
+					</div>
+					<a class="font-label-sm text-label-sm text-primary underline mt-space-md uppercase tracking-wider block hover:bg-primary hover:text-on-primary py-1 px-2 border border-transparent hover:border-primary w-fit"
+						href="#">
+						VIEW SEGMENT -&gt;
+					</a>
+				</div>
+				<div class="p-space-md flex flex-col justify-between bg-surface-container-lowest">
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<span class="font-label-sm text-label-sm text-secondary uppercase">THU APR 23 - SUN
+								26</span>
+							<span class="font-index-indicator text-index-indicator text-primary">05 TASKS</span>
+						</div>
+						<p class="font-body-md text-body-md text-primary font-medium">Annual Product Design Guidelines
+							Revamp</p>
+					</div>
+					<a class="font-label-sm text-label-sm text-primary underline mt-space-md uppercase tracking-wider block hover:bg-primary hover:text-on-primary py-1 px-2 border border-transparent hover:border-primary w-fit"
+						href="#">
+						VIEW SEGMENT -&gt;
+					</a>
+				</div>
+				<div class="p-space-md flex flex-col justify-between">
+					<div>
+						<div class="flex justify-between items-center mb-2">
+							<span class="font-label-sm text-label-sm text-secondary uppercase">MAY 2026 HORIZON</span>
+							<span class="font-index-indicator text-index-indicator text-secondary">03 TASKS</span>
+						</div>
+						<p class="font-body-md text-body-md text-secondary font-medium">Hardware Prototype Assembly Run
+							#02</p>
+					</div>
+					<a class="font-label-sm text-label-sm text-primary underline mt-space-md uppercase tracking-wider block hover:bg-primary hover:text-on-primary py-1 px-2 border border-transparent hover:border-primary w-fit"
+						href="#">
+						VIEW SEGMENT -&gt;
+					</a>
+				</div>
+			</div>
+		</section>
+		<!-- ACTION FOOTPRINT TERMINAL -->
+		<div class="p-space-lg flex flex-col md:flex-row items-center justify-between gap-space-md bg-surface">
+			<div class="flex flex-col">
+				<span class="font-label-sm text-label-sm text-secondary uppercase tracking-widest">SCHEDULE
+					HEALTH</span>
+				<p class="font-body-sm text-body-sm text-primary uppercase mt-1">ALL FUTURE ALLOCATIONS SATISFY 100%
+					BLUEPRINT DENSITY CHECKS.</p>
+			</div>
+			<div class="flex items-center gap-space-sm w-full md:w-auto">
+				<button
+					class="flex-1 md:flex-initial px-space-lg py-space-sm border border-primary bg-surface hover:bg-primary hover:text-on-primary font-label-lg text-label-lg uppercase tracking-wider transition-none">
+					EXPORT SCHEDULE (.ICS)
+				</button>
+				<button
+					class="flex-1 md:flex-initial px-space-lg py-space-sm border border-primary bg-primary text-on-primary hover:bg-surface hover:text-primary font-label-lg text-label-lg uppercase tracking-wider transition-none">
+					NEW TIME BLOCK +
+				</button>
+			</div>
+		</div>
+	</main>
+	<!-- BOTTOM NAVIGATION BAR (Anchored Shared Component) -->
+	<!-- Intent mapping: This is the 'Upcoming' schedule screen -> Tab 2 'Upcoming' is ACTIVE INVERTED -->
+	<nav
+		class="fixed bottom-0 w-full z-50 flex items-stretch border-t border-primary dark:border-outline-variant divide-x divide-primary dark:divide-outline-variant bg-surface">
+		<!-- Tab 1: Today (Inactive) -->
+		<a class="flex flex-col items-center justify-center flex-1 bg-surface text-primary dark:bg-primary-container dark:text-inverse-primary py-space-sm hover:bg-primary hover:text-on-primary transition-none active:invert"
+			href="#">
+			<span class="material-symbols-outlined" data-icon="check_box">check_box</span>
+			<span class="font-label-sm text-label-sm uppercase mt-1">Today</span>
+		</a>
+		<!-- Tab 2: Upcoming (ACTIVE - Autonomous Selection Logic: Exact Match for this screen) -->
+		<a class="flex flex-col items-center justify-center flex-1 bg-primary text-on-primary dark:bg-inverse-primary dark:text-primary py-space-sm transition-none active:invert font-bold"
+			href="#">
+			<span class="material-symbols-outlined" data-icon="date_range"
+				style="font-variation-settings: 'FILL' 1;">date_range</span>
+			<span class="font-label-sm text-label-sm uppercase mt-1">Upcoming</span>
+		</a>
+		<!-- Tab 3: Lists (Inactive) -->
+		<a class="flex flex-col items-center justify-center flex-1 bg-surface text-primary dark:bg-primary-container dark:text-inverse-primary py-space-sm hover:bg-primary hover:text-on-primary transition-none active:invert"
+			href="#">
+			<span class="material-symbols-outlined" data-icon="view_agenda">view_agenda</span>
+			<span class="font-label-sm text-label-sm uppercase mt-1">Lists</span>
+		</a>
+		<!-- Tab 4: Settings (Inactive) -->
+		<a class="flex flex-col items-center justify-center flex-1 bg-surface text-primary dark:bg-primary-container dark:text-inverse-primary py-space-sm hover:bg-primary hover:text-on-primary transition-none active:invert"
+			href="#">
+			<span class="material-symbols-outlined" data-icon="tune">tune</span>
+			<span class="font-label-sm text-label-sm uppercase mt-1">Settings</span>
+		</a>
+	</nav>
+	<!-- Interactive logic for checkboxes to simulate completion -->
+	<script>
+		document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+			checkbox.addEventListener('change', function () {
+				const row = this.closest('.group') || this.closest('.p-space-md') || this.parentElement.parentElement;
+				const textElement = row.querySelector('.font-headline-sm') || row.querySelector('p');
+				if (this.checked) {
+					if (textElement) {
+						textElement.style.textDecoration = 'line-through';
+						textElement.style.color = '#7e7576';
+					}
+				} else {
+					if (textElement) {
+						textElement.style.textDecoration = 'none';
+						textElement.style.color = '';
+					}
+				}
+			});
+		});
+	</script>
+</body>
+
+</html>

@@ -1,0 +1,138 @@
+name: flutter_todo
+description: "A simple todo project built with flutter"
+# The following line prevents the package from being accidentally published to
+# pub.dev using `flutter pub publish`. This is preferred for private packages.
+publish_to: "none" # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.2
+
+# Dependencies specify other packages that your package needs in order to work.
+# To automatically upgrade your package dependencies to the latest versions
+# consider running `flutter pub upgrade --major-versions`. Alternatively,
+# dependencies can be manually updated by changing the version numbers below to
+# the latest version available on pub.dev. To see which dependencies have newer
+# versions available, run `flutter pub outdated`.
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # The following adds the Cupertino Icons font to your application.
+  # Use with the CupertinoIcons class for iOS style icons.
+  cupertino_icons: ^1.0.9
+  flutter_riverpod: ^3.4.3
+  sqflite: ^2.4.4
+  path: ^1.9.1
+  google_fonts: ^8.2.1
+  file_picker: ^13.1.0
+  flutter_local_notifications: ^22.3.1
+  timezone: ^0.11.1
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  flutter_native_splash: ^2.4.2
+
+flutter_launcher_icons:
+  image_path: "assets/icon/app_icon_inverted-1024.png"
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  background_color: "#FFFFFF"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icon/android_foreground_inverted-432.png"
+  adaptive_icon_monochrome: "assets/icon/android_monochrome-432.png"
+  web:
+    generate: true
+    image_path: "assets/icon/app_icon_inverted-1024.png"
+    background_color: "#FFFFFF"
+    theme_color: "#FFFFFF"
+
+flutter_native_splash:
+  # Light = black grid on white; dark = white grid on black.
+  color: "#FFFFFF"
+  color_dark: "#000000"
+  image: assets/icon/splash_foreground_light.png
+  image_dark: assets/icon/splash_foreground_dark.png
+  android_12:
+    color: "#FFFFFF"
+    color_dark: "#000000"
+    image: assets/icon/splash_foreground_light.png
+    image_dark: assets/icon/splash_foreground_dark.png
+  android: true
+  ios: true
+  web: false
+  # No preserve/removal calls in Dart: stock MainActivity lets the
+  # native splash exit automatically on the first frame.
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+  # The following line ensures that the Material Icons font is
+  # included with your application, so that you can use the icons in
+  # the material Icons class.
+  uses-material-design: true
+
+  # To add assets to your application, add an assets section, like this:
+  # assets:
+  #   - images/a_dot_burr.jpeg
+  #   - images/a_dot_ham.jpeg
+
+  # An image asset can refer to one or more resolution-specific "variants", see
+  # https://flutter.dev/to/resolution-aware-images
+
+  # For details regarding adding assets from package dependencies, see
+  # https://flutter.dev/to/asset-from-package
+
+  # google_fonts offline bundle: files must keep their API names
+  # (e.g. Megrim-Regular.ttf, NOT Megrim.ttf) and must be listed under
+  # `assets:` so AssetManifest can find them when
+  # `GoogleFonts.config.allowRuntimeFetching = false`.
+  # The `fonts:` block below is kept so plain TextStyle(fontFamily:)
+  # also resolves without the google_fonts loader.
+  assets:
+    - assets/fonts/Megrim-Regular.ttf
+    - assets/fonts/SpaceMono-Regular.ttf
+    - assets/fonts/SpaceMono-Bold.ttf
+    - assets/fonts/SpaceMono-Italic.ttf
+    - assets/fonts/SpaceMono-BoldItalic.ttf
+
+  # Bundled  type. Drop the .ttf files into assets/fonts/
+  # (see assets/fonts/README.md), then uncomment the block below and remove
+  # the google_fonts dependency. Until then fonts load from the Google Fonts
+  # runtime cache warmed at startup (AppTypography.precache).
+  fonts:
+    - family: Megrim
+      fonts:
+        - asset: assets/fonts/Megrim-Regular.ttf
+    - family: Space Mono
+      fonts:
+        - asset: assets/fonts/SpaceMono-Regular.ttf
+        - asset: assets/fonts/SpaceMono-Bold.ttf
+          weight: 700
+        - asset: assets/fonts/SpaceMono-Italic.ttf
+          style: italic
+        - asset: assets/fonts/SpaceMono-BoldItalic.ttf
+          weight: 700
+          style: italic
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package
