@@ -531,7 +531,7 @@ class ReminderService {
       // The summary is shown immediately (displayed, never pending), so it
       // is excluded from the intact-check; children must match exactly.
       final want = wanted();
-      final live = pending.where((id) => id != 999998 && id != 999999).toSet();
+      final live = pending.toSet();
       if (live.length == want.length && live.containsAll(want)) {
         debugPrint(
           '[ReminderService] syncAll heal-only: schedules intact, skip',
@@ -552,7 +552,6 @@ class ReminderService {
     final desired = wanted()..add(reminderGroupSummaryId);
     final pending = await _notifications.pendingIds();
     for (final id in pending) {
-      if (id == 999998 || id == 999999) continue;
       if (!desired.contains(id)) await _notifications.cancel(id);
     }
     // Group summary last: shows live inbox lines when anything is
@@ -800,72 +799,6 @@ class ReminderService {
       );
     } catch (e) {
       debugPrint('[ReminderService] _schedule error: $e');
-    }
-  }
-
-  /// Schedules a simple test notification `delay` from now. Uses a
-  /// deterministic high id (to avoid colliding with task ids) and the
-  /// nudge chime sound so it's audible. Intended for manual QA.
-  /// Test ids are excluded from the stale-sweep, so mutations leave them
-  /// alone; only master-off / data-purge clears them.
-  Future<void> scheduleTestNotification([
-    Duration delay = const Duration(minutes: 2),
-  ]) async {
-    final fire = DateTime.now().add(delay);
-    final test = (
-      id: 999999,
-      kind: ReminderKind.halfHourBefore,
-      fireAt: fire,
-      title: 'TEST REMINDER',
-      body: 'This is a test scheduled ${fire.toLocal()}',
-      payload: reminderPayload(nid: 999999),
-    );
-    try {
-      // Ensure initialization and permissions before scheduling.
-      if (!_ready) {
-        debugPrint(
-          '[ReminderService] not ready, initializing before test schedule',
-        );
-        await init(onRoute: (_) async {});
-      }
-      await ensureReady();
-      debugPrint(
-        '[ReminderService] scheduling test notification for $fire '
-        '(local=${fire.toLocal()} epoch=${fire.millisecondsSinceEpoch} '
-        'exact=${_notifications.exactAlarms})',
-      );
-      // Fire an immediate notification to verify channel/sound/display.
-      try {
-        debugPrint('[ReminderService] showing immediate test notification');
-        await _notifications.show(
-          id: 999998,
-          title: 'TEST NOW',
-          body: 'Immediate test notification',
-          notificationDetails: const NotificationDetails(
-            android: AndroidNotificationDetails(
-              NotificationService.remindersChannelId,
-              'REMINDERS',
-              importance: Importance.max,
-              priority: Priority.high,
-              playSound: true,
-              sound: RawResourceAndroidNotificationSound('nudge_chime'),
-              audioAttributesUsage: AudioAttributesUsage.alarm,
-            ),
-          ),
-        );
-      } catch (e) {
-        debugPrint('[ReminderService] immediate show failed: $e');
-      }
-
-      await _schedule(test);
-      final ids = await _notifications.pendingIds();
-      debugPrint(
-        '[ReminderService] pending after schedule: $ids '
-        '(expect 999999; if missing, zonedSchedule dropped it — check exact-alarm permission)',
-      );
-    } catch (e, st) {
-      debugPrint('[ReminderService] failed to schedule test: $e');
-      debugPrint(st.toString());
     }
   }
 }

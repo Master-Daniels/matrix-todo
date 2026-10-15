@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-surface" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>TODAY / 24 — Architectural Minimal Brutalist Deck</title>
+<!-- Google Fonts: Space Grotesk & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-error-container": "#93000a",
+            "on-primary-fixed": "#1b1b1b",
+            "background": "#f9f9f9",
+            "outline-variant": "#cfc4c5",
+            "tertiary-fixed": "#e2e2e2",
+            "secondary-container": "#e3e2e2",
+            "secondary": "#5e5e5e",
+            "primary": "#000000",
+            "surface-container-lowest": "#ffffff",
+            "surface": "#f9f9f9",
+            "surface-container": "#eeeeee",
+            "surface-container-highest": "#e2e2e2",
+            "primary-fixed": "#e2e2e2",
+            "on-primary-fixed-variant": "#474747",
+            "surface-bright": "#f9f9f9",
+            "on-secondary-container": "#646464",
+            "inverse-on-surface": "#f1f1f1",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#c6c6c6",
+            "surface-container-high": "#e8e8e8",
+            "on-tertiary-fixed-variant": "#474747",
+            "surface-tint": "#5e5e5e",
+            "inverse-surface": "#2f3131",
+            "on-secondary-fixed-variant": "#464747",
+            "tertiary": "#000000",
+            "on-secondary": "#ffffff",
+            "surface-container-low": "#f3f3f3",
+            "outline": "#7e7576",
+            "on-surface": "#1a1c1c",
+            "inverse-primary": "#c6c6c6",
+            "on-secondary-fixed": "#1b1c1c",
+            "surface-variant": "#e2e2e2",
+            "on-primary-container": "#848484",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-surface-variant": "#4c4546",
+            "secondary-fixed": "#e3e2e2",
+            "tertiary-container": "#1b1b1b",
+            "surface-dim": "#dadada",
+            "on-tertiary": "#ffffff",
+            "on-background": "#1a1c1c",
+            "on-tertiary-container": "#848484",
+            "tertiary-fixed-dim": "#c6c6c6",
+            "error": "#ba1a1a",
+            "on-tertiary-fixed": "#1b1b1b",
+            "error-container": "#ffdad6",
+            "on-primary": "#ffffff",
+            "primary-container": "#1b1b1b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1.25rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "gutter-mobile": "0.75rem",
+            "margin": "1.5rem",
+            "margin-mobile": "1.25rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Space Grotesk"],
+            "headline-lg": ["Space Grotesk"],
+            "headline-md": ["Space Grotesk"],
+            "body-md": ["Inter"],
+            "label-sm": ["Space Grotesk"],
+            "body-sm": ["Inter"],
+            "label-md": ["Space Grotesk"],
+            "title-md": ["Space Grotesk"],
+            "headline-sm": ["Space Grotesk"],
+            "body-lg": ["Inter"],
+            "label-lg": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+            "headline-lg": ["36px", { "lineHeight": "44px", "fontWeight": "600" }],
+            "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "fontWeight": "500" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "label-md": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "label-lg": ["12px", { "lineHeight": "16px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    /* Drafting architectural hairline cues */
+    .drafting-grid-pattern {
+      background-size: 24px 24px;
+      background-image: linear-gradient(to right, rgba(0,0,0,0.03) 1px, transparent 1px),
+                        linear-gradient(to bottom, rgba(0,0,0,0.03) 1px, transparent 1px);
+    }
+    .crisp-border {
+      border: 1.5px solid #000000;
+    }
+    .crisp-border-b {
+      border-bottom: 1.5px solid #000000;
+    }
+    .crisp-border-t {
+      border-top: 1.5px solid #000000;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="h-full bg-surface text-on-surface flex flex-col font-body-md antialiased select-none overflow-x-hidden">
+<!-- TOP APP BAR (Shared Component JSON anchor) -->
+<header class="sticky top-0 z-40 bg-surface dark:bg-surface-container-lowest border-b border-primary dark:border-outline">
+<div class="flex justify-between items-center w-full px-5 py-3.5 max-w-xl mx-auto">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="calendar_today">calendar_today</span>
+<div class="flex items-baseline gap-2">
+<span class="text-headline-sm font-headline-sm uppercase text-primary dark:text-inverse-primary tracking-widest">TODAY / 24</span>
+<span class="px-1.5 py-0.5 bg-primary text-on-primary text-label-sm font-label-sm tracking-wider uppercase">OCT 05, 2026</span>
+</div>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Search" class="p-2 border border-primary bg-surface-container-lowest text-primary hover:bg-primary hover:text-on-primary transition-none flex items-center justify-center" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="search">search</span>
+</button>
+</div>
+</div>
+</header>
+<!-- MAIN SCROLLABLE DRAFTING CANVAS -->
+<main class="flex-1 w-full max-w-xl mx-auto px-4 pt-3 pb-24 flex flex-col drafting-grid-pattern">
+<!-- METRICS & PROGRESS SECTION -->
+<section class="mb-4 bg-surface-container-lowest border border-primary p-3 flex flex-col gap-2.5">
+<div class="flex items-center justify-between text-label-sm font-label-sm uppercase tracking-wider">
+<span class="font-bold text-primary">01 / 04 COMPLETED</span>
+<span class="flex items-center gap-1 text-secondary">
+<span class="inline-block w-1.5 h-1.5 bg-primary"></span> 7-DAY STREAK
+        </span>
+</div>
+<!-- Segmented architectural progress meter -->
+<div class="w-full grid grid-cols-4 gap-1 h-1.5 bg-surface-container">
+<div class="bg-primary h-full"></div>
+<div class="bg-surface-container-high h-full"></div>
+<div class="bg-surface-container-high h-full"></div>
+<div class="bg-surface-container-high h-full"></div>
+</div>
+<!-- Category Filter Pills -->
+<div class="flex items-center gap-1.5 overflow-x-auto pt-0.5">
+<button class="px-2.5 py-1 text-label-sm font-label-sm bg-primary text-on-primary border border-primary uppercase tracking-wider">
+          ALL (04)
+        </button>
+<button class="px-2.5 py-1 text-label-sm font-label-sm bg-surface-container-lowest text-primary border border-primary hover:bg-primary hover:text-on-primary uppercase tracking-wider transition-none">
+          WORK (02)
+        </button>
+<button class="px-2.5 py-1 text-label-sm font-label-sm bg-surface-container-lowest text-primary border border-primary hover:bg-primary hover:text-on-primary uppercase tracking-wider transition-none">
+          PERSONAL (01)
+        </button>
+<button class="px-2.5 py-1 text-label-sm font-label-sm bg-surface-container-lowest text-primary border border-primary hover:bg-primary hover:text-on-primary uppercase tracking-wider transition-none">
+          ERRANDS (01)
+        </button>
+</div>
+</section>
+<!-- DOWNWARD LAYERED CARD STACK (Cascade flipped downwards) -->
+<section class="relative w-full my-auto py-1">
+<!-- Lateral swipe gestures cues flanking the deck -->
+<div class="flex justify-between items-center text-label-sm font-label-sm text-secondary uppercase tracking-widest px-1 mb-1">
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="west">west</span> DISMISS / LATER
+        </span>
+<span class="flex items-center gap-1">
+          COMPLETE <span class="material-symbols-outlined text-[14px]" data-icon="east">east</span>
+</span>
+</div>
+<!-- The Cascade Deck Container -->
+<div class="relative w-full pt-1 pb-14">
+<!-- DECK LAYER 4 (Bottom-most peek: +36px downward offset, narrower) -->
+<div class="absolute inset-x-5 top-9 h-[340px] bg-surface-container-high rounded-2xl border-2 border-primary z-0 opacity-70 pointer-events-none flex items-end justify-between px-4 pb-2">
+<span class="text-label-sm font-label-sm text-secondary uppercase font-bold tracking-widest">#04 ERRANDS</span>
+<span class="text-label-sm font-label-sm text-secondary font-mono">DUE 18:30</span>
+</div>
+<!-- DECK LAYER 3 (Middle peek: +24px downward offset, intermediate width) -->
+<div class="absolute inset-x-3.5 top-6 h-[340px] bg-surface-container-low rounded-2xl border-2 border-primary z-10 opacity-90 pointer-events-none flex items-end justify-between px-4 pb-2">
+<span class="text-label-sm font-label-sm text-secondary uppercase font-bold tracking-widest">#03 PERSONAL</span>
+<span class="text-label-sm font-label-sm text-secondary font-mono">DUE 17:00</span>
+</div>
+<!-- DECK LAYER 2 (First under-peek: +12px downward offset) -->
+<div class="absolute inset-x-2 top-3 h-[340px] bg-surface-container-lowest rounded-2xl border-2 border-primary z-20 pointer-events-none flex items-end justify-between px-4 pb-2.5">
+<span class="text-label-sm font-label-sm text-primary uppercase font-bold tracking-widest">#02 ARCHITECTURAL DRAFT REVIEW</span>
+<span class="text-label-sm font-label-sm text-primary font-mono font-bold">DUE 16:00</span>
+</div>
+<!-- FRONT-MOST ACTIVE CARD (Card 01 - Top Layer at focal plane) -->
+<article class="relative z-30 bg-surface-container-lowest rounded-2xl border-2 border-primary p-5 sm:p-6 transition-transform">
+<!-- Card Top Meta Header -->
+<div class="flex items-center justify-between pb-3.5 border-b border-primary/20">
+<div class="flex items-center gap-1.5 flex-wrap">
+<span class="px-2 py-0.5 bg-primary text-on-primary text-label-sm font-label-sm tracking-wider uppercase">
+                [NOW // FOCUS]
+              </span>
+<span class="px-2 py-0.5 border border-primary text-primary text-label-sm font-label-sm tracking-wider uppercase">
+                [WORK]
+              </span>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm font-label-sm text-error border border-error px-1.5 py-0.5 font-bold uppercase tracking-wider">
+                [HIGH PRIORITY]
+              </span>
+<span class="text-label-sm font-label-sm text-primary font-mono font-bold">
+                DUE 14:00
+              </span>
+</div>
+</div>
+<!-- Card Core Content -->
+<div class="py-5">
+<h1 class="text-headline-md font-headline-md text-primary uppercase tracking-tight leading-tight mb-2.5">
+              PREP PRESENTATION FOR TEAM SYNC
+            </h1>
+<p class="text-body-md font-body-md text-secondary leading-relaxed">
+              Outline key milestones, review budget slide, and check demo slides before sync call.
+            </p>
+</div>
+<!-- Interactive Row -->
+<div class="pt-3 pb-4 border-t border-primary/20 flex flex-wrap items-center justify-between gap-3">
+<!-- Mark Complete Interactive Checkbox -->
+<label class="flex items-center gap-2 cursor-pointer group">
+<input class="sr-only peer" type="checkbox"/>
+<div class="w-5 h-5 border border-primary bg-surface-container-lowest peer-checked:bg-primary flex items-center justify-center transition-none">
+<span class="material-symbols-outlined text-[16px] text-on-primary hidden peer-checked:block" data-icon="check">check</span>
+</div>
+<span class="text-label-sm font-label-sm uppercase tracking-wider text-primary group-hover:underline">
+                [ ] MARK COMPLETE
+              </span>
+</label>
+<!-- Action Button -->
+<button class="px-3.5 py-2 bg-primary text-on-primary text-label-sm font-label-sm uppercase tracking-wider border border-primary hover:bg-surface-container-lowest hover:text-primary transition-none flex items-center gap-1" type="button">
+<span>OPEN SLIDES</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</button>
+</div>
+<!-- Card Footnote Affordance -->
+<div class="pt-3 border-t border-primary/10 flex items-center justify-between text-label-sm font-label-sm text-secondary uppercase tracking-widest">
+<span>CARD 01 OF 04</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="touch_app">touch_app</span>
+              SWIPE OR TAP TO EXPAND
+            </span>
+</div>
+</article>
+</div>
+</section>
+<!-- BELOW STACK CONTROLS -->
+<section class="mt-4 flex flex-col items-center gap-2.5">
+<!-- Stack Expand Pill Button -->
+<button class="w-full py-2 bg-surface-container-low border border-primary text-primary text-label-sm font-label-sm uppercase tracking-widest hover:bg-primary hover:text-on-primary transition-none flex items-center justify-center gap-1.5" type="button">
+<span class="material-symbols-outlined text-[14px]" data-icon="expand_more">expand_more</span>
+        [ TAP STACK TO EXPAND (4 CARDS) ]
+      </button>
+<!-- Primary Action Row -->
+<div class="w-full flex items-center gap-2">
+<button class="flex-1 h-12 bg-primary text-on-primary text-label-lg font-label-lg uppercase tracking-wider border border-primary flex items-center justify-center gap-2 hover:bg-surface-container-lowest hover:text-primary transition-none" type="button">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+          + ADD TASK
+        </button>
+<button aria-label="Toggle View" class="w-12 h-12 bg-surface-container-lowest text-primary border border-primary flex items-center justify-center hover:bg-primary hover:text-on-primary transition-none" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="grid_view">grid_view</span>
+</button>
+</div>
+</section>
+</main>
+<!-- BOTTOM NAVIGATION BAR (Shared Component JSON anchor) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-16 border-t border-primary dark:border-outline bg-surface dark:bg-surface-container-lowest">
+<!-- Tab 1: Today (ACTIVE - style_active_navigation) -->
+<button class="flex flex-1 flex-col items-center justify-center bg-primary text-on-primary rounded-none py-2 gap-1 transition-none" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="check_box" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_box</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Today</span>
+</button>
+<!-- Tab 2: Upcoming (INACTIVE - style_inactive_navigation) -->
+<button class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 hover:bg-surface-container-high transition-none" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_month">calendar_month</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Upcoming</span>
+</button>
+<!-- Tab 3: Lists (INACTIVE - style_inactive_navigation) -->
+<button class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 hover:bg-surface-container-high transition-none" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Lists</span>
+</button>
+<!-- Tab 4: Settings (INACTIVE - style_inactive_navigation) -->
+<button class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 last:border-r-0 hover:bg-surface-container-high transition-none" type="button">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Settings</span>
+</button>
+</nav>
+</body></html>

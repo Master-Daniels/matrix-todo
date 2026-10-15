@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+
+<html class="h-full bg-background text-on-background" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Add Task — Modal Sheet</title>
+<!-- Google Fonts: Space Grotesk & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS with CDN plugin config -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-error-container": "#93000a",
+            "on-primary-fixed": "#1b1b1b",
+            "background": "#f9f9f9",
+            "outline-variant": "#cfc4c5",
+            "tertiary-fixed": "#e2e2e2",
+            "secondary-container": "#e3e2e2",
+            "secondary": "#5e5e5e",
+            "primary": "#000000",
+            "surface-container-lowest": "#ffffff",
+            "surface": "#f9f9f9",
+            "surface-container": "#eeeeee",
+            "surface-container-highest": "#e2e2e2",
+            "primary-fixed": "#e2e2e2",
+            "on-primary-fixed-variant": "#474747",
+            "surface-bright": "#f9f9f9",
+            "on-secondary-container": "#646464",
+            "inverse-on-surface": "#f1f1f1",
+            "on-error": "#ffffff",
+            "primary-fixed-dim": "#c6c6c6",
+            "surface-container-high": "#e8e8e8",
+            "on-tertiary-fixed-variant": "#474747",
+            "surface-tint": "#5e5e5e",
+            "inverse-surface": "#2f3131",
+            "on-secondary-fixed-variant": "#464747",
+            "tertiary": "#000000",
+            "on-secondary": "#ffffff",
+            "surface-container-low": "#f3f3f3",
+            "outline": "#7e7576",
+            "on-surface": "#1a1c1c",
+            "inverse-primary": "#c6c6c6",
+            "on-secondary-fixed": "#1b1c1c",
+            "surface-variant": "#e2e2e2",
+            "on-primary-container": "#848484",
+            "secondary-fixed-dim": "#c7c6c6",
+            "on-surface-variant": "#4c4546",
+            "secondary-fixed": "#e3e2e2",
+            "tertiary-container": "#1b1b1b",
+            "surface-dim": "#dadada",
+            "on-tertiary": "#ffffff",
+            "on-background": "#1a1c1c",
+            "on-tertiary-container": "#848484",
+            "tertiary-fixed-dim": "#c6c6c6",
+            "error": "#ba1a1a",
+            "on-tertiary-fixed": "#1b1b1b",
+            "error-container": "#ffdad6",
+            "on-primary": "#ffffff",
+            "primary-container": "#1b1b1b"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "2xl": "1rem",
+            "3xl": "1.5rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "gutter": "1rem",
+            "space-lg": "1.5rem",
+            "space-xs": "0.25rem",
+            "space-md": "1rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "gutter-mobile": "0.75rem",
+            "margin": "1.5rem",
+            "margin-mobile": "1.25rem"
+          },
+          "fontFamily": {
+            "headline-lg-mobile": ["Space Grotesk"],
+            "headline-lg": ["Space Grotesk"],
+            "headline-md": ["Space Grotesk"],
+            "body-md": ["Inter"],
+            "label-sm": ["Space Grotesk"],
+            "body-sm": ["Inter"],
+            "label-md": ["Space Grotesk"],
+            "title-md": ["Space Grotesk"],
+            "headline-sm": ["Space Grotesk"],
+            "body-lg": ["Inter"],
+            "label-lg": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+            "headline-lg": ["36px", { "lineHeight": "44px", "fontWeight": "600" }],
+            "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "fontWeight": "500" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "label-md": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "label-lg": ["12px", { "lineHeight": "16px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="min-h-screen bg-surface text-on-surface font-body-md text-body-md antialiased overflow-hidden select-none">
+<!-- ========================================================================= -->
+<!-- BACKGROUND SCREEN: Decluttered Today Home Screen (Dimmed Underneath)      -->
+<!-- ========================================================================= -->
+<div class="relative w-full min-h-screen flex flex-col justify-between max-w-md mx-auto filter blur-[1px] opacity-40 pointer-events-none border-x border-primary/10">
+<!-- TopAppBar Component (Rendered verbatim as Anchor Blueprint) -->
+<header class="flex justify-between items-center w-full px-5 py-4 border-b border-primary bg-surface text-primary">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="calendar_today">calendar_today</span>
+<span class="text-headline-sm font-headline-sm tracking-widest uppercase text-primary">TODAY / 24</span>
+</div>
+<div class="flex items-center">
+<span class="material-symbols-outlined text-primary text-xl cursor-pointer" data-icon="search">search</span>
+</div>
+</header>
+<!-- Main Background Feed: Card Deck Ledger -->
+<main class="flex-1 p-5 space-y-4 overflow-hidden">
+<!-- Ledger Ratio & Progress -->
+<div class="flex items-center justify-between pb-2 border-b border-primary/20">
+<span class="font-label-md text-label-md uppercase tracking-wider text-primary">02 / 06 COMPLETED</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-secondary">ARCHITECTURAL LEDGER</span>
+</div>
+<!-- Card Deck Stack (Simulated Home Screen) -->
+<div class="space-y-3">
+<!-- Task Card 1 (Active) -->
+<div class="bg-surface-container-lowest border border-primary p-4 rounded-xl shadow-none">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 border border-primary bg-surface-container-lowest flex items-center justify-center"></div>
+<div>
+<p class="font-title-md text-title-md text-primary">Finalize structural cantilever specs</p>
+<p class="font-body-sm text-body-sm text-secondary">Due 11:30 • Structural Studio</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm border border-primary px-2 py-0.5 uppercase">HIGH</span>
+</div>
+</div>
+<!-- Task Card 2 (Done) -->
+<div class="bg-surface-container-low border border-primary/40 p-4 rounded-xl line-through text-secondary">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 border border-primary bg-primary flex items-center justify-center text-on-primary">
+<span class="material-symbols-outlined text-xs" data-icon="check">check</span>
+</div>
+<div>
+<p class="font-title-md text-title-md text-secondary">Submit municipal zoning schematics</p>
+<p class="font-body-sm text-body-sm text-secondary">Archived 09:15</p>
+</div>
+</div>
+</div>
+<!-- Task Card 3 -->
+<div class="bg-surface-container-lowest border border-primary p-4 rounded-xl">
+<div class="flex items-start justify-between">
+<div class="flex items-center gap-3">
+<div class="w-5 h-5 border border-primary bg-surface-container-lowest"></div>
+<div>
+<p class="font-title-md text-title-md text-primary">Review thermal barrier cross-sections</p>
+<p class="font-body-sm text-body-sm text-secondary">Due 16:45 • Engineering</p>
+</div>
+</div>
+<span class="font-label-sm text-label-sm border border-primary px-2 py-0.5 uppercase">MED</span>
+</div>
+</div>
+</div>
+</main>
+<!-- Bottom Navigation Bar (Docked Background Anchor) -->
+<nav class="w-full flex justify-around items-stretch h-16 border-t border-primary bg-surface text-primary">
+<div class="flex flex-1 flex-col items-center justify-center bg-primary text-on-primary py-2 gap-1">
+<span class="material-symbols-outlined text-lg" data-icon="check_box">check_box</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Today</span>
+</div>
+<div class="flex flex-1 flex-col items-center justify-center text-secondary py-2 gap-1 border-r border-primary/20">
+<span class="material-symbols-outlined text-lg" data-icon="calendar_month">calendar_month</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Upcoming</span>
+</div>
+<div class="flex flex-1 flex-col items-center justify-center text-secondary py-2 gap-1 border-r border-primary/20">
+<span class="material-symbols-outlined text-lg" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Lists</span>
+</div>
+<div class="flex flex-1 flex-col items-center justify-center text-secondary py-2 gap-1">
+<span class="material-symbols-outlined text-lg" data-icon="tune">tune</span>
+<span class="font-label-sm text-label-sm uppercase tracking-wider">Settings</span>
+</div>
+</nav>
+</div>
+<!-- ========================================================================= -->
+<!-- MODAL SHEET OVERLAY & BOTTOM CONTAINER                                    -->
+<!-- ========================================================================= -->
+<div class="fixed inset-0 z-50 flex flex-col justify-end bg-primary/40 backdrop-blur-[2px]">
+<!-- Tap-outside dismiss touch area -->
+<div class="flex-1 w-full max-w-md mx-auto" onclick="window.history.back()"></div>
+<!-- Architectural Bottom Modal Sheet Card -->
+<div class="w-full max-w-md mx-auto bg-surface-container-lowest border-t-2 border-x-2 border-primary rounded-t-3xl shadow-[0_-8px_30px_rgba(0,0,0,0.12)] flex flex-col max-h-[813px] overflow-hidden transition-transform duration-300">
+<!-- Tactile Drag Indicator Pill -->
+<div class="w-full pt-3 pb-2 flex justify-center items-center bg-surface-container-lowest cursor-grab active:cursor-grabbing">
+<div class="w-12 h-1.5 bg-primary rounded-full"></div>
+</div>
+<!-- Modal Header -->
+<div class="px-6 py-3 flex items-center justify-between border-b border-primary/10 bg-surface-container-lowest">
+<div class="flex items-center gap-2">
+<span class="font-headline-sm text-headline-sm tracking-tight text-primary font-bold">[+] NEW TASK</span>
+<span class="font-label-sm text-label-sm px-1.5 py-0.5 border border-primary/30 uppercase tracking-widest text-secondary ml-1">DECK ENTRY</span>
+</div>
+<button aria-label="Close Modal" class="w-8 h-8 flex items-center justify-center border border-primary rounded-lg text-primary hover:bg-primary hover:text-on-primary transition-colors text-sm font-label-md" type="button">
+          ✕
+        </button>
+</div>
+<!-- Scrollable Modal Sheet Content -->
+<div class="px-6 py-5 overflow-y-auto space-y-5 bg-surface-container-lowest">
+<!-- Task Title Input -->
+<div class="space-y-2">
+<label class="block font-label-sm text-label-sm uppercase tracking-widest text-secondary">
+            Task Definition &amp; Objective
+          </label>
+<div class="relative">
+<input autofocus="" class="w-full px-4 py-3.5 bg-surface-container-low border-2 border-primary rounded-xl text-primary font-title-md text-title-md placeholder:text-secondary/60 focus:bg-surface-container-lowest focus:outline-none focus:ring-0 focus:border-primary transition-all" placeholder="What needs to be done?" type="text" value="Coordinate facade mock-up inspection"/>
+</div>
+</div>
+<!-- Category Horizontal Pill Selector -->
+<div class="space-y-2">
+<div class="flex justify-between items-center">
+<label class="block font-label-sm text-label-sm uppercase tracking-widest text-secondary">Category Group</label>
+<span class="font-label-sm text-label-sm text-secondary/70">SELECT ONE</span>
+</div>
+<div class="grid grid-cols-4 gap-2">
+<!-- Selected Pill -->
+<button class="py-2.5 px-1 border-2 border-primary bg-primary text-on-primary font-label-md text-label-md uppercase tracking-wider text-center rounded-xl flex items-center justify-center gap-1 shadow-none" type="button">
+              WORK
+            </button>
+<button class="py-2.5 px-1 border border-primary/40 bg-surface-container-lowest text-primary hover:border-primary font-label-md text-label-md uppercase tracking-wider text-center rounded-xl flex items-center justify-center gap-1" type="button">
+              PERSONAL
+            </button>
+<button class="py-2.5 px-1 border border-primary/40 bg-surface-container-lowest text-primary hover:border-primary font-label-md text-label-md uppercase tracking-wider text-center rounded-xl flex items-center justify-center gap-1" type="button">
+              ERRANDS
+            </button>
+<button class="py-2.5 px-1 border border-primary/40 bg-surface-container-lowest text-primary hover:border-primary font-label-md text-label-md uppercase tracking-wider text-center rounded-xl flex items-center justify-center gap-1" type="button">
+              FAMILY
+            </button>
+</div>
+</div>
+<!-- Stack Placement / Position Toggle (Architectural Card Deck Concept) -->
+<div class="space-y-2 p-3.5 bg-surface-container-low border border-primary/20 rounded-2xl">
+<div class="flex items-center justify-between pb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary font-bold">DECK STACK POSITION</span>
+<span class="material-symbols-outlined text-sm text-secondary" data-icon="layers">layers</span>
+</div>
+<div class="grid grid-cols-2 gap-2">
+<!-- Active Option -->
+<button class="px-3 py-2.5 bg-primary text-on-primary border-2 border-primary rounded-xl font-label-md text-label-md uppercase tracking-wide flex flex-col items-center justify-center gap-0.5 text-center" type="button">
+<span class="font-bold flex items-center gap-1">
+<span class="material-symbols-outlined text-xs" data-icon="vertical_align_top">vertical_align_top</span>
+                TOP OF STACK
+              </span>
+<span class="text-[9px] text-on-primary/70 tracking-normal capitalize">(Next up in queue)</span>
+</button>
+<!-- Inactive Option -->
+<button class="px-3 py-2.5 bg-surface-container-lowest text-primary border border-primary/40 hover:border-primary rounded-xl font-label-md text-label-md uppercase tracking-wide flex flex-col items-center justify-center gap-0.5 text-center" type="button">
+<span class="font-medium flex items-center gap-1 text-secondary">
+<span class="material-symbols-outlined text-xs" data-icon="vertical_align_bottom">vertical_align_bottom</span>
+                BOTTOM OF STACK
+              </span>
+<span class="text-[9px] text-secondary/60 tracking-normal capitalize">(Append to ledger)</span>
+</button>
+</div>
+</div>
+<!-- Due Time & Priority: Spaced Out Rounded Boxes -->
+<div class="grid grid-cols-2 gap-3 pt-1">
+<!-- Due Time Box -->
+<div class="border-2 border-primary rounded-2xl p-3 bg-surface-container-lowest flex flex-col justify-between">
+<div class="flex items-center justify-between text-secondary mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">EXECUTION</span>
+<span class="material-symbols-outlined text-base text-primary" data-icon="schedule">schedule</span>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-secondary uppercase">Due Target</p>
+<div class="flex items-baseline gap-1 mt-0.5">
+<span class="font-title-md text-title-md text-primary font-bold">TODAY</span>
+<span class="font-label-md text-label-md text-primary bg-surface-container px-1.5 py-0.5 rounded border border-primary/20">15:00</span>
+</div>
+</div>
+</div>
+<!-- Priority Segmented Box -->
+<div class="border-2 border-primary rounded-2xl p-3 bg-surface-container-lowest flex flex-col justify-between">
+<div class="flex items-center justify-between text-secondary mb-1">
+<span class="font-label-sm text-label-sm uppercase tracking-wider">PRIORITY</span>
+<span class="material-symbols-outlined text-base text-primary" data-icon="flag">flag</span>
+</div>
+<div class="flex items-center gap-1 mt-1">
+<button class="flex-1 py-1 text-center font-label-sm text-label-sm uppercase border border-primary/30 rounded-lg text-secondary" type="button">
+                LOW
+              </button>
+<button class="flex-1 py-1 text-center font-label-sm text-label-sm uppercase border border-primary/30 rounded-lg text-secondary" type="button">
+                MED
+              </button>
+<button class="flex-1 py-1 text-center font-label-sm text-label-sm uppercase border-2 border-primary bg-primary text-on-primary rounded-lg font-bold" type="button">
+                HIGH
+              </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Action Footer Area -->
+<div class="px-6 pt-3 pb-7 border-t border-primary/10 bg-surface-container-lowest space-y-3">
+<!-- High-Contrast Full-Width Action Button -->
+<button class="w-full h-12 bg-primary text-on-primary border-2 border-primary rounded-xl font-title-md text-title-md font-bold tracking-wide uppercase flex items-center justify-center gap-2 hover:bg-neutral-900 active:translate-x-0.5 active:translate-y-0.5 transition-none shadow-none cursor-pointer" type="button">
+<span>ADD TASK TO DECK</span>
+<span class="text-lg leading-none font-sans">↵</span>
+</button>
+<!-- Subtle Discard Action -->
+<div class="text-center">
+<button class="font-label-md text-label-md uppercase tracking-widest text-secondary hover:text-primary transition-colors py-1 cursor-pointer" type="button">
+            DISCARD
+          </button>
+</div>
+</div>
+</div>
+</div>
+</body></html>

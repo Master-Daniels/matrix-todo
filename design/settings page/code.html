@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Settings // Preferences</title>
+<!-- Google Fonts: Space Grotesk & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#2f3131",
+            "surface-dim": "#dadada",
+            "outline-variant": "#cfc4c5",
+            "inverse-primary": "#c6c6c6",
+            "primary-container": "#1b1b1b",
+            "on-tertiary-fixed-variant": "#474747",
+            "surface-container-highest": "#e2e2e2",
+            "secondary": "#5e5e5e",
+            "surface-variant": "#e2e2e2",
+            "surface-container-low": "#f3f3f3",
+            "surface-container": "#eeeeee",
+            "surface-container-high": "#e8e8e8",
+            "on-surface": "#1a1c1c",
+            "on-surface-variant": "#4c4546",
+            "on-tertiary-container": "#848484",
+            "primary-fixed": "#e2e2e2",
+            "on-error-container": "#93000a",
+            "surface-tint": "#5e5e5e",
+            "tertiary": "#000000",
+            "surface-bright": "#f9f9f9",
+            "inverse-on-surface": "#f1f1f1",
+            "on-primary-container": "#848484",
+            "on-primary-fixed-variant": "#474747",
+            "on-error": "#ffffff",
+            "on-background": "#1a1c1c",
+            "tertiary-container": "#1b1b1b",
+            "primary-fixed-dim": "#c6c6c6",
+            "on-secondary-fixed": "#1b1c1c",
+            "on-secondary-fixed-variant": "#464747",
+            "on-primary-fixed": "#1b1b1b",
+            "background": "#f9f9f9",
+            "surface": "#f9f9f9",
+            "secondary-fixed": "#e3e2e2",
+            "on-primary": "#ffffff",
+            "secondary-container": "#e3e2e2",
+            "on-tertiary-fixed": "#1b1b1b",
+            "outline": "#7e7576",
+            "tertiary-fixed": "#e2e2e2",
+            "secondary-fixed-dim": "#c7c6c6",
+            "primary": "#000000",
+            "error-container": "#ffdad6",
+            "on-tertiary": "#ffffff",
+            "error": "#ba1a1a",
+            "on-secondary-container": "#646464",
+            "tertiary-fixed-dim": "#c6c6c6",
+            "surface-container-lowest": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0.25rem",
+            "lg": "0.5rem",
+            "xl": "0.75rem",
+            "full": "9999px"
+          },
+          "spacing": {
+            "margin-mobile": "1.25rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "gutter-mobile": "0.75rem",
+            "margin": "1.5rem",
+            "space-md": "1rem",
+            "gutter": "1rem"
+          },
+          "fontFamily": {
+            "label-md": ["Space Grotesk"],
+            "label-lg": ["Space Grotesk"],
+            "body-lg": ["Inter"],
+            "headline-lg": ["Space Grotesk"],
+            "label-sm": ["Space Grotesk"],
+            "headline-sm": ["Space Grotesk"],
+            "headline-md": ["Space Grotesk"],
+            "headline-lg-mobile": ["Space Grotesk"],
+            "body-sm": ["Inter"],
+            "body-md": ["Inter"],
+            "title-md": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "label-md": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "label-lg": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "headline-lg": ["36px", { "lineHeight": "44px", "fontWeight": "600" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "fontWeight": "500" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+            "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      display: inline-block;
+      vertical-align: middle;
+      line-height: 1;
+    }
+    /* Clean custom switch animation without rounded pills to match brutalist lines */
+    .switch-checkbox:checked + .switch-label .switch-indicator {
+      transform: translateX(20px);
+      background-color: #000000;
+    }
+    .switch-checkbox:checked + .switch-label {
+      background-color: #000000;
+    }
+    .switch-checkbox:checked + .switch-label .switch-indicator {
+      background-color: #ffffff;
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface antialiased min-h-screen pb-24 selection:bg-primary selection:text-on-primary">
+<!-- Top App Bar (Architectural Header) -->
+<header class="sticky top-0 z-40 bg-surface flex justify-between items-center w-full px-5 py-4 border-b border-primary">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-xl" data-icon="tune">tune</span>
+<h1 class="text-headline-sm font-headline-sm uppercase text-primary tracking-widest">
+        SETTINGS // PREFERENCES
+      </h1>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-widest border border-primary px-2 py-1">
+        v0.1
+      </span>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="max-w-md mx-auto w-full">
+<!-- 00 // PROFILE SECTION -->
+<section class="border-b border-primary bg-surface-container-lowest p-6">
+<div class="text-label-sm font-label-sm uppercase text-secondary tracking-widest mb-4">
+        00 // PROFILE
+      </div>
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<!-- Geometric Avatar -->
+<div class="w-14 h-14 border border-primary bg-surface-container-low flex items-center justify-center relative">
+<span class="material-symbols-outlined text-primary text-2xl" data-icon="person">person</span>
+<div class="absolute -top-1 -right-1 w-2.5 h-2.5 bg-primary"></div>
+</div>
+<div>
+<div class="text-headline-sm font-headline-sm uppercase text-primary tracking-wider leading-none">
+              USER
+            </div>
+<div class="text-body-sm font-body-sm text-secondary mt-1">
+              On-device local profile
+            </div>
+</div>
+</div>
+<button class="border border-primary bg-primary text-on-primary px-4 py-2.5 text-label-md font-label-md uppercase tracking-wider flex items-center gap-2 hover:bg-surface hover:text-primary transition-none active:translate-x-0.5 active:translate-y-0.5">
+<span class="material-symbols-outlined text-sm" data-icon="edit">edit</span>
+<span>EDIT PROFILE</span>
+</button>
+</div>
+</section>
+<!-- 01 // APP PREFERENCES -->
+<section class="border-b border-primary bg-surface">
+<div class="p-4 border-b border-primary/20 bg-surface-container-low flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase text-primary tracking-widest">
+          01 // PREFERENCES
+        </span>
+<span class="text-label-sm font-label-sm text-secondary">
+          LAYOUT &amp; APPEARANCE
+        </span>
+</div>
+<div class="p-6 space-y-6">
+<!-- Theme Mode Toggle -->
+<div>
+<div class="flex justify-between items-baseline mb-2.5">
+<label class="text-title-md font-title-md uppercase text-primary tracking-wider">
+              THEME
+            </label>
+<span class="text-label-sm font-label-sm text-secondary uppercase">APPEARANCE</span>
+</div>
+<div class="grid grid-cols-3 border border-primary bg-surface-container-lowest">
+<!-- Light Selected -->
+<button class="py-3 text-center border-r border-primary bg-primary text-on-primary text-label-md font-label-md uppercase tracking-wider flex items-center justify-center gap-1.5 transition-none">
+<span>[ LIGHT ]</span>
+<span class="w-1.5 h-1.5 bg-on-primary inline-block"></span>
+</button>
+<button class="py-3 text-center border-r border-primary text-secondary hover:text-primary text-label-md font-label-md uppercase tracking-wider transition-none">
+              [ DARK ]
+            </button>
+<button class="py-3 text-center text-secondary hover:text-primary text-label-md font-label-md uppercase tracking-wider transition-none">
+              [ AUTO ]
+            </button>
+</div>
+</div>
+<!-- Start of Week -->
+<div>
+<div class="flex justify-between items-baseline mb-2.5">
+<label class="text-title-md font-title-md uppercase text-primary tracking-wider">
+              START OF WEEK
+            </label>
+<span class="text-label-sm font-label-sm text-secondary uppercase">CALENDAR</span>
+</div>
+<div class="grid grid-cols-2 border border-primary bg-surface-container-lowest">
+<button class="py-3 text-center border-r border-primary bg-primary text-on-primary text-label-md font-label-md uppercase tracking-wider flex items-center justify-center gap-1.5 transition-none">
+<span>[ MONDAY ]</span>
+<span class="w-1.5 h-1.5 bg-on-primary inline-block"></span>
+</button>
+<button class="py-3 text-center text-secondary hover:text-primary text-label-md font-label-md uppercase tracking-wider transition-none">
+              [ SUNDAY ]
+            </button>
+</div>
+</div>
+</div>
+</section>
+<!-- 02 // NOTIFICATIONS -->
+<section class="border-b border-primary bg-surface">
+<div class="p-4 border-b border-primary/20 bg-surface-container-low flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase text-primary tracking-widest">
+          02 // NOTIFICATIONS
+        </span>
+<span class="text-label-sm font-label-sm text-secondary">
+          SCHEDULED ALERTS
+        </span>
+</div>
+<div class="p-6 space-y-5">
+<!-- Daily Morning Briefing Toggle -->
+<div class="flex items-center justify-between py-2 border-b border-primary/10">
+<div>
+<div class="flex items-center gap-2">
+<span class="text-title-md font-title-md uppercase text-primary tracking-wide">
+                DAILY MORNING BRIEFING
+              </span>
+<span class="border border-primary px-1.5 py-0.5 text-label-sm font-label-sm uppercase bg-surface-container-low">
+                08:00 AM
+              </span>
+</div>
+<p class="text-body-sm font-body-sm text-secondary mt-0.5">
+              Summary of daily goals and deadlines
+            </p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer select-none">
+<input checked="" class="sr-only switch-checkbox" type="checkbox"/>
+<div class="w-12 h-6 border border-primary bg-surface transition-none switch-label flex items-center px-0.5">
+<div class="w-5 h-5 bg-primary transition-transform duration-100 ease-linear switch-indicator"></div>
+</div>
+</label>
+</div>
+<!-- Evening Reminder Toggle -->
+<div class="flex items-center justify-between py-2">
+<div>
+<div class="flex items-center gap-2">
+<span class="text-title-md font-title-md uppercase text-primary tracking-wide">
+                EVENING REMINDER
+              </span>
+<span class="border border-outline px-1.5 py-0.5 text-label-sm font-label-sm uppercase text-secondary bg-surface">
+                20:00 PM
+              </span>
+</div>
+<p class="text-body-sm font-body-sm text-secondary mt-0.5">
+              Review remaining tasks before day close
+            </p>
+</div>
+<label class="relative inline-flex items-center cursor-pointer select-none">
+<input class="sr-only switch-checkbox" type="checkbox"/>
+<div class="w-12 h-6 border border-primary bg-surface transition-none switch-label flex items-center px-0.5">
+<div class="w-5 h-5 bg-outline transition-transform duration-100 ease-linear switch-indicator"></div>
+</div>
+</label>
+</div>
+</div>
+</section>
+<!-- 03 // DATA & BACKUP -->
+<section class="border-b border-primary bg-surface">
+<div class="p-4 border-b border-primary/20 bg-surface-container-low flex justify-between items-center">
+<span class="text-label-sm font-label-sm uppercase text-primary tracking-widest">
+          03 // DATA &amp; BACKUP
+        </span>
+<span class="text-label-sm font-label-sm text-secondary">
+          STORAGE
+        </span>
+</div>
+<div class="p-6">
+<div class="grid grid-cols-2 gap-4">
+<!-- Export Card -->
+<div class="border border-primary p-4 bg-surface-container-lowest flex flex-col justify-between h-36">
+<div>
+<span class="text-label-sm font-label-sm uppercase text-secondary">PORTABILITY</span>
+<h3 class="text-title-md font-title-md uppercase text-primary mt-1">EXPORT</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1 line-clamp-2">Save JSON data bundle to disk</p>
+</div>
+<button class="w-full border border-primary bg-surface py-2 text-label-sm font-label-sm uppercase font-semibold text-primary hover:bg-primary hover:text-on-primary transition-none flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-sm" data-icon="file_download">file_download</span>
+<span>EXPORT</span>
+</button>
+</div>
+<!-- Import Card -->
+<div class="border border-primary p-4 bg-surface-container-lowest flex flex-col justify-between h-36">
+<div>
+<span class="text-label-sm font-label-sm uppercase text-secondary">RECOVERY</span>
+<h3 class="text-title-md font-title-md uppercase text-primary mt-1">IMPORT</h3>
+<p class="text-body-sm font-body-sm text-secondary mt-1 line-clamp-2">Restore state from archive file</p>
+</div>
+<button class="w-full border border-primary bg-surface py-2 text-label-sm font-label-sm uppercase font-semibold text-primary hover:bg-primary hover:text-on-primary transition-none flex items-center justify-center gap-1.5">
+<span class="material-symbols-outlined text-sm" data-icon="file_upload">file_upload</span>
+<span>IMPORT</span>
+</button>
+</div>
+</div>
+</div>
+</section>
+<!-- 04 // DANGER ZONE -->
+<section class="p-6 my-2">
+<div class="border border-error p-5 bg-surface-container-lowest flex flex-col items-center text-center">
+<div class="flex items-center gap-2 text-error mb-2">
+<span class="material-symbols-outlined text-lg" data-icon="warning">warning</span>
+<span class="text-label-sm font-label-sm uppercase tracking-widest font-semibold">IRREVERSIBLE ACTION</span>
+</div>
+<p class="text-body-sm font-body-sm text-secondary mb-4 max-w-xs">
+          Permanently remove all tasks, lists, logs, and custom preferences.
+        </p>
+<button class="w-full max-w-xs border border-error text-error bg-transparent py-3 text-label-md font-label-md uppercase tracking-widest hover:bg-error hover:text-on-error transition-none active:translate-x-0.5 active:translate-y-0.5">
+          [ Reset All Data ]
+        </button>
+</div>
+<div class="text-center mt-6">
+<p class="text-label-sm font-label-sm uppercase text-secondary tracking-widest">
+          CONSTRUCT ENGINE // MINIMALIST TODO
+        </p>
+</div>
+</section>
+</main>
+<!-- Docked Bottom Navigation Bar (Semantic Shared Component) -->
+<!-- Active Tab: 'Settings' based on page intent -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-16 border-t border-primary dark:border-outline bg-surface dark:bg-surface-container-lowest">
+<!-- Tab: Today -->
+<a class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 last:border-r-0 hover:bg-surface-container-high transition-none" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="check_box">check_box</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Today</span>
+</a>
+<!-- Tab: Upcoming -->
+<a class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 last:border-r-0 hover:bg-surface-container-high transition-none" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="calendar_month">calendar_month</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Upcoming</span>
+</a>
+<!-- Tab: Lists -->
+<a class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 last:border-r-0 hover:bg-surface-container-high transition-none" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Lists</span>
+</a>
+<!-- Tab: Settings (ACTIVE) -->
+<a class="flex flex-1 flex-col items-center justify-center bg-primary text-on-primary rounded-none py-2 gap-1" href="#">
+<span class="material-symbols-outlined text-xl" data-icon="tune">tune</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Settings</span>
+</a>
+</nav>
+</body></html>

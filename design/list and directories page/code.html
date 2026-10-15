@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Lists // Directories</title>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Space Grotesk & Inter -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+    tailwind.config = {
+      darkMode: "class",
+      theme: {
+        extend: {
+          "colors": {
+            "on-secondary": "#ffffff",
+            "inverse-surface": "#2f3131",
+            "surface-dim": "#dadada",
+            "outline-variant": "#cfc4c5",
+            "inverse-primary": "#c6c6c6",
+            "primary-container": "#1b1b1b",
+            "on-tertiary-fixed-variant": "#474747",
+            "surface-container-highest": "#e2e2e2",
+            "secondary": "#5e5e5e",
+            "surface-variant": "#e2e2e2",
+            "surface-container-low": "#f3f3f3",
+            "surface-container": "#eeeeee",
+            "surface-container-high": "#e8e8e8",
+            "on-surface": "#1a1c1c",
+            "on-surface-variant": "#4c4546",
+            "on-tertiary-container": "#848484",
+            "primary-fixed": "#e2e2e2",
+            "on-error-container": "#93000a",
+            "surface-tint": "#5e5e5e",
+            "tertiary": "#000000",
+            "surface-bright": "#f9f9f9",
+            "inverse-on-surface": "#f1f1f1",
+            "on-primary-container": "#848484",
+            "on-primary-fixed-variant": "#474747",
+            "on-error": "#ffffff",
+            "on-background": "#1a1c1c",
+            "tertiary-container": "#1b1b1b",
+            "primary-fixed-dim": "#c6c6c6",
+            "on-secondary-fixed": "#1b1c1c",
+            "on-secondary-fixed-variant": "#464747",
+            "on-primary-fixed": "#1b1b1b",
+            "background": "#f9f9f9",
+            "surface": "#f9f9f9",
+            "secondary-fixed": "#e3e2e2",
+            "on-primary": "#ffffff",
+            "secondary-container": "#e3e2e2",
+            "on-tertiary-fixed": "#1b1b1b",
+            "outline": "#7e7576",
+            "tertiary-fixed": "#e2e2e2",
+            "secondary-fixed-dim": "#c7c6c6",
+            "primary": "#000000",
+            "error-container": "#ffdad6",
+            "on-tertiary": "#ffffff",
+            "error": "#ba1a1a",
+            "on-secondary-container": "#646464",
+            "tertiary-fixed-dim": "#c6c6c6",
+            "surface-container-lowest": "#ffffff"
+          },
+          "borderRadius": {
+            "DEFAULT": "0px",
+            "lg": "0px",
+            "xl": "0px",
+            "full": "0px"
+          },
+          "spacing": {
+            "margin-mobile": "1.25rem",
+            "space-lg": "1.5rem",
+            "space-xl": "2.5rem",
+            "space-sm": "0.5rem",
+            "space-xs": "0.25rem",
+            "gutter-mobile": "0.75rem",
+            "margin": "1.5rem",
+            "space-md": "1rem",
+            "gutter": "1rem"
+          },
+          "fontFamily": {
+            "label-md": ["Space Grotesk"],
+            "label-lg": ["Space Grotesk"],
+            "body-lg": ["Inter"],
+            "headline-lg": ["Space Grotesk"],
+            "label-sm": ["Space Grotesk"],
+            "headline-sm": ["Space Grotesk"],
+            "headline-md": ["Space Grotesk"],
+            "headline-lg-mobile": ["Space Grotesk"],
+            "body-sm": ["Inter"],
+            "body-md": ["Inter"],
+            "title-md": ["Space Grotesk"]
+          },
+          "fontSize": {
+            "label-md": ["11px", { "lineHeight": "14px", "fontWeight": "500" }],
+            "label-lg": ["12px", { "lineHeight": "16px", "fontWeight": "600" }],
+            "body-lg": ["16px", { "lineHeight": "26px", "fontWeight": "400" }],
+            "headline-lg": ["36px", { "lineHeight": "44px", "fontWeight": "600" }],
+            "label-sm": ["10px", { "lineHeight": "12px", "fontWeight": "500" }],
+            "headline-sm": ["20px", { "lineHeight": "28px", "fontWeight": "500" }],
+            "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "500" }],
+            "headline-lg-mobile": ["28px", { "lineHeight": "36px", "fontWeight": "600" }],
+            "body-sm": ["12px", { "lineHeight": "18px", "fontWeight": "400" }],
+            "body-md": ["14px", { "lineHeight": "22px", "fontWeight": "400" }],
+            "title-md": ["16px", { "lineHeight": "22px", "fontWeight": "600" }]
+          }
+        }
+      }
+    }
+  </script>
+<style>
+    body {
+      background-color: #f9f9f9;
+      color: #1a1c1c;
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    .material-symbols-outlined {
+      font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+      line-height: 1;
+    }
+    /* Drafting hairline aesthetic */
+    .architectural-border {
+      border: 1px solid #000000;
+    }
+    .grid-lines-bg {
+      background-size: 24px 24px;
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.03) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.03) 1px, transparent 1px);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen flex flex-col selection:bg-primary selection:text-on-primary">
+<!-- Desktop Notification / Responsive Anchor Container -->
+<div class="max-w-md mx-auto w-full min-h-screen bg-surface flex flex-col architectural-border border-y-0 sm:border-y shadow-none relative pb-36">
+<!-- TopAppBar (Derived from Shared Components JSON) -->
+<header class="flex justify-between items-center w-full px-5 py-4 border-b border-primary dark:border-outline bg-surface dark:bg-surface-container-lowest sticky top-0 z-40">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-primary text-[20px]" data-icon="calendar_today">calendar_today</span>
+<span class="text-headline-sm font-headline-sm tracking-widest uppercase text-primary dark:text-inverse-primary">TODAY / 24</span>
+</div>
+<div class="flex items-center gap-2">
+<button aria-label="Search" class="w-8 h-8 flex items-center justify-center architectural-border bg-surface-container-lowest hover:bg-primary hover:text-on-primary transition-none">
+<span class="material-symbols-outlined text-[18px]" data-icon="search">search</span>
+</button>
+</div>
+</header>
+<!-- Page Header & Summary Section (Decluttered & Spacious) -->
+<section class="px-margin-mobile pt-space-xl pb-space-lg border-b border-primary/20 bg-surface">
+<div class="flex items-baseline justify-between mb-space-sm">
+<h1 class="text-headline-lg-mobile font-headline-lg-mobile tracking-tight uppercase text-primary">
+          LISTS // DIRECTORIES
+        </h1>
+<span class="text-label-sm font-label-sm uppercase tracking-widest text-secondary px-2 py-0.5 border border-primary/20">
+          INDEX
+        </span>
+</div>
+<div class="flex items-center justify-between text-body-sm font-body-sm text-secondary pt-space-xs">
+<p class="font-label-md text-label-md uppercase tracking-wider text-on-surface">
+          4 DIRECTORIES <span class="text-outline">/</span> 7 TASKS ACTIVE
+        </p>
+<div class="flex items-center gap-1.5 font-label-sm text-label-sm uppercase tracking-widest">
+<span class="inline-block w-1.5 h-1.5 bg-primary"></span>
+<span>SYNCED</span>
+</div>
+</div>
+</section>
+<!-- Main Content Canvas: Spacious Category Deck -->
+<main class="px-margin-mobile py-space-lg flex flex-col gap-space-lg flex-1">
+<!-- Category 01: PERSONAL -->
+<article class="architectural-border bg-surface-container-lowest p-space-lg flex flex-col justify-between transition-none hover:translate-x-0.5 hover:translate-y-0.5">
+<div class="flex items-start justify-between mb-space-md">
+<div>
+<span class="text-label-sm font-label-sm text-secondary tracking-widest uppercase block mb-1">01 / PER-SYS</span>
+<h2 class="text-headline-md font-headline-md tracking-tight uppercase text-primary">
+              PERSONAL
+            </h2>
+</div>
+<span class="text-label-sm font-label-sm tracking-wider uppercase px-2 py-1 architectural-border bg-surface">
+            ACTIVE
+          </span>
+</div>
+<!-- Task Preview Box -->
+<div class="border-t border-b border-primary/10 py-space-sm my-space-xs bg-surface/50 px-space-sm">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-widest block mb-1">NEXT PRIORITY</span>
+<div class="flex items-center gap-2">
+<div class="w-3.5 h-3.5 architectural-border bg-surface-container-lowest flex items-center justify-center"></div>
+<p class="text-body-sm font-body-sm text-on-surface truncate">Draft morning cognitive routines</p>
+</div>
+</div>
+<!-- Progress & Footer -->
+<div class="mt-space-md pt-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm uppercase tracking-wider mb-2">
+<span class="text-secondary">1 OF 2 TASKS COMPLETED</span>
+<span class="font-medium text-primary">50%</span>
+</div>
+<!-- Slim Progress Line -->
+<div class="w-full h-1 bg-surface-container-high relative overflow-hidden architectural-border border-primary">
+<div class="h-full bg-primary w-1/2"></div>
+</div>
+<div class="mt-space-md flex justify-end">
+<a class="inline-flex items-center gap-1 text-label-md font-label-md uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:bg-primary hover:text-on-primary px-1 transition-none" href="#">
+<span>OPEN</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- Category 02: WORK -->
+<article class="architectural-border bg-surface-container-lowest p-space-lg flex flex-col justify-between transition-none hover:translate-x-0.5 hover:translate-y-0.5">
+<div class="flex items-start justify-between mb-space-md">
+<div>
+<span class="text-label-sm font-label-sm text-secondary tracking-widest uppercase block mb-1">02 / ARCH-OPS</span>
+<h2 class="text-headline-md font-headline-md tracking-tight uppercase text-primary">
+              WORK
+            </h2>
+</div>
+<span class="text-label-sm font-label-sm tracking-wider uppercase px-2 py-1 architectural-border bg-primary text-on-primary">
+            CRITICAL
+          </span>
+</div>
+<!-- Task Preview Box -->
+<div class="border-t border-b border-primary/10 py-space-sm my-space-xs bg-surface/50 px-space-sm">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-widest block mb-1">NEXT PRIORITY</span>
+<div class="flex items-center gap-2">
+<div class="w-3.5 h-3.5 architectural-border bg-surface-container-lowest flex items-center justify-center"></div>
+<p class="text-body-sm font-body-sm text-on-surface truncate">Finalize spatial schematics for YLabs</p>
+</div>
+</div>
+<!-- Progress & Footer -->
+<div class="mt-space-md pt-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm uppercase tracking-wider mb-2">
+<span class="text-secondary">0 OF 2 TASKS COMPLETED</span>
+<span class="font-medium text-primary">0%</span>
+</div>
+<!-- Slim Progress Line -->
+<div class="w-full h-1 bg-surface-container-high relative overflow-hidden architectural-border border-primary">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<div class="mt-space-md flex justify-end">
+<a class="inline-flex items-center gap-1 text-label-md font-label-md uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:bg-primary hover:text-on-primary px-1 transition-none" href="#">
+<span>OPEN</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- Category 03: HOME & LIVING -->
+<article class="architectural-border bg-surface-container-lowest p-space-lg flex flex-col justify-between transition-none hover:translate-x-0.5 hover:translate-y-0.5">
+<div class="flex items-start justify-between mb-space-md">
+<div>
+<span class="text-label-sm font-label-sm text-secondary tracking-widest uppercase block mb-1">03 / DOMESTIC</span>
+<h2 class="text-headline-md font-headline-md tracking-tight uppercase text-primary">
+              HOME &amp; LIVING
+            </h2>
+</div>
+<span class="text-label-sm font-label-sm tracking-wider uppercase px-2 py-1 architectural-border bg-surface-container text-secondary">
+            RESOLVED
+          </span>
+</div>
+<!-- Task Preview Box -->
+<div class="border-t border-b border-primary/10 py-space-sm my-space-xs bg-surface/50 px-space-sm">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-widest block mb-1">ALL COMPLETED</span>
+<div class="flex items-center gap-2">
+<div class="w-3.5 h-3.5 bg-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[10px] text-on-primary" data-icon="check">check</span>
+</div>
+<p class="text-body-sm font-body-sm text-secondary line-through truncate">Studio air ventilation maintenance</p>
+</div>
+</div>
+<!-- Progress & Footer -->
+<div class="mt-space-md pt-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm uppercase tracking-wider mb-2">
+<span class="text-secondary">2 OF 2 TASKS COMPLETED</span>
+<span class="font-medium text-primary">100%</span>
+</div>
+<!-- Slim Progress Line -->
+<div class="w-full h-1 bg-surface-container-high relative overflow-hidden architectural-border border-primary">
+<div class="h-full bg-primary w-full"></div>
+</div>
+<div class="mt-space-md flex justify-between items-center">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-wider">ARCHIVED</span>
+<a class="inline-flex items-center gap-1 text-label-md font-label-md uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:bg-primary hover:text-on-primary px-1 transition-none" href="#">
+<span>OPEN</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- Category 04: ERRANDS -->
+<article class="architectural-border bg-surface-container-lowest p-space-lg flex flex-col justify-between transition-none hover:translate-x-0.5 hover:translate-y-0.5">
+<div class="flex items-start justify-between mb-space-md">
+<div>
+<span class="text-label-sm font-label-sm text-secondary tracking-widest uppercase block mb-1">04 / LOGISTICS</span>
+<h2 class="text-headline-md font-headline-md tracking-tight uppercase text-primary">
+              ERRANDS
+            </h2>
+</div>
+<span class="text-label-sm font-label-sm tracking-wider uppercase px-2 py-1 architectural-border bg-surface text-secondary">
+            QUEUED
+          </span>
+</div>
+<!-- Task Preview Box -->
+<div class="border-t border-b border-primary/10 py-space-sm my-space-xs bg-surface/50 px-space-sm">
+<span class="text-label-sm font-label-sm text-secondary uppercase tracking-widest block mb-1">NEXT PRIORITY</span>
+<div class="flex items-center gap-2">
+<div class="w-3.5 h-3.5 architectural-border bg-surface-container-lowest flex items-center justify-center"></div>
+<p class="text-body-sm font-body-sm text-on-surface truncate">Procure 300gsm drafting stationery</p>
+</div>
+</div>
+<!-- Progress & Footer -->
+<div class="mt-space-md pt-space-xs">
+<div class="flex justify-between items-center text-label-sm font-label-sm uppercase tracking-wider mb-2">
+<span class="text-secondary">0 OF 1 TASKS COMPLETED</span>
+<span class="font-medium text-primary">0%</span>
+</div>
+<!-- Slim Progress Line -->
+<div class="w-full h-1 bg-surface-container-high relative overflow-hidden architectural-border border-primary">
+<div class="h-full bg-primary w-0"></div>
+</div>
+<div class="mt-space-md flex justify-end">
+<a class="inline-flex items-center gap-1 text-label-md font-label-md uppercase tracking-widest text-primary border-b border-primary pb-0.5 hover:bg-primary hover:text-on-primary px-1 transition-none" href="#">
+<span>OPEN</span>
+<span class="material-symbols-outlined text-[14px]" data-icon="arrow_forward">arrow_forward</span>
+</a>
+</div>
+</div>
+</article>
+<!-- Action: Create New Category Button -->
+<div class="pt-space-sm pb-space-lg">
+<button class="w-full h-12 architectural-border bg-primary text-on-primary flex items-center justify-center gap-2 text-label-md font-label-md uppercase tracking-widest hover:bg-surface-container-lowest hover:text-primary transition-none">
+<span class="material-symbols-outlined text-[18px]" data-icon="add">add</span>
+<span>CREATE NEW CATEGORY</span>
+</button>
+</div>
+</main>
+<!-- BottomNavBar (Derived from Shared Components JSON with 'Lists' Active) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-stretch h-16 border-t border-primary dark:border-outline bg-surface dark:bg-surface-container-lowest max-w-md left-1/2 -translate-x-1/2">
+<!-- Item 0: Today -->
+<a class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 hover:bg-surface-container-high transition-none" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="check_box">check_box</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Today</span>
+</a>
+<!-- Item 1: Upcoming -->
+<a class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 border-r border-primary/20 hover:bg-surface-container-high transition-none" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="calendar_month">calendar_month</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Upcoming</span>
+</a>
+<!-- Item 2: Lists (ACTIVE STATE) -->
+<a class="flex flex-1 flex-col items-center justify-center bg-primary text-on-primary rounded-none py-2 gap-1 border-r border-primary/20" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="format_list_bulleted">format_list_bulleted</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Lists</span>
+</a>
+<!-- Item 3: Settings -->
+<a class="flex flex-1 flex-col items-center justify-center text-secondary dark:text-outline rounded-none py-2 gap-1 last:border-r-0 hover:bg-surface-container-high transition-none" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="tune">tune</span>
+<span class="text-label-sm font-label-sm uppercase tracking-wider">Settings</span>
+</a>
+</nav>
+</div>
+</body></html>
