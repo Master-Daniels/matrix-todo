@@ -4,70 +4,59 @@ import '../../data/models.dart';
 import '../../data/providers.dart';
 import '../../data/task_dates.dart';
 
-/// Category filter for the Today page. Enum (not strings) so chips and
-/// matching logic stay in sync. `all` shows everything.
-enum HomeFilter { all, personal, home, work, errands, family }
-
-extension HomeFilterX on HomeFilter {
-  String get label {
-    switch (this) {
-      case HomeFilter.all:
-        return 'ALL';
-      case HomeFilter.personal:
-        return 'PERSONAL';
-      case HomeFilter.home:
-        return 'HOME';
-      case HomeFilter.work:
-        return 'WORK';
-      case HomeFilter.errands:
-        return 'ERRANDS';
-      case HomeFilter.family:
-        return 'FAMILY';
-    }
-  }
-
-  /// Matches a [TodoTask.category] value (stored uppercase in DB).
-  /// `HOME` also matches the seeded `HOME & LIVING` list name.
-  bool matches(TodoTask task) {
-    if (this == HomeFilter.all) return true;
-    final cat = task.category.trim().toUpperCase();
-    switch (this) {
-      case HomeFilter.all:
-        return true;
-      case HomeFilter.personal:
-        return cat == 'PERSONAL';
-      case HomeFilter.home:
-        return cat == 'HOME' || cat == 'HOME & LIVING';
-      case HomeFilter.work:
-        return cat == 'WORK';
-      case HomeFilter.errands:
-        return cat == 'ERRANDS';
-      case HomeFilter.family:
-        return cat == 'FAMILY';
-    }
-  }
-}
-
-final homeFilterProvider = NotifierProvider<HomeFilterNotifier, HomeFilter>(
+/// Category filter for the Today page: `null` shows everything (ALL),
+/// otherwise an uppercase list/category key resolved live from the
+/// directory lists (seeded four + user custom). No hardcoded pills —
+/// filters always mirror the available lists.
+final homeFilterProvider = NotifierProvider<HomeFilterNotifier, String?>(
   HomeFilterNotifier.new,
 );
 
-class HomeFilterNotifier extends Notifier<HomeFilter> {
+class HomeFilterNotifier extends Notifier<String?> {
   @override
-  HomeFilter build() => HomeFilter.all;
+  String? build() => null;
 
-  void setFilter(HomeFilter filter) => state = filter;
+  void setFilter(String? filter) {
+    final v = filter?.trim().toUpperCase();
+    state = (v == null || v.isEmpty) ? null : v;
+  }
 }
 
-/// Today = due-today (any status, done struck-through) plus overdue undone.
-/// Done-past and future rows are hidden. Sorted: focus first, undone,
-/// done last, sort ASC.
-final todayTasksProvider = FutureProvider<List<TodoTask>>((ref) async {
-  final filter = ref.watch(homeFilterProvider);
+/// Matches a [TodoTask.category] value (stored uppercase in DB) against a
+/// [homeFilterProvider] key. `HOME & LIVING` also matches the seeded
+/// `HOME` category alias.
+bool homeFilterMatches(String? filter, TodoTask task) {
+  if (filter == null || filter.isEmpty) return true;
+  final cat = task.category.trim().toUpperCase();
+  if (cat == filter) return true;
+  return filter == 'HOME & LIVING' && cat == 'HOME';
+}
+
+/// Density switch for the Today deck (grid button re-added as toggle).
+/// `deck` = rounded cards with swipe physics, `compact` = flat ledger rows.
+enum HomeDensity { deck, compact }
+
+final homeDensityProvider =
+    NotifierProvider<HomeDensityNotifier, HomeDensity>(
+  HomeDensityNotifier.new,
+);
+
+class HomeDensityNotifier extends Notifier<HomeDensity> {
+  @override
+  HomeDensity build() => HomeDensity.deck;
+
+  void toggle() =>
+      state = state == HomeDensity.deck ? HomeDensity.compact : HomeDensity.deck;
+
+  void setDensity(HomeDensity density) => state = density;
+}
+
+/// Unfiltered Today base (due-today any status + overdue undone).
+/// Client-side filter deck builds on top of this — no refetch on filter.
+final todayBaseTasksProvider = FutureProvider<List<TodoTask>>((ref) async {
   final all = await ref.watch(tasksProvider((listId: null, done: null)).future);
   final today = dayOf(DateTime.now());
   final filtered = all.where((t) {
-    if (!filter.matches(t)) return false;
     final parsed = tryParseDueDate(t.dueDate);
     if (parsed == null) return false;
     final day = dayOf(parsed);
@@ -84,6 +73,32 @@ final todayTasksProvider = FutureProvider<List<TodoTask>>((ref) async {
   return filtered;
 });
 
+/// Today = due-today (any status, done struck-through) plus overdue undone.
+/// Done-past and future rows are hidden. Sorted: focus first, undone,
+/// done last, sort ASC. Client-side filter over [todayBaseTasksProvider].
+final todayTasksProvider = FutureProvider<List<TodoTask>>((ref) async {
+  final filter = ref.watch(homeFilterProvider);
+  final base = await ref.watch(todayBaseTasksProvider.future);
+  if (filter == null) return base;
+  return base.where((t) => homeFilterMatches(filter, t)).toList();
+});
+
+/// Per-filter counts for the deck pills, derived from the unfiltered base.
+/// Keys are uppercase list names; `null` is ALL.
+final todayCategoryCountsProvider = FutureProvider<Map<String?, int>>((
+  ref,
+) async {
+  final base = await ref.watch(todayBaseTasksProvider.future);
+  final lists = await ref.watch(listsProvider.future);
+  return {
+    null: base.length,
+    for (final l in lists)
+      l.name.trim().toUpperCase(): base
+          .where((t) => homeFilterMatches(l.name.trim().toUpperCase(), t))
+          .length,
+  };
+});
+
 /// {total, completed, remaining} derived from the filtered today list.
 final todayCountsProvider =
     FutureProvider<({int total, int completed, int remaining})>((ref) async {
@@ -95,6 +110,44 @@ final todayCountsProvider =
         remaining: tasks.length - completed,
       );
     });
+
+/// Consecutive fully-completed days (WS14): counts back over days that have
+/// due tasks while all are done. Days with no due tasks are skipped
+/// (neither count nor break). An in-progress today doesn't break the run
+/// (count starts yesterday). Zero history = 0.
+/// Pure + unit-testable.
+int computeStreak(List<TodoTask> tasks, DateTime now) {
+  List<TodoTask> dueOn(DateTime day) => tasks.where((t) {
+    final parsed = tryParseDueDate(t.dueDate);
+    return parsed != null && dayOf(parsed).isAtSameMomentAs(day);
+  }).toList();
+
+  final today = dayOf(now);
+  final todayDue = dueOn(today);
+  var day = todayDue.isNotEmpty && todayDue.any((t) => !t.done)
+      ? today.subtract(const Duration(days: 1))
+      : today;
+  var streak = 0;
+  for (var i = 0; i < 3700; i++) {
+    final due = dueOn(day);
+    if (due.isEmpty) {
+      day = day.subtract(const Duration(days: 1));
+      continue;
+    }
+    if (due.any((t) => !t.done)) break;
+    streak++;
+    day = day.subtract(const Duration(days: 1));
+  }
+  return streak;
+}
+
+/// Live streak for the Today metrics header.
+final streakProvider = FutureProvider<int>((ref) async {
+  final all = await ref.watch(
+    tasksProvider((listId: null, done: null)).future,
+  );
+  return computeStreak(all, DateTime.now());
+});
 
 /// ISO `yyyy-MM-dd` for [offset] days from today. Seeds spread across the
 /// week so Upcoming has content on first launch.

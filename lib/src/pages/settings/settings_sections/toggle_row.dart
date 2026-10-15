@@ -29,7 +29,7 @@ class ToggleRow extends StatelessWidget {
         color: scheme.surface,
         border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
       ),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Row(
         children: [
           Expanded(
@@ -69,7 +69,7 @@ class ToggleRow extends StatelessWidget {
                     ],
                   ],
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
                 Text(
                   subtitle.toUpperCase(),
                   style: theme.textTheme.labelSmall?.copyWith(

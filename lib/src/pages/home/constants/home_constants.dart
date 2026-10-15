@@ -29,3 +29,6 @@ String todayBadge() {
 }
 
 String weekday() => _weekdays[DateTime.now().weekday - 1];
+
+/// Topbar index for Option 1: `SATURDAY — OCT 11, 2026`.
+String todayIndex() => '${weekday()} — ${todayBadge()}';

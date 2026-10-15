@@ -54,6 +54,12 @@ class AppSettings {
   final bool streakReminder;
   final bool reminders;
 
+  /// First-run swipe legend dismissed.
+  final bool guideSeen;
+
+  /// First-run onboarding coach completed.
+  final bool onboardingSeen;
+
   const AppSettings({
     this.theme = ThemeSetting.light,
     this.defaultView = DefaultView.today,
@@ -62,6 +68,8 @@ class AppSettings {
     this.briefing = true,
     this.streakReminder = false,
     this.reminders = true,
+    this.guideSeen = false,
+    this.onboardingSeen = false,
   });
 
   factory AppSettings.fromMap(Map<String, String> map) {
@@ -74,6 +82,8 @@ class AppSettings {
       briefing: (map['briefing'] ?? 'on') == 'on',
       streakReminder: (map['streak_reminder'] ?? 'off') == 'on',
       reminders: (map['reminders'] ?? 'on') == 'on',
+      guideSeen: (map['guide_seen'] ?? 'off') == 'on',
+      onboardingSeen: (map['onboarding_seen'] ?? 'off') == 'on',
     );
   }
 
@@ -85,6 +95,8 @@ class AppSettings {
     bool? briefing,
     bool? streakReminder,
     bool? reminders,
+    bool? guideSeen,
+    bool? onboardingSeen,
   }) => AppSettings(
     theme: theme ?? this.theme,
     defaultView: defaultView ?? this.defaultView,
@@ -93,6 +105,8 @@ class AppSettings {
     briefing: briefing ?? this.briefing,
     streakReminder: streakReminder ?? this.streakReminder,
     reminders: reminders ?? this.reminders,
+    guideSeen: guideSeen ?? this.guideSeen,
+    onboardingSeen: onboardingSeen ?? this.onboardingSeen,
   );
 }
 
@@ -141,6 +155,18 @@ class SettingsController extends Notifier<AppSettings> {
     value ? 'on' : 'off',
     state.copyWith(reminders: value),
   );
+
+  Future<void> setGuideSeen(bool value) => _save(
+    'guide_seen',
+    value ? 'on' : 'off',
+    state.copyWith(guideSeen: value),
+  );
+
+  Future<void> setOnboardingSeen(bool value) => _save(
+    'onboarding_seen',
+    value ? 'on' : 'off',
+    state.copyWith(onboardingSeen: value),
+  );
 }
 
 final settingsControllerProvider =
@@ -172,4 +198,12 @@ final streakReminderProvider = Provider<bool>(
 
 final remindersEnabledProvider = Provider<bool>(
   (ref) => ref.watch(settingsControllerProvider).reminders,
+);
+
+final guideSeenProvider = Provider<bool>(
+  (ref) => ref.watch(settingsControllerProvider).guideSeen,
+);
+
+final onboardingSeenProvider = Provider<bool>(
+  (ref) => ref.watch(settingsControllerProvider).onboardingSeen,
 );

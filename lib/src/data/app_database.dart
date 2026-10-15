@@ -5,7 +5,7 @@ import 'models.dart';
 
 class AppDatabase {
   static const _name = 'todo.db';
-  static const version = 2;
+  static const version = 3;
 
   static const tableLists = 'lists';
   static const tableTasks = 'tasks';
@@ -28,11 +28,17 @@ class AppDatabase {
   }
 
   /// Future schema migrations go here. v2 adds the notification SNOOZE
-  /// persistence (`tasks.snoozed_until`, epoch millis, nullable).
+  /// persistence (`tasks.snoozed_until`, epoch millis, nullable); v3 adds
+  /// the recurrence rule (`tasks.recurrence`, `NONE` default).
   Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute(
         'ALTER TABLE $tableTasks ADD COLUMN snoozed_until INTEGER',
+      );
+    }
+    if (oldVersion < 3) {
+      await db.execute(
+        "ALTER TABLE $tableTasks ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'NONE'",
       );
     }
   }
@@ -60,6 +66,7 @@ class AppDatabase {
         done INTEGER NOT NULL DEFAULT 0,
         focus INTEGER NOT NULL DEFAULT 0,
         sort INTEGER NOT NULL DEFAULT 0,
+        recurrence TEXT NOT NULL DEFAULT 'NONE',
         snoozed_until INTEGER
       )
     ''');
@@ -176,6 +183,19 @@ class AppDatabase {
   Future<int> insertTask(TodoTask task) async {
     final db = await open();
     return db.insert(tableTasks, task.toMap());
+  }
+
+  /// Single task by id, or null when missing.
+  Future<TodoTask?> getTask(int id) async {
+    final db = await open();
+    final rows = await db.query(
+      tableTasks,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return TodoTask.fromMap(rows.first);
   }
 
   Future<int> updateTask(TodoTask task) async {

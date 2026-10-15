@@ -71,7 +71,9 @@ class SubtaskSection extends StatelessWidget {
         Container(
           decoration: BoxDecoration(
             border: Border.all(color: scheme.primary, width: 1),
+            borderRadius: BorderRadius.zero,
           ),
+          clipBehavior: Clip.hardEdge,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -113,7 +115,7 @@ class SubtaskSection extends StatelessWidget {
                             onTap: () => onStartEdit(i),
                             behavior: HitTestBehavior.opaque,
                             child: Text(
-                              drafts[i].title.toUpperCase(),
+                              drafts[i].title,
                               style: theme.textTheme.bodySmall?.copyWith(
                                 color: drafts[i].done
                                     ? scheme.secondary
@@ -261,6 +263,7 @@ class _InputRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 GestureDetector(
+                  key: const ValueKey('subtask-input-cancel'),
                   onTap: onCancel,
                   child: const Icon(Icons.close, size: 16),
                 ),

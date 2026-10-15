@@ -7,9 +7,9 @@ import '../theme/app_spacing.dart';
 /// * [Sheet] — content scaffold: opaque container, 2px top border, header
 ///   with title + `[X] CLOSE`, divided form body. Works in either presenter.
 /// * [showAnimatedModalBottomSheet] — primary presenter: modal route with a
-///   short slide+fade entrance. Use for forms like Add Task. Pass
-///   [heightFactor] (e.g. `0.92`) to stretch the sheet to a fraction of the
-///   screen height so it sits higher; omit to hug content.
+///   short slide+fade entrance. Use for forms like Add Task. The sheet
+///   always docks bottom and hugs content (capped at 85% height, scrolling
+///   internally beyond that) — never floating, never stretched.
 /// * [showBrutalSheet] — stipple-scrim variant (`showGeneralDialog` +
 ///   [StippleScrim]) for cases that need the technical hatch overlay.
 /// * [StippleScrim] — 72% dark + dot hatch, no blur.
@@ -17,14 +17,12 @@ Future<T?> showAnimatedModalBottomSheet<T>({
   required BuildContext context,
   required WidgetBuilder builder,
   Color? barrierColor,
-  double? heightFactor,
 }) {
   return showModalBottomSheet<T>(
     context: context,
     builder: (BuildContext context) {
       return AnimatedBottomSheetContent(
         builder: builder,
-        heightFactor: heightFactor,
       );
     },
     isScrollControlled: true,
@@ -32,7 +30,12 @@ Future<T?> showAnimatedModalBottomSheet<T>({
     barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.4),
     elevation: 0,
     shape: const RoundedRectangleBorder(),
-    useSafeArea: true,
+    // Cap width on tablets/landscape so rows never stretch edge to edge.
+    constraints: const BoxConstraints(maxWidth: 640),
+    // Single safe-area source: the Sheet pads its own content below, so
+    // the background stays flush with the screen bottom edge (docked,
+    // never floating). useSafeArea:true would lift the whole sheet.
+    useSafeArea: false,
   );
 }
 
@@ -42,13 +45,9 @@ Future<T?> showAnimatedModalBottomSheet<T>({
 class AnimatedBottomSheetContent extends StatefulWidget {
   final WidgetBuilder builder;
 
-  /// Fraction of screen height the sheet should occupy. Null hugs content.
-  final double? heightFactor;
-
   const AnimatedBottomSheetContent({
     super.key,
     required this.builder,
-    this.heightFactor,
   });
 
   @override
@@ -96,20 +95,23 @@ class _AnimatedBottomSheetContentState extends State<AnimatedBottomSheetContent>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     final media = MediaQuery.of(context);
-    final expanded = widget.heightFactor != null;
+    // Hug content, capped at 85%: the route bottom-anchors the box, so
+    // the sheet is always docked flush (never floating middle) and the
+    // inner Flexible below always has bounded height to work with.
     final content = Container(
-      margin: const EdgeInsets.only(top: 12),
-      decoration: BoxDecoration(
-        color: scheme.surface,
-        border: Border(top: BorderSide(color: scheme.primary, width: 2)),
+      decoration: const BoxDecoration(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.zero,
       ),
+      clipBehavior: Clip.hardEdge,
       child: Padding(
         padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
-        child: Column(
-          mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
-          children: [Flexible(child: widget.builder(context))],
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxHeight: media.size.height * 0.85,
+          ),
+          child: widget.builder(context),
         ),
       ),
     );
@@ -117,33 +119,28 @@ class _AnimatedBottomSheetContentState extends State<AnimatedBottomSheetContent>
       position: _slideAnimation,
       child: FadeTransition(
         opacity: _fadeAnimation,
-        // Fixed height on purpose: shrinking with viewInsets.bottom is what
-        // made the sheet visibly drop when the keyboard opened. The inner
-        // viewInsets padding + Flexible scroll area absorb the keyboard
-        // while the sheet frame stays put.
-        child: expanded
-            ? SizedBox(
-                height: media.size.height * widget.heightFactor!,
-                child: content,
-              )
-            : content,
+        child: content,
       ),
     );
   }
 }
 
-/// Bottom sheet scaffold: opaque container, 2px top border,
-/// header with title + `[X] CLOSE`, divided form body.
-/// Use inside [showAnimatedModalBottomSheet], or with [showBrutalSheet]
-/// for the stipple scrim.
+/// Bottom sheet scaffold: rounded-top opaque container (decluttered
+/// deck styling), drag pill, header with title + optional tag + close,
+/// spaced form body. Use inside [showAnimatedModalBottomSheet], or with
+/// [showBrutalSheet] for the stipple scrim.
 class Sheet extends StatelessWidget {
   final String title;
+
+  /// Optional uppercase tag pill next to the title (e.g. `DECK ENTRY`).
+  final String? tag;
   final VoidCallback? onClose;
   final List<Widget> children;
 
   const Sheet({
     super.key,
     required this.title,
+    this.tag,
     this.onClose,
     required this.children,
   });
@@ -152,49 +149,104 @@ class Sheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    // Manual bottom inset (route useSafeArea is off): background stays
+    // flush with the screen edge while content clears the gesture bar.
+    final viewPadding = MediaQuery.of(context).viewPadding.bottom;
+    final bottomPad = viewPadding > 12 ? viewPadding : 12.0;
     return Container(
       decoration: BoxDecoration(
         color: scheme.surface,
-        border: Border(top: BorderSide(color: scheme.primary, width: 2)),
+        borderRadius: BorderRadius.zero,
+        border: Border(
+          top: BorderSide(color: scheme.primary, width: 2),
+          left: BorderSide(color: scheme.primary, width: 2),
+          right: BorderSide(color: scheme.primary, width: 2),
+        ),
       ),
-      child: SafeArea(
-        top: false,
-        child: Column(
+      padding: EdgeInsets.only(bottom: bottomPad),
+      child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            // Tactile drag indicator.
+            Padding(
+              padding: const EdgeInsets.only(top: 12, bottom: 8),
+              child: Center(
+                child: Container(
+                  width: 48,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    borderRadius: BorderRadius.zero,
+                  ),
+                ),
+              ),
+            ),
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
               decoration: BoxDecoration(
-                color: scheme.surfaceContainerLowest,
                 border: Border(
-                  bottom: BorderSide(color: scheme.primary, width: 1),
+                  bottom: BorderSide(
+                    color: scheme.primary.withValues(alpha: 0.12),
+                    width: 1,
+                  ),
                 ),
               ),
               child: Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      title.toUpperCase(),
-                      style: theme.textTheme.labelLarge,
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title.toUpperCase(),
+                            style: theme.textTheme.labelLarge?.copyWith(
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                        if (tag != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(
+                                color: scheme.primary.withValues(alpha: 0.35),
+                                width: 1,
+                              ),
+                              borderRadius: BorderRadius.zero,
+                            ),
+                            child: Text(
+                              tag!.toUpperCase(),
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.secondary,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
                     ),
                   ),
+                  const SizedBox(width: 8),
                   GestureDetector(
                     onTap: onClose ?? () => Navigator.of(context).pop(),
                     child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
                         border: Border.all(color: scheme.primary, width: 1),
+                        borderRadius: BorderRadius.zero,
                       ),
-                      child: Text(
-                        '[X] CLOSE',
-                        style: theme.textTheme.labelSmall,
+                      child: Icon(
+                        Icons.close,
+                        size: 16,
+                        color: scheme.primary,
                       ),
                     ),
                   ),
@@ -203,15 +255,19 @@ class Sheet extends StatelessWidget {
             ),
             Flexible(
               child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.lg,
+                  AppSpacing.md,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     for (var i = 0; i < children.length; i++) ...[
-                      Padding(
-                        padding: const EdgeInsets.all(AppSpacing.md),
-                        child: children[i],
-                      ),
-                      if (i < children.length - 1) const Divider(height: 0),
+                      children[i],
+                      if (i < children.length - 1)
+                        const SizedBox(height: AppSpacing.lg),
                     ],
                   ],
                 ),
@@ -219,7 +275,6 @@ class Sheet extends StatelessWidget {
             ),
           ],
         ),
-      ),
     );
   }
 }

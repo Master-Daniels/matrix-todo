@@ -103,35 +103,6 @@ final weekStripProvider = FutureProvider<List<StripDay>>((ref) async {
   });
 });
 
-typedef UpcomingMetrics = ({
-  int total,
-  int dueTomorrow,
-  int overdue,
-  int capacityPct,
-});
-
-/// Done-ratio capacity over the on-screen scope.
-final upcomingMetricsProvider = FutureProvider<UpcomingMetrics>((
-  ref,
-) async {
-  final g = await ref.watch(upcomingGroupsProvider.future);
-  final all = [
-    ...g.today,
-    ...g.overdue,
-    ...g.tomorrow,
-    ...g.laterThisWeek,
-    ...g.nextBeyond,
-  ];
-  final done = all.where((t) => t.done).length;
-  final total = all.length - done;
-  return (
-    total: total,
-    dueTomorrow: g.tomorrow.where((t) => !t.done).length,
-    overdue: g.overdue.length,
-    capacityPct: all.isEmpty ? 0 : (done / all.length * 100).round(),
-  );
-});
-
 /// Push [task] one day forward, then rebuilds the whole reminder schedule
 /// (pre-reminders shift with it; digest mornings recompute).
 Future<void> pauseTask(WidgetRef ref, TodoTask task) async {
@@ -166,5 +137,4 @@ void _invalidateSchedule(WidgetRef ref) {
   ref.invalidate(tasksProvider);
   ref.invalidate(upcomingGroupsProvider);
   ref.invalidate(weekStripProvider);
-  ref.invalidate(upcomingMetricsProvider);
 }

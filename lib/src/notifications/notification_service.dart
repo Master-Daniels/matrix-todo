@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:timezone/data/latest_all.dart' as tzdata;
+import 'package:timezone/data/latest_10y.dart' as tzdata;
 import 'package:timezone/timezone.dart' as tz;
 
 /// Thin transport over `flutter_local_notifications`. No task knowledge:
@@ -237,10 +237,10 @@ final notificationServiceProvider = Provider<NotificationService>(
 
 /// Minimal system bridge for OEM-resilience flows: vendor detection plus
 /// settings intents (battery-optimization, app-info, app notifications).
-/// Implemented natively in MainActivity (`flutter_todo/system`). Settings
+/// Implemented natively in MainActivity (`matrix_todo/system`). Settings
 /// screens only — never auto-requests battery exemptions (Play policy).
 class SystemBridge {
-  static const MethodChannel _channel = MethodChannel('flutter_todo/system');
+  static const MethodChannel _channel = MethodChannel('matrix_todo/system');
 
   static Future<String> manufacturer() async {
     try {

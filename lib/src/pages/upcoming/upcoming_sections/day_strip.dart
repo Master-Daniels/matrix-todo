@@ -76,12 +76,14 @@ class _DayCell extends StatelessWidget {
               top: 0,
               right: 0,
               child: Container(
-                color: scheme.error,
                 padding: const EdgeInsets.symmetric(horizontal: 4),
+                decoration: BoxDecoration(
+                  border: Border.all(color: scheme.onPrimary, width: 1),
+                ),
                 child: Text(
                   'NOW',
                   style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onError,
+                    color: scheme.onPrimary,
                     fontSize: 8,
                   ),
                 ),

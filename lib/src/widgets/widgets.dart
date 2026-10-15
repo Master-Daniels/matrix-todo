@@ -1,5 +1,8 @@
 export 'app_bar.dart';
 export 'animated_bottom_sheet.dart';
+export 'done_undo.dart';
+export 'search_sheet.dart';
+export 'subtask_slot.dart';
 export 'bottom_nav.dart';
 export 'button.dart';
 export 'checkbox.dart';

@@ -19,9 +19,9 @@ abstract final class AppColors {
   static const surfaceHighest = Color(0xFFE2E2E2);
   static const surfaceVariant = Color(0xFFE2E2E2);
 
-  // On-surfaces
+  // On-surfaces (darkened for body/metadata legibility on white)
   static const onSurface = Color(0xFF1A1C1C);
-  static const onSurfaceVariant = Color(0xFF4C4546);
+  static const onSurfaceVariant = Color(0xFF2F3033);
   static const inverseSurface = Color(0xFF2F3131);
   static const inverseOnSurface = Color(0xFFF0F1F1);
 
@@ -32,11 +32,12 @@ abstract final class AppColors {
   static const onPrimaryContainer = Color(0xFF848484);
   static const inversePrimary = Color(0xFFC6C6C6);
 
-  // Secondary / tertiary
-  static const secondary = Color(0xFF5D5E66);
+  // Secondary / tertiary (darkened: secondary is the app-wide muted
+  // text tone — metadata, hints, unselected states — on white surfaces)
+  static const secondary = Color(0xFF3B3C44);
   static const onSecondary = Color(0xFFFFFFFF);
   static const secondaryContainer = Color(0xFFE3E1EC);
-  static const onSecondaryContainer = Color(0xFF63646C);
+  static const onSecondaryContainer = Color(0xFF43444C);
   static const tertiary = Color(0xFF000000);
   static const onTertiary = Color(0xFFFFFFFF);
   static const tertiaryContainer = Color(0xFF1A1C1D);

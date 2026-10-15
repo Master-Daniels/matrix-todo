@@ -3,6 +3,10 @@ import 'package:flutter/material.dart';
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
 import 'checkbox.dart';
+import 'subtask_slot.dart';
+
+/// `↻` chip visibility: DAILY or WEEKLY only.
+bool _showsRecurrence(String rule) => rule == 'DAILY' || rule == 'WEEKLY';
 
 /// Contiguous task row: shared 1px rules (no outer margin), index header
 /// (`01/`), mono tag + time, Megrim title, optional description.
@@ -27,6 +31,12 @@ class TaskCell extends StatelessWidget {
   final String? actionLabel;
   final VoidCallback? onActionTap;
 
+  /// Task id for the expandable subtask slot (WS8). Null hides the slot.
+  final int? subtaskTaskId;
+
+  /// Recurrence rule (`NONE` hides). Renders a `↻ DAILY` chip.
+  final String recurrence;
+
   const TaskCell({
     super.key,
     required this.index,
@@ -42,12 +52,15 @@ class TaskCell extends StatelessWidget {
     this.priorityBadge,
     this.actionLabel,
     this.onActionTap,
+    this.subtaskTaskId,
+    this.recurrence = 'NONE',
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final rule = recurrence.trim().toUpperCase();
 
     final bg = active
         ? scheme.primary
@@ -64,7 +77,7 @@ class TaskCell extends StatelessWidget {
       ),
       child: Container(
         color: bg,
-        padding: const EdgeInsets.all(AppSpacing.md),
+        padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -72,6 +85,7 @@ class TaskCell extends StatelessWidget {
               padding: const EdgeInsets.only(top: 2),
               child: CustomCheckbox(
                 value: checked || completed,
+                inverted: active,
                 onChanged: onChecked,
               ),
             ),
@@ -120,7 +134,7 @@ class TaskCell extends StatelessWidget {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
                   Text(
                     title,
                     style: theme.textTheme.bodyMedium?.copyWith(
@@ -134,16 +148,40 @@ class TaskCell extends StatelessWidget {
                     ),
                   ),
                   if (description != null && description!.isNotEmpty) ...[
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Text(
                       description!,
                       style: theme.textTheme.labelSmall?.copyWith(color: muted),
                     ),
                   ],
-                  if (priorityBadge != null || actionLabel != null) ...[
+                  if (subtaskTaskId != null)
+                    SubtaskSlot(taskId: subtaskTaskId, inverted: active),
+                  if (_showsRecurrence(rule) ||
+                      priorityBadge != null ||
+                      actionLabel != null) ...[
                     const SizedBox(height: 8),
                     Row(
                       children: [
+                        if (_showsRecurrence(rule))
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 4,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: muted),
+                            ),
+                            child: Text(
+                              '↻ $rule',
+                              style: AppTypography.indexIndicator(
+                                context,
+                                color: muted,
+                              ),
+                            ),
+                          ),
+                        if (_showsRecurrence(rule) &&
+                            (priorityBadge != null || actionLabel != null))
+                          const SizedBox(width: 8),
                         if (priorityBadge != null)
                           Container(
                             padding: const EdgeInsets.symmetric(

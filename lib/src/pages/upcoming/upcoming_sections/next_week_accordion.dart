@@ -6,7 +6,7 @@ import '../../../theme/app_spacing.dart';
 import '../../../theme/app_typography.dart';
 import '../../settings/settings_providers.dart';
 import '../upcoming_providers.dart';
-import 'timeline_section.dart';
+import 'later_week_grid.dart';
 import 'upcoming_format.dart';
 
 /// `NEXT WEEK & BEYOND` accordion: outer bar with total badge + expand
@@ -218,10 +218,10 @@ class _SegmentBlock extends StatelessWidget {
           ),
         ),
         if (open)
-          for (var i = 0; i < tasks.length; i++)
-            UpcomingTaskRow(
-              task: tasks[i],
-              index: (i + 1).toString().padLeft(2, '0'),
+          for (final task in tasks)
+            LaterWeekRow(
+              task: task,
+              date: tryParseDueDate(task.dueDate) ?? dayOf(DateTime.now()),
             ),
       ],
     );

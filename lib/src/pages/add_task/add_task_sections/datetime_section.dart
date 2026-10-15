@@ -51,8 +51,10 @@ class DateTimeSection extends StatelessWidget {
         const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(color: scheme.primary, width: 1),
+            border: Border.all(color: scheme.primary, width: 2),
+            borderRadius: BorderRadius.zero,
           ),
+          clipBehavior: Clip.hardEdge,
           child: IntrinsicHeight(
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -127,6 +129,8 @@ class _DateTimeCell extends StatelessWidget {
           children: [
             Text(
               header.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.secondary,
               ),
@@ -136,6 +140,7 @@ class _DateTimeCell extends StatelessWidget {
               decoration: BoxDecoration(
                 color: scheme.surface,
                 border: Border.all(color: scheme.primary, width: 1),
+                borderRadius: BorderRadius.zero,
               ),
               padding: const EdgeInsets.all(AppSpacing.sm),
               child: Row(
@@ -147,6 +152,8 @@ class _DateTimeCell extends StatelessWidget {
                       children: [
                         Text(
                           mono.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.secondary,
                           ),
@@ -154,6 +161,8 @@ class _DateTimeCell extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           value.toUpperCase(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                           style: theme.textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
                           ),

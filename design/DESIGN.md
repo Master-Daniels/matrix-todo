@@ -74,22 +74,22 @@ typography:
         lineHeight: 22px
         letterSpacing: -0.01em
     body-lg:
-        fontFamily: Megrim
+        fontFamily: Space Grotesk
         fontSize: 16px
+        fontWeight: "400"
+        lineHeight: 24px
+        letterSpacing: 0em
+    body-md:
+        fontFamily: Space Grotesk
+        fontSize: 15px
         fontWeight: "400"
         lineHeight: 22px
         letterSpacing: 0em
-    body-md:
-        fontFamily: Megrim
-        fontSize: 14px
-        fontWeight: "400"
-        lineHeight: 20px
-        letterSpacing: 0em
     body-sm:
-        fontFamily: Megrim
-        fontSize: 12px
+        fontFamily: Space Grotesk
+        fontSize: 13px
         fontWeight: "400"
-        lineHeight: 16px
+        lineHeight: 18px
         letterSpacing: 0.01em
     label-lg:
         fontFamily: Space Mono
@@ -105,9 +105,9 @@ typography:
         letterSpacing: 0.06em
     label-sm:
         fontFamily: Space Mono
-        fontSize: 10px
+        fontSize: 11px
         fontWeight: "400"
-        lineHeight: 12px
+        lineHeight: 15px
         letterSpacing: 0.08em
     index-indicator:
         fontFamily: Space Mono
@@ -152,9 +152,10 @@ Color never indicates state; state changes are communicated entirely through str
 
 The typographic identity contrasts the geometric rigidity of Megrim with the algorithmic precision of Space Mono:
 
-- **Headings & Body (Megrim):** Provides high structural presence with distinctive geometric angles and tight tracking. Used for screen titles, task titles, and primary reading copy.
-- **Labels, Indices & Metadata (Space Mono):** Used for technical labeling, numeric counts, dates, status badges, and numbered matrix cells (`01`, `02`, `03`). All labels default to uppercase with extended letter spacing to mimic architectural specification sheets.
-- **Rule of Composition:** Headers and body copy are set with tight leading, accentuating the , compact layout density.
+- **Display & Headings (Megrim):** Provides high structural presence with distinctive geometric angles and tight tracking. Used for screen titles and large numerals only — never body copy.
+- **Body (Space Grotesk):** Legible grotesk for task titles, notes, descriptions and sentences, always in sentence case with generous leading (≥1.4). Minimum 13px.
+- **Labels, Indices & Metadata (Space Mono):** Used for technical labeling, numeric counts, dates, status badges, and numbered matrix cells (`01`, `02`, `03`). Only short labels default to uppercase with extended letter spacing to mimic architectural specification sheets.
+- **Rule of Composition:** Sentences render in sentence case (uppercase destroys word shapes at small sizes); headers keep tight leading, body keeps open leading.
 
 ## Layout & Spacing
 

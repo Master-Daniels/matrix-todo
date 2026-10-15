@@ -24,7 +24,7 @@ class ProfileHero extends ConsumerWidget {
         color: scheme.surfaceContainerLowest,
         border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
       ),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -36,21 +36,21 @@ class ProfileHero extends ConsumerWidget {
               color: scheme.secondary,
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 8),
           Text(
             name.toUpperCase(),
             style: theme.textTheme.headlineMedium?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             'LOCAL OPERATOR • ON-DEVICE VAULT',
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           Button(
             label: 'Edit profile',
             leading: const Icon(Icons.arrow_forward, size: 18),

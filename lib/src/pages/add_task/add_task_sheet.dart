@@ -12,7 +12,10 @@ import '../upcoming/upcoming_providers.dart';
 import 'add_task_sections/action_section.dart';
 import 'add_task_sections/category_section.dart';
 import 'add_task_sections/datetime_section.dart';
+import 'add_task_sections/notes_section.dart';
 import 'add_task_sections/priority_section.dart';
+import 'add_task_sections/recurrence_section.dart';
+import 'add_task_sections/stack_position_section.dart';
 import 'add_task_sections/subtask_section.dart';
 import 'add_task_sections/title_section.dart';
 
@@ -28,7 +31,12 @@ import 'add_task_sections/title_section.dart';
 class AddTaskSheet extends ConsumerStatefulWidget {
   final TodoTask? task;
 
-  const AddTaskSheet({super.key, this.task});
+  /// Locks the category in create mode (e.g. opened from a list folder):
+  /// the pill is display-only and taps explain how to file elsewhere.
+  final String? lockedCategory;
+  final int? lockedListId;
+
+  const AddTaskSheet({super.key, this.task, this.lockedCategory, this.lockedListId});
 
   @override
   ConsumerState<AddTaskSheet> createState() => _AddTaskSheetState();
@@ -37,8 +45,13 @@ class AddTaskSheet extends ConsumerStatefulWidget {
 class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   bool get isEditing => widget.task != null;
 
+  /// Category lock applies to create mode only; edits keep full control.
+  bool get _locked =>
+      !isEditing && (widget.lockedCategory?.trim().isNotEmpty ?? false);
+
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
+  final _notesController = TextEditingController();
   final _subtaskController = TextEditingController();
   final _subtaskFocus = FocusNode();
   final _subtaskFormKey = GlobalKey<FormState>();
@@ -46,6 +59,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   String _category = 'WORK';
   int? _categoryListId;
   int _priority = 3;
+  String _recurrence = 'NONE';
   DateTime _date = DateTime.now();
   TimeOfDay? _time;
   final List<DraftSubtask> _drafts = [];
@@ -53,16 +67,26 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   bool _addingSubtask = false;
   int _editingIndex = -1;
   bool _saving = false;
+  bool _stackTop = true;
 
   @override
   void initState() {
     super.initState();
+    if (_locked) {
+      _category = widget.lockedCategory!.trim().toUpperCase();
+      _categoryListId = widget.lockedListId;
+    }
     final task = widget.task;
     if (task == null) return;
     _titleController.text = task.title;
+    _notesController.text = task.notes;
     _category = task.category.toUpperCase();
     _categoryListId = task.listId;
     _priority = task.priority.clamp(1, 3);
+    _recurrence = task.recurrence.trim().toUpperCase();
+    if (_recurrence != 'DAILY' && _recurrence != 'WEEKLY') {
+      _recurrence = 'NONE';
+    }
     final parsedDate = tryParseDueDate(task.dueDate);
     if (parsedDate != null) _date = parsedDate;
     final parsedTime = parseEventTime(task.dueTime);
@@ -96,6 +120,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   @override
   void dispose() {
     _titleController.dispose();
+    _notesController.dispose();
     _subtaskController.dispose();
     _subtaskFocus.dispose();
     super.dispose();
@@ -113,16 +138,25 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     return Form(
       key: _formKey,
       child: Sheet(
-        title: isEditing ? '[~] Edit Task Entry' : '[+] New Task Entry',
+        title: isEditing ? '[~] Edit Task' : '[+] New Task',
+        tag: isEditing ? 'Edit Entry' : 'Deck Entry',
         children: [
           TitleSection(controller: _titleController),
+          NotesSection(controller: _notesController),
           CategorySection(
             selected: _category,
+            locked: _locked,
+            onLockedTap: _showLockedDialog,
             onSelect: (name, listId) => setState(() {
               _category = name;
               _categoryListId = listId;
             }),
           ),
+          if (!isEditing)
+            StackPositionSection(
+              top: _stackTop,
+              onSelect: (v) => setState(() => _stackTop = v),
+            ),
           DateTimeSection(
             date: _date,
             time: _time,
@@ -132,6 +166,10 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
           PrioritySection(
             priority: _priority,
             onSelect: (p) => setState(() => _priority = p),
+          ),
+          RecurrenceSection(
+            recurrence: _recurrence,
+            onSelect: (r) => setState(() => _recurrence = r),
           ),
           SubtaskSection(
             drafts: _drafts,
@@ -160,7 +198,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
             saving: _saving,
             onSubmit: _submit,
             submitLabel:
-                isEditing ? 'SAVE CHANGES -> [ENTER]' : 'COMMIT & SAVE TASK -> [ENTER]',
+                isEditing ? 'SAVE CHANGES -> [ENTER]' : 'ADD TASK TO DECK',
           ),
         ],
       ),
@@ -220,6 +258,33 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     });
   }
 
+  /// Locked-category prompt: filing elsewhere means going back to the
+  /// folder you want, or starting from the homepage.
+  Future<void> _showLockedDialog() async {
+    if (!mounted) return;
+    final goBack = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('CATEGORY LOCKED'),
+        content: Text(
+          'THIS TASK FILES UNDER ${widget.lockedCategory?.trim().toUpperCase() ?? 'THIS LIST'}. '
+          'GO BACK AND ADD IT TO A LIST YOU WANT, OR ADD IT FROM THE HOMEPAGE.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('STAY HERE'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: const Text('GO BACK'),
+          ),
+        ],
+      ),
+    );
+    if (goBack == true && mounted) Navigator.of(context).pop();
+  }
+
   Future<void> _pickDate() async {
     // Todos can't target the past: clamp the picker to today onwards.
     final now = DateTime.now();
@@ -257,13 +322,15 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
       if (isEditing && editingId != null) {
         final task = widget.task!;
         final updated = task.copyWith(
-          title: _titleController.text.trim().toUpperCase(),
+          title: _titleController.text.trim(),
+          notes: _notesController.text.trim(),
           category: _category,
           listId: _categoryListId,
           dueDate: _isoDate,
           dueTime: _timeValue,
           priority: _priority,
           focus: _priority == 3,
+          recurrence: _recurrence,
         );
         await db.updateTask(updated);
         final keepIds = <int>{};
@@ -274,7 +341,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               Subtask(
                 id: d.id,
                 taskId: editingId,
-                title: d.title.toUpperCase(),
+                title: d.title.trim(),
                 done: d.done,
               ),
             );
@@ -282,7 +349,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
             await db.insertSubtask(
               Subtask(
                 taskId: editingId,
-                title: d.title.toUpperCase(),
+                title: d.title.trim(),
                 done: d.done,
               ),
             );
@@ -292,19 +359,29 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
           await db.deleteSubtask(removed);
         }
       } else {
+        final existing = await db.getTasks();
+        var sort = 0;
+        if (existing.isNotEmpty) {
+          final sorts = existing.map((t) => t.sort).toList();
+          sorts.sort();
+          sort = _stackTop ? sorts.first - 1 : sorts.last + 1;
+        }
         final created = TodoTask(
-          title: _titleController.text.trim().toUpperCase(),
+          title: _titleController.text.trim(),
+          notes: _notesController.text.trim(),
           category: _category,
           listId: _categoryListId,
           dueDate: _isoDate,
           dueTime: _timeValue,
           priority: _priority,
           focus: _priority == 3,
+          recurrence: _recurrence,
+          sort: sort,
         );
         final id = await db.insertTask(created);
         for (final d in _drafts) {
           await db.insertSubtask(
-            Subtask(taskId: id, title: d.title.toUpperCase(), done: d.done),
+            Subtask(taskId: id, title: d.title.trim(), done: d.done),
           );
         }
       }
@@ -342,7 +419,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
           title: const Text('ENABLE REMINDERS?'),
           content: const Text(
             'THIS TASK HAS A DUE TIME. ALLOW NOTIFICATIONS SO THE '
-            '1-HOUR + 30-MINUTE CHIMES CAN FIRE.',
+            '1-HOUR + 30-MINUTE + ON-TIME CHIMES CAN FIRE.',
           ),
           actions: [
             TextButton(
@@ -363,11 +440,11 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
 
   void _invalidateSchedule(WidgetRef ref) {
     ref.invalidate(tasksProvider);
+    ref.invalidate(subtasksProvider);
     ref.invalidate(todayTasksProvider);
     ref.invalidate(todayCountsProvider);
     ref.invalidate(upcomingGroupsProvider);
     ref.invalidate(weekStripProvider);
-    ref.invalidate(upcomingMetricsProvider);
     ref.invalidate(listTasksProvider);
     ref.invalidate(listCountsProvider);
     ref.invalidate(listsSummaryProvider);

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/app_spacing.dart';
+import '../theme/app_typography.dart';
 
 /// Edge-to-edge top bar: 1px bottom rule, mono uppercase title,
 /// bordered square actions. No elevation, no rounding.
@@ -49,10 +50,12 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                     if (index != null)
                       Text(
                         index!.toUpperCase(),
-                        style: theme.textTheme.labelSmall?.copyWith(
+                        style: AppTypography.indexIndicator(
+                          context,
                           color: theme.colorScheme.secondary,
                         ),
                       ),
+                    SizedBox(height: 3),
                     Text(
                       title.toUpperCase(),
                       style: theme.textTheme.headlineSmall,

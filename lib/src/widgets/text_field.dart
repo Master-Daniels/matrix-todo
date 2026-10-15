@@ -109,6 +109,13 @@ class CustomTextField extends StatelessWidget {
   /// mounts on demand). When null the field manages its own node.
   final FocusNode? focusNode;
 
+  /// Corner radius override. Defaults to 0 (sharp brutalist); the
+  /// decluttered task modal passes 12–16 for rounded inputs.
+  final double radius;
+
+  /// Lines for multiline inputs (e.g. notes). Defaults to 1.
+  final int maxLines;
+
   const CustomTextField({
     super.key,
     this.label,
@@ -124,6 +131,8 @@ class CustomTextField extends StatelessWidget {
     this.onChanged,
     this.onSaved,
     this.focusNode,
+    this.radius = 0,
+    this.maxLines = 1,
   });
 
   FormFieldValidator<String>? get _effectiveValidator {
@@ -144,6 +153,11 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    BorderRadius radiusOf() => BorderRadius.circular(radius);
+    InputBorder borderOf(BorderSide side) =>
+        OutlineInputBorder(borderRadius: radiusOf(), borderSide: side);
+    final thick = BorderSide(color: scheme.primary, width: 2);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -175,6 +189,10 @@ class CustomTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           focusNode: focusNode,
+          maxLines: maxLines,
+          keyboardType: maxLines > 1
+              ? TextInputType.multiline
+              : TextInputType.text,
           textInputAction: textInputAction,
           onFieldSubmitted: onSubmitted,
           onChanged: onChanged,
@@ -186,12 +204,27 @@ class CustomTextField extends StatelessWidget {
                   ? AutovalidateMode.onUserInteraction
                   : AutovalidateMode.disabled),
           style: theme.textTheme.bodyMedium,
-          // Error borders/style come from the global InputDecorationTheme
-          // so every input (text, date, dropdown) stays .
-          decoration: InputDecoration(
-            hintText: hint?.toUpperCase(),
-            errorText: errorText,
-          ),
+          // Rounded override when requested; otherwise the global
+          // InputDecorationTheme (sharp) applies via null borders.
+          decoration: radius > 0
+              ? InputDecoration(
+                  hintText: hint?.toUpperCase(),
+                  errorText: errorText,
+                  border: borderOf(thick),
+                  enabledBorder: borderOf(thick),
+                  focusedBorder: borderOf(thick),
+                  errorBorder: borderOf(BorderSide(color: scheme.error)),
+                  focusedErrorBorder:
+                      borderOf(BorderSide(color: scheme.error, width: 2)),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                )
+              : InputDecoration(
+                  hintText: hint?.toUpperCase(),
+                  errorText: errorText,
+                ),
         ),
       ],
     );

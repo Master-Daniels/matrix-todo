@@ -8,8 +8,9 @@ import '../../../widgets/button.dart';
 import '../../../widgets/progress_bar.dart';
 import '../lists_providers.dart';
 
-/// Quad-matrix directory card: index + code badge, title, description,
-/// registered/completed metric strip, segmented progress, `OPEN FOLDER ->`.
+/// Directory card: `01 / CODE` index + status badge (`CRITICAL` filled /
+/// `RESOLVED` / `QUEUED` / `ACTIVE` outlined), title + description,
+/// `X OF Y TASKS COMPLETED` + percent + progress bar, `OPEN ->` entry.
 /// Counts resolve live via [listCountsProvider]; `id == null` renders zeros.
 class CoreListCard extends ConsumerWidget {
   final TaskList list;
@@ -36,15 +37,38 @@ class CoreListCard extends ConsumerWidget {
         counts?.maybeWhen(data: (c) => c.completed, orElse: () => 0) ?? 0;
     final hasHigh =
         counts?.maybeWhen(data: (c) => c.hasHigh, orElse: () => false) ?? false;
+    final hasActionable =
+        counts?.maybeWhen(data: (c) => c.hasActionable, orElse: () => false) ??
+            false;
     final allDone = total > 0 && done == total;
     final pct = total == 0 ? 0 : (done / total * 100).round();
 
+    final String badge;
+    final bool badgeFilled;
+    if (hasHigh) {
+      badge = 'CRITICAL';
+      badgeFilled = true;
+    } else if (allDone) {
+      badge = 'RESOLVED';
+      badgeFilled = false;
+    } else if (!hasActionable) {
+      badge = 'QUEUED';
+      badgeFilled = false;
+    } else {
+      badge = 'ACTIVE';
+      badgeFilled = false;
+    }
+
     return Container(
+      margin: const EdgeInsets.fromLTRB(
+        AppSpacing.md,
+        AppSpacing.sm,
+        AppSpacing.md,
+        AppSpacing.sm,
+      ),
       decoration: BoxDecoration(
-        color: allDone
-            ? scheme.surfaceContainerLow
-            : scheme.surfaceContainerLowest,
-        border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
+        color: scheme.surfaceContainerLowest,
+        border: Border.all(color: scheme.primary, width: 1),
       ),
       padding: const EdgeInsets.all(AppSpacing.md),
       child: Column(
@@ -55,123 +79,82 @@ class CoreListCard extends ConsumerWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$index/',
+                '$index / ${list.code.toUpperCase()}',
                 style: AppTypography.indexIndicator(
                   context,
                   color: scheme.secondary,
                 ),
               ),
-              if (allDone)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  color: scheme.primary,
-                  child: Text(
-                    '[ALL DONE]',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.onPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                )
-              else if (hasHigh)
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  color: scheme.primary,
-                  child: Text(
-                    'HIGH PRIORITY // ${list.code.toUpperCase()}',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: scheme.onPrimary,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                )
-              else
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: scheme.primary,
-                        border: Border.all(
-                          color: scheme.primary,
-                          width: 1,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      list.code.toUpperCase(),
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.secondary,
-                      ),
-                    ),
-                  ],
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 4,
                 ),
+                decoration: BoxDecoration(
+                  color: badgeFilled ? scheme.primary : Colors.transparent,
+                  border: Border.all(color: scheme.primary, width: 1),
+                ),
+                child: Text(
+                  badge,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: badgeFilled ? scheme.onPrimary : scheme.primary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             list.name.toUpperCase(),
-            style: theme.textTheme.headlineLarge?.copyWith(
-              decoration: allDone ? TextDecoration.lineThrough : null,
+            style: theme.textTheme.headlineSmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: scheme.primary,
             ),
           ),
           if (list.description.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              list.description,
-              style: theme.textTheme.bodySmall?.copyWith(
+              list.description.toUpperCase(),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.secondary,
               ),
             ),
           ],
           const SizedBox(height: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 4),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: scheme.primary, width: 1),
-                bottom: BorderSide(color: scheme.primary, width: 1),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                '$done OF $total TASKS COMPLETED',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: scheme.secondary,
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  '$total TASKS REGISTERED',
-                  style: theme.textTheme.labelMedium,
+              Text(
+                '$pct%',
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
                 ),
-                Text(
-                  '$done COMPLETED',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           ProgressBar(total: total == 0 ? 1 : total, completed: done),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                '$pct% RESOLVED',
+                allDone ? 'ARCHIVED' : '',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: scheme.secondary,
-                  fontWeight: allDone ? FontWeight.w700 : null,
                 ),
               ),
-              GhostButton(label: allDone ? 'Archive log' : 'Open folder', onPressed: onOpen),
+              GhostButton(label: 'Open', onPressed: onOpen),
             ],
           ),
         ],

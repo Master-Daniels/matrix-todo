@@ -31,43 +31,49 @@ class PrioritySection extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Container(
+          padding: const EdgeInsets.all(4),
           decoration: BoxDecoration(
             border: Border.all(color: scheme.primary, width: 1),
+            borderRadius: BorderRadius.zero,
           ),
           child: Row(
             children: [
               for (var i = 0; i < 3; i++)
                 Expanded(
-                  child: GestureDetector(
-                    onTap: () => onSelect(i + 1),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppSpacing.sm,
-                      ),
-                      decoration: BoxDecoration(
-                        color: priority == i + 1
-                            ? scheme.primary
-                            : scheme.surface,
-                        border: i < 2
-                            ? Border(
-                                right: BorderSide(
-                                  color: scheme.primary,
+                  child: Padding(
+                    padding: EdgeInsets.only(right: i < 2 ? 4 : 0),
+                    child: GestureDetector(
+                      onTap: () => onSelect(i + 1),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          vertical: AppSpacing.sm,
+                        ),
+                        decoration: BoxDecoration(
+                          color: priority == i + 1
+                              ? scheme.primary
+                              : scheme.surface,
+                          borderRadius: BorderRadius.zero,
+                          border: priority == i + 1
+                              ? null
+                              : Border.all(
+                                  color: scheme.primary.withValues(alpha: 0.3),
                                   width: 1,
                                 ),
-                              )
-                            : null,
-                      ),
-                      child: Text(
-                        priority == i + 1 ? '${labels[i]} ■' : labels[i],
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: priority == i + 1
-                              ? scheme.onPrimary
-                              : scheme.primary,
-                          fontWeight: priority == i + 1
-                              ? FontWeight.w700
-                              : FontWeight.w400,
                         ),
-                        textAlign: TextAlign.center,
+                        child: Text(
+                          priority == i + 1 ? '${labels[i]} ■' : labels[i],
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: priority == i + 1
+                                ? scheme.onPrimary
+                                : scheme.primary,
+                            fontWeight: priority == i + 1
+                                ? FontWeight.w700
+                                : FontWeight.w400,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
                     ),
                   ),

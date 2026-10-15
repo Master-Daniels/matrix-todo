@@ -1,5 +1,5 @@
-name: flutter_todo
-description: "A simple todo project built with flutter"
+name: matrix_todo
+description: "Matrix Todo - a simple todo app built with Flutter"
 # The following line prevents the package from being accidentally published to
 # pub.dev using `flutter pub publish`. This is preferred for private packages.
 publish_to: "none" # Remove this line if you wish to publish to pub.dev
@@ -16,7 +16,7 @@ publish_to: "none" # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 1.0.0+1
+version: 0.0.1+1
 
 environment:
   sdk: ^3.12.2
@@ -37,7 +37,6 @@ dependencies:
   flutter_riverpod: ^3.4.3
   sqflite: ^2.4.4
   path: ^1.9.1
-  google_fonts: ^8.2.1
   file_picker: ^13.1.0
   flutter_local_notifications: ^22.3.1
   timezone: ^0.11.1
@@ -102,23 +101,10 @@ flutter:
   # For details regarding adding assets from package dependencies, see
   # https://flutter.dev/to/asset-from-package
 
-  # google_fonts offline bundle: files must keep their API names
-  # (e.g. Megrim-Regular.ttf, NOT Megrim.ttf) and must be listed under
-  # `assets:` so AssetManifest can find them when
-  # `GoogleFonts.config.allowRuntimeFetching = false`.
-  # The `fonts:` block below is kept so plain TextStyle(fontFamily:)
-  # also resolves without the google_fonts loader.
-  assets:
-    - assets/fonts/Megrim-Regular.ttf
-    - assets/fonts/SpaceMono-Regular.ttf
-    - assets/fonts/SpaceMono-Bold.ttf
-    - assets/fonts/SpaceMono-Italic.ttf
-    - assets/fonts/SpaceMono-BoldItalic.ttf
-
-  # Bundled  type. Drop the .ttf files into assets/fonts/
-  # (see assets/fonts/README.md), then uncomment the block below and remove
-  # the google_fonts dependency. Until then fonts load from the Google Fonts
-  # runtime cache warmed at startup (AppTypography.precache).
+  # Bundled fonts resolve via the `fonts:` block below with plain
+  # `TextStyle(fontFamily:)` — no runtime fetching, no precache step.
+  # (The .ttf files must NOT also be listed under `assets:`; that would
+  # embed every font twice.)
   fonts:
     - family: Megrim
       fonts:
@@ -128,11 +114,13 @@ flutter:
         - asset: assets/fonts/SpaceMono-Regular.ttf
         - asset: assets/fonts/SpaceMono-Bold.ttf
           weight: 700
-        - asset: assets/fonts/SpaceMono-Italic.ttf
-          style: italic
-        - asset: assets/fonts/SpaceMono-BoldItalic.ttf
+    - family: Space Grotesk
+      fonts:
+        - asset: assets/fonts/SpaceGrotesk-Regular.ttf
+        - asset: assets/fonts/SpaceGrotesk-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/SpaceGrotesk-Bold.ttf
           weight: 700
-          style: italic
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package

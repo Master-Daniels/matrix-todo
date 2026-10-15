@@ -2,25 +2,35 @@ import 'package:flutter/material.dart';
 
 import '../theme/app_borders.dart';
 
-/// Square 18x18 selection control, 0px radius.
-/// Checked = solid black fill with sharp `X` (Space Mono), not a curve.
+/// Square 22x22 selection control, 0px radius.
+/// Checked = solid fill with sharp `X` (Space Mono), not a curve.
+/// [inverted] renders for black backgrounds (white box / black X).
 class CustomCheckbox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool>? onChanged;
+  final bool inverted;
 
-  const CustomCheckbox({super.key, required this.value, this.onChanged});
+  const CustomCheckbox({
+    super.key,
+    required this.value,
+    this.onChanged,
+    this.inverted = false,
+  });
 
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
+    final edge = inverted ? scheme.onPrimary : scheme.primary;
     return GestureDetector(
       onTap: onChanged != null ? () => onChanged!(!value) : null,
       child: Container(
-        width: 18,
-        height: 18,
+        width: 22,
+        height: 22,
         decoration: BoxDecoration(
-          color: value ? scheme.primary : scheme.surfaceContainerLowest,
-          border: Border.all(color: scheme.primary, width: 1),
+          color: value
+              ? edge
+              : (inverted ? Colors.transparent : scheme.surfaceContainerLowest),
+          border: Border.all(color: edge, width: 1),
           borderRadius: AppBorders.zero,
         ),
         alignment: Alignment.center,
@@ -29,10 +39,10 @@ class CustomCheckbox extends StatelessWidget {
                 'X',
                 style: TextStyle(
                   fontFamily: 'Space Mono',
-                  fontSize: 10,
+                  fontSize: 12,
                   height: 1,
                   fontWeight: FontWeight.w700,
-                  color: scheme.onPrimary,
+                  color: inverted ? scheme.primary : scheme.onPrimary,
                 ),
               )
             : null,

@@ -2,8 +2,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models.dart';
 import '../../data/providers.dart';
+import '../../data/task_dates.dart';
 
-typedef ListCounts = ({int total, int completed, bool hasHigh});
+typedef ListCounts = ({
+  int total,
+  int completed,
+  bool hasHigh,
+  bool hasActionable,
+  int? nextId,
+  String? nextTitle,
+  bool nextDone,
+});
 
 /// A task belongs to a list via its explicit `listId` — or, when unset
 /// (seeded snapshots, pre-linkage rows), by matching the category string.
@@ -37,16 +46,37 @@ final listTasksProvider = FutureProvider.family<List<TodoTask>, int>((
   return all.where((t) => taskBelongsToList(t, resolved)).toList();
 });
 
-/// Live per-list counts. `listId` is the `TaskList.id`.
+/// Live per-list counts plus queue state. `listId` is the `TaskList.id`.
 final listCountsProvider = FutureProvider.family<ListCounts, int>((
   ref,
   listId,
 ) async {
   final tasks = await ref.watch(listTasksProvider(listId).future);
+  final ordered = tasks.toList()
+    ..sort((a, b) {
+      final sortCmp = a.sort.compareTo(b.sort);
+      if (sortCmp != 0) return sortCmp;
+      return (a.id ?? 0).compareTo(b.id ?? 0);
+    });
+  final today = dayOf(DateTime.now());
+  bool actionable(TodoTask t) {
+    if (t.done) return false;
+    final parsed = tryParseDueDate(t.dueDate);
+    if (parsed == null) return false;
+    final day = dayOf(parsed);
+    return isToday(day, today) || isOverdueDay(day, today);
+  }
+
+  final undone = ordered.where((t) => !t.done).toList();
+  final next = undone.isNotEmpty ? undone.first : ordered.isNotEmpty ? ordered.last : null;
   return (
     total: tasks.length,
     completed: tasks.where((t) => t.done).length,
     hasHigh: tasks.any((t) => !t.done && t.priority >= 3),
+    hasActionable: tasks.any(actionable),
+    nextId: next?.id,
+    nextTitle: next?.title,
+    nextDone: next?.done ?? false,
   );
 });
 

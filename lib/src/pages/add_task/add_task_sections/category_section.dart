@@ -9,21 +9,25 @@ import 'section_label.dart';
 /// Mirrors the seeded DB lists. No `+ CUSTOM` (added via Lists screen later).
 const fallbackCategories = ['PERSONAL', 'WORK', 'HOME & LIVING', 'ERRANDS'];
 
-/// `02 // TAXONOMY CATEGORY` — DB-driven 3-column matrix, selected cell
-/// inverted with `■`.
+/// `02 // TAXONOMY CATEGORY` — DB-driven wrapping pill row. Selected pill
+/// inverted; single-select via [onSelect]. When [locked], the single
+/// pill is display-only and taps route to [onLockedTap] instead.
 class CategorySection extends ConsumerWidget {
   final String selected;
   final void Function(String name, int? listId) onSelect;
+  final bool locked;
+  final VoidCallback? onLockedTap;
 
   const CategorySection({
     super.key,
     required this.selected,
     required this.onSelect,
+    this.locked = false,
+    this.onLockedTap,
   });
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final scheme = Theme.of(context).colorScheme;
     final listsAsync = ref.watch(listsProvider);
 
     final names = listsAsync.maybeWhen(
@@ -40,83 +44,60 @@ class CategorySection extends ConsumerWidget {
       orElse: () => null,
     );
 
-    final rows = <Widget>[];
-    final rowCount = (names.length / 3).ceil();
-    for (var r = 0; r < rowCount; r++) {
-      final cells = <Widget>[];
-      for (var c = 0; c < 3; c++) {
-        final i = r * 3 + c;
-        if (i < names.length) {
-          cells.add(
-            _CategoryCell(
-              label: names[i],
-              selected: names[i] == selected.toUpperCase(),
-              lastCol: c == 2,
-              onTap: () => onSelect(names[i], listIdFor(names[i])),
-            ),
-          );
-        } else {
-          cells.add(
-            Expanded(
-              child: Container(
-                decoration: BoxDecoration(
-                  color: scheme.surfaceContainerHigh,
-                  border: Border(
-                    right: BorderSide(
-                      color: scheme.primary,
-                      width: c == 2 ? 0 : 1,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          );
-        }
-      }
-      // Horizontal rule between rows so each grid row reads as its own
-      // ledger line (outer top/bottom come from the wrapper border).
-      rows.add(
-        Container(
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: scheme.primary,
-                width: r < rowCount - 1 ? 1 : 0,
-              ),
-            ),
-          ),
-          child: IntrinsicHeight(child: Row(children: cells)),
-        ),
-      );
-    }
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SectionLabel('02 // Taxonomy Category', right: 'Select one'),
+        SectionLabel(
+          '02 // Taxonomy Category',
+          right: locked ? 'LOCKED' : 'Select one',
+          boldRight: locked,
+        ),
         const SizedBox(height: AppSpacing.sm),
-        Container(
-          decoration: BoxDecoration(
-            border: Border.all(color: scheme.primary, width: 1),
+        LayoutBuilder(
+          builder: (context, constraints) => Wrap(
+            spacing: AppSpacing.sm,
+            runSpacing: AppSpacing.sm,
+            children: [
+              if (locked)
+                ConstrainedBox(
+                  constraints: BoxConstraints(
+                    maxWidth: constraints.maxWidth,
+                  ),
+                  child: _CategoryPill(
+                    label: selected.toUpperCase(),
+                    selected: true,
+                    onTap: () => onLockedTap?.call(),
+                  ),
+                )
+              else
+                for (final name in names)
+                  ConstrainedBox(
+                    constraints: BoxConstraints(
+                      maxWidth: constraints.maxWidth,
+                    ),
+                    child: _CategoryPill(
+                      label: name,
+                      selected: name == selected.toUpperCase(),
+                      onTap: () => onSelect(name, listIdFor(name)),
+                    ),
+                  ),
+            ],
           ),
-          child: Column(children: rows),
         ),
       ],
     );
   }
 }
 
-class _CategoryCell extends StatelessWidget {
+class _CategoryPill extends StatelessWidget {
   final String label;
   final bool selected;
-  final bool lastCol;
   final VoidCallback onTap;
 
-  const _CategoryCell({
+  const _CategoryPill({
     required this.label,
     required this.selected,
-    required this.lastCol,
     required this.onTap,
   });
 
@@ -124,23 +105,25 @@ class _CategoryCell extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Expanded(
-      child: GestureDetector(
-        onTap: onTap,
-        child: Container(
-          padding: const EdgeInsets.all(AppSpacing.sm),
-          decoration: BoxDecoration(
-            color: selected ? scheme.primary : scheme.surface,
-            border: Border(
-              right: BorderSide(color: scheme.primary, width: lastCol ? 0 : 1),
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+        decoration: BoxDecoration(
+          color: selected ? scheme.primary : scheme.surfaceContainerLowest,
+          border: Border.all(
+            color: scheme.primary,
+            width: selected ? 2 : 1,
           ),
-          child: Text(
-            selected ? '[ $label ] ■' : '[ $label ]',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: selected ? scheme.onPrimary : scheme.primary,
-              fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-            ),
+          borderRadius: BorderRadius.zero,
+        ),
+        child: Text(
+          label,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.labelSmall?.copyWith(
+            color: selected ? scheme.onPrimary : scheme.primary,
+            fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
           ),
         ),
       ),

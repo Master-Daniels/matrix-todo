@@ -17,7 +17,7 @@ String deriveListCode(String name) {
   return chars.length <= 4 ? chars : chars.substring(0, 4);
 }
 
-/// `+ CREATE NEW CATEGORY` brutal sheet: `01` name (required), `02` code
+/// `CREATE NEW CATEGORY` brutal sheet: `01` name (required), `02` code
 /// (optional, auto-derived), `03` description. New lists land in
 /// `SEC 02` (`sort` continues past the seeded core directories).
 class ListFormSheet extends ConsumerStatefulWidget {

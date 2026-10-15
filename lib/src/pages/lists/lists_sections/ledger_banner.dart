@@ -41,7 +41,7 @@ class LedgerBanner extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'SYSTEM LEDGER // V.04',
+                'SYSTEM LEDGER // V.0.0.1',
                 style: AppTypography.indexIndicator(
                   context,
                   color: scheme.secondary,
@@ -68,18 +68,6 @@ class LedgerBanner extends ConsumerWidget {
                 child: Text(
                   pctLabel.toUpperCase(),
                   style: theme.textTheme.labelSmall,
-                ),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                color: scheme.primary,
-                child: Text(
-                  'SYNCED [OK]',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.onPrimary,
-                    fontWeight: FontWeight.w700,
-                  ),
                 ),
               ),
             ],

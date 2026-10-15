@@ -1,20 +1,33 @@
-# Bundled fonts (drop-in)
+# Bundled fonts
 
-Download these 5 files into this folder (all OFL-licensed, google/fonts):
+The `.ttf` files in this folder are bundled for offline use and resolve via
+the `fonts:` block in `pubspec.yaml` with plain `TextStyle(fontFamily:)`
+(`lib/src/theme/app_typography.dart`) — no `google_fonts` dependency, no
+runtime fetching. Do NOT also list them under `assets:`; that would embed
+each font twice.
 
-- `Megrim-Regular.ttf` — `ofl/megrim/Megrim.ttf` (renamed: google_fonts with
-  `allowRuntimeFetching = false` looks up `Megrim-Regular.ttf` via AssetManifest,
-  so the file MUST keep the `-Regular` suffix and be listed under `assets:` in
-  `pubspec.yaml`, not just `fonts:`)
-- `SpaceMono-Regular.ttf` — `ofl/spacemono/SpaceMono-Regular.ttf`
-- `SpaceMono-Bold.ttf` — `ofl/spacemono/SpaceMono-Bold.ttf`
-- `SpaceMono-Italic.ttf` — `ofl/spacemono/SpaceMono-Italic.ttf`
-- `SpaceMono-BoldItalic.ttf` — `ofl/spacemono/SpaceMono-BoldItalic.ttf`
+Actual files shipped (6):
 
-Then:
+- `Megrim-Regular.ttf` — Megrim, OFL-licensed, source `ofl/megrim/Megrim.ttf`
+  (renamed with `-Regular`)
+- `SpaceMono-Regular.ttf` — Space Mono Regular, OFL, `ofl/spacemono/SpaceMono-Regular.ttf`
+- `SpaceMono-Bold.ttf` — Space Mono Bold, OFL, `ofl/spacemono/SpaceMono-Bold.ttf`
+- `SpaceGrotesk-Regular.ttf` — Space Grotesk Regular, OFL
+- `SpaceGrotesk-Medium.ttf` — Space Grotesk Medium, OFL
+- `SpaceGrotesk-Bold.ttf` — Space Grotesk Bold, OFL
 
-1. Uncomment the `fonts:` block in `pubspec.yaml`.
-2. Remove `google_fonts` from dependencies and run `flutter pub get`.
-3. `AppTypography.precache()` becomes an instant no-op — no other code changes.
+## OFL attribution
 
-Until then, type resolves via the Google Fonts runtime cache warmed at startup.
+All fonts above are licensed under the SIL Open Font License 1.1
+(https://openfontlicense.org / https://scripts.sil.org/OFL).
+
+- Megrim © Sorkin Type Co. (google/fonts `ofl/megrim`, OFL 1.1). See `OFL.txt` in the upstream repo.
+- Space Mono © 2012, Colophon Foundry / Google Fonts (google/fonts
+  `ofl/spacemono`, OFL 1.1).
+- Space Grotesk © 2020, Florian Karsten / Google Fonts (google/fonts
+  `ofl/spacegrotesk`, OFL 1.1).
+
+License copies live upstream at https://github.com/google/fonts/tree/main/ofl
+(`megrim/OFL.txt`, `spacemono/OFL.txt`, `spacegrotesk/OFL.txt`). If you
+redistribute this app or these `.ttf` files, keep the font copyright notices
+and make the OFL text available alongside them.

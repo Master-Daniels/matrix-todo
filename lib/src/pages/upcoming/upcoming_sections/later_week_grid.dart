@@ -3,13 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models.dart';
 import '../../../data/providers.dart';
+import '../../../data/recurrence.dart';
 import '../../../notifications/reminder_service.dart';
 import '../../../theme/app_spacing.dart';
-import '../../../theme/app_typography.dart';
 import '../../../widgets/animated_bottom_sheet.dart';
-import '../../../widgets/checkbox.dart';
-import '../../../widgets/task_swipe.dart';
+import '../../../widgets/deck_swipe.dart';
+import '../../../widgets/done_undo.dart';
+import '../../../widgets/subtask_slot.dart';
 import '../../add_task/add_task_sheet.dart';
+import '../../home/home_sections/reschedule_dialog.dart';
 import '../../settings/settings_providers.dart';
 import '../upcoming_providers.dart';
 import 'task_popover.dart';
@@ -33,13 +35,11 @@ class LaterWeekGrid extends StatelessWidget {
     }
     final cells = <Widget>[];
     for (final iso in order) {
-      final first = order.first == iso;
       for (var i = 0; i < byDate[iso]!.length; i++) {
         cells.add(
-          _BentoCell(
+          LaterWeekRow(
             task: byDate[iso]![i],
             date: tryParseDueDate(iso) ?? DateTime.now(),
-            highlightBadge: first && i == 0,
           ),
         );
       }
@@ -72,28 +72,42 @@ class LaterWeekGrid extends StatelessWidget {
   }
 }
 
-class _BentoCell extends ConsumerWidget {
+/// Later-week row from the timeline design: `[WED 07]` date chip,
+/// title, due time and a chevron collapsing the notes. Notes render
+/// expanded by default. Swipe right completes, left reschedules.
+/// Also reused for open Next Week & Beyond segments.
+class LaterWeekRow extends ConsumerStatefulWidget {
   final TodoTask task;
   final DateTime date;
-  final bool highlightBadge;
 
-  const _BentoCell({
+  const LaterWeekRow({
+    super.key,
     required this.task,
     required this.date,
-    required this.highlightBadge,
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LaterWeekRow> createState() => _LaterWeekRowState();
+}
+
+class _LaterWeekRowState extends ConsumerState<LaterWeekRow> {
+  bool _expanded = true;
+
+  TodoTask get task => widget.task;
+
+  @override
+  Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final done = task.done;
+    final date = widget.date;
 
-    return TaskSwipe(
+    return HomeDeckSwipe(
       swipeKey: 'bento-${task.id ?? 'n'}-${task.dueDate}',
       done: done,
-      onMarkDone: () => _toggleDone(ref, task, true),
-      onMarkUndone: () => _toggleDone(ref, task, false),
+      rotate: false,
+      onComplete: () => _completeWithUndo(task),
+      onReschedule: () => showRescheduleDialog(context, task),
       onTap: () => _openEdit(context, task),
       child: Container(
         decoration: BoxDecoration(
@@ -106,114 +120,101 @@ class _BentoCell extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 2,
-                ),
-                decoration: BoxDecoration(
-                  color: highlightBadge ? scheme.primary : Colors.transparent,
-                  border: Border.all(color: scheme.primary, width: 1),
-                ),
-                child: Text(
-                  fmtDayBadge(date),
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: highlightBadge
-                        ? scheme.onPrimary
-                        : scheme.primary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              Text(
-                '[TAG: ${task.category.toUpperCase()}]',
-                style: AppTypography.indexIndicator(
-                  context,
-                  color: scheme.secondary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.only(top: 2),
-                child: CustomCheckbox(
-                  value: done,
-                  onChanged: task.id == null
-                      ? null
-                      : (v) => _toggleDone(ref, task, v),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      task.title,
-                      style: theme.textTheme.headlineSmall?.copyWith(
-                        color: done ? scheme.secondary : scheme.primary,
-                        decoration: done
-                            ? TextDecoration.lineThrough
-                            : TextDecoration.none,
-                      ),
-                    ),
-                    if (task.notes.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        task.notes,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: scheme.secondary,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              TaskPopover(task: task),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Container(
-            padding: const EdgeInsets.only(top: 8),
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(color: scheme.outline, width: 1),
-              ),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'TIME: ${(task.dueTime ?? 'ANYTIME').toUpperCase()}',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.secondary,
-                  ),
-                ),
                 Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
+                    horizontal: 8,
+                    vertical: 4,
                   ),
                   decoration: BoxDecoration(
                     border: Border.all(color: scheme.primary, width: 1),
                   ),
-                  child: Text(
-                    task.category.toUpperCase(),
-                    style: theme.textTheme.labelSmall,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        weekdayShort[date.weekday - 1],
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: scheme.secondary,
+                        ),
+                      ),
+                      Text(
+                        date.day.toString().padLeft(2, '0'),
+                        style: theme.textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: scheme.primary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    task.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: done ? scheme.secondary : scheme.primary,
+                      decoration: done
+                          ? TextDecoration.lineThrough
+                          : TextDecoration.none,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      normalizeDueTime(task.dueTime).isEmpty
+                          ? 'ANYTIME'
+                          : normalizeDueTime(task.dueTime),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.secondary,
+                      ),
+                    ),
+                    GestureDetector(
+                      onTap: () =>
+                          setState(() => _expanded = !_expanded),
+                      child: Icon(
+                        _expanded ? Icons.expand_less : Icons.expand_more,
+                        size: 18,
+                        color: scheme.primary,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 8),
+                TaskPopover(task: task),
               ],
             ),
-          ),
-        ],
-      ),
+            if (_expanded && task.notes.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(
+                task.notes,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: scheme.secondary,
+                ),
+              ),
+            ],
+            if (task.id != null) SubtaskSlot(taskId: task.id),
+            if (task.recurrence.trim().toUpperCase() == 'DAILY' ||
+                task.recurrence.trim().toUpperCase() == 'WEEKLY')
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(
+                  '↻ ${task.recurrence.trim().toUpperCase()}',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.secondary,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -221,16 +222,20 @@ class _BentoCell extends ConsumerWidget {
   void _openEdit(BuildContext context, TodoTask task) {
     showAnimatedModalBottomSheet(
       context: context,
-      heightFactor: 0.92,
       builder: (_) => AddTaskSheet(task: task),
     );
   }
 
-  Future<void> _toggleDone(WidgetRef ref, TodoTask task, bool done) async {
+  Future<int?> _toggleDone(WidgetRef ref, TodoTask task, bool done) async {
     final id = task.id;
-    if (id == null) return;
+    if (id == null) return null;
     final db = ref.read(appDatabaseProvider);
-    await db.setTaskDone(id, done);
+    int? cloneId;
+    if (done) {
+      cloneId = await completeTaskWithRecurrence(db, task);
+    } else {
+      await db.setTaskDone(id, false);
+    }
     await ref.read(reminderServiceProvider).syncAll(
           await db.getTasks(),
           enabled: ref.read(remindersEnabledProvider),
@@ -238,6 +243,26 @@ class _BentoCell extends ConsumerWidget {
     ref.invalidate(tasksProvider);
     ref.invalidate(upcomingGroupsProvider);
     ref.invalidate(weekStripProvider);
-    ref.invalidate(upcomingMetricsProvider);
+    return cloneId;
+  }
+
+  Future<void> _completeWithUndo(TodoTask task) async {
+    final cloneId = await _toggleDone(ref, task, true);
+    if (!mounted || !context.mounted) return;
+    showDoneUndo(
+      context,
+      ref,
+      task,
+      () => _undoComplete(ref, task, cloneId),
+    );
+  }
+
+  Future<void> _undoComplete(WidgetRef ref, TodoTask task, int? cloneId) async {
+    if (cloneId != null) {
+      try {
+        await ref.read(appDatabaseProvider).deleteTask(cloneId);
+      } catch (_) {}
+    }
+    await _toggleDone(ref, task, false);
   }
 }

@@ -1,34 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-/// Typographic identity: geometric Megrim for headings/body,
-/// technical Space Mono (uppercase) for labels/indices/metadata.
+/// Typographic identity: geometric Megrim for display/headings,
+/// legible Space Grotesk for body copy, technical Space Mono (uppercase)
+/// for labels/indices/metadata.
 ///
-/// Fonts resolve in this order: bundled `assets/fonts` (see `pubspec.yaml`
-/// `fonts:` + `assets/fonts/README.md`) first, Google Fonts runtime cache
-/// second (warmed at startup via [precache]). No per-paint fetching.
+/// Fonts are bundled via the `fonts:` block in `pubspec.yaml` and resolve
+/// with plain `TextStyle(fontFamily:)` — zero startup cost, no precache.
 abstract final class AppTypography {
   static String get displayFamily => 'Megrim';
+  static String get bodyFamily => 'Space Grotesk';
   static String get monoFamily => 'Space Mono';
 
-  /// Warm the font cache before first paint. Call once in `main()` after
-  /// `WidgetsFlutterBinding.ensureInitialized()`. Resolves instantly once
-  /// the `.ttf` files are bundled.
-  static Future<void> precache() => GoogleFonts.pendingFonts([
-    GoogleFonts.megrim(),
-    GoogleFonts.spaceMono(),
-    GoogleFonts.spaceMono(fontWeight: FontWeight.w700),
-    GoogleFonts.spaceMono(
-      fontWeight: FontWeight.w700,
-      fontStyle: FontStyle.italic,
-    ),
-  ]);
-
   static final TextStyle _megrimBase = TextStyle(fontFamily: 'Megrim');
+  static final TextStyle _groteskBase = TextStyle(fontFamily: 'Space Grotesk');
   static final TextStyle _monoBase = TextStyle(fontFamily: 'Space Mono');
 
   static TextTheme textTheme(ColorScheme scheme) {
     final megrim = _megrimBase;
+    final grotesk = _groteskBase;
     final mono = _monoBase;
 
     TextStyle scaled(
@@ -78,23 +67,23 @@ abstract final class AppTypography {
         letterSpacing: -0.01,
       ),
       bodyLarge: scaled(
-        megrim,
+        grotesk,
         size: 16,
-        height: 22,
+        height: 24,
         weight: FontWeight.w400,
         letterSpacing: 0,
       ),
       bodyMedium: scaled(
-        megrim,
-        size: 14,
-        height: 20,
+        grotesk,
+        size: 15,
+        height: 22,
         weight: FontWeight.w400,
         letterSpacing: 0,
       ),
       bodySmall: scaled(
-        megrim,
-        size: 12,
-        height: 16,
+        grotesk,
+        size: 13,
+        height: 18,
         weight: FontWeight.w400,
         letterSpacing: 0.01,
       ),
@@ -114,8 +103,8 @@ abstract final class AppTypography {
       ),
       labelSmall: scaled(
         mono,
-        size: 10,
-        height: 12,
+        size: 11,
+        height: 15,
         weight: FontWeight.w400,
         letterSpacing: 0.08,
       ),

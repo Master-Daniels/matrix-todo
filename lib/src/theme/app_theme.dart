@@ -11,9 +11,14 @@ import 'app_typography.dart';
 /// identical — only the [ColorScheme] flips (black-on-white vs
 /// white-on-near-black). Pair with `ThemeMode.system` in [MaterialApp].
 abstract final class AppTheme {
-  static ThemeData light() => _build(AppColors.lightScheme);
+  // Built once: ThemeData construction walks the whole component-theme
+  // tree, so rebuilding light+dark on every TodoApp.build wastes frames.
+  static final ThemeData _light = _build(AppColors.lightScheme);
+  static final ThemeData _dark = _build(AppColors.darkScheme);
 
-  static ThemeData dark() => _build(AppColors.darkScheme);
+  static ThemeData light() => _light;
+
+  static ThemeData dark() => _dark;
 
   static ThemeData _build(ColorScheme scheme) {
     final text = AppTypography.textTheme(scheme);

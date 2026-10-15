@@ -62,6 +62,10 @@ class TodoTask {
   final bool focus;
   final int sort;
 
+  /// Recurrence rule: `NONE`, `DAILY` or `WEEKLY`. Completing a recurring
+  /// task clones it onto the next due date (see `completeTaskWithRecurrence`).
+  final String recurrence;
+
   /// Epoch millis until which regular pre-reminders are replaced by a
   /// single deferred fire (notification SNOOZE action). Null = no snooze.
   final int? snoozedUntil;
@@ -78,6 +82,7 @@ class TodoTask {
     this.done = false,
     this.focus = false,
     this.sort = 0,
+    this.recurrence = 'NONE',
     this.snoozedUntil,
   });
 
@@ -93,6 +98,7 @@ class TodoTask {
     done: ((map['done'] as int?) ?? 0) == 1,
     focus: ((map['focus'] as int?) ?? 0) == 1,
     sort: (map['sort'] as int?) ?? 0,
+    recurrence: ((map['recurrence'] as String?) ?? 'NONE').toUpperCase(),
     snoozedUntil: map['snoozed_until'] as int?,
   );
 
@@ -108,6 +114,7 @@ class TodoTask {
     'done': done ? 1 : 0,
     'focus': focus ? 1 : 0,
     'sort': sort,
+    'recurrence': recurrence,
     'snoozed_until': snoozedUntil,
   };
 
@@ -123,6 +130,7 @@ class TodoTask {
     bool? done,
     bool? focus,
     int? sort,
+    String? recurrence,
     int? snoozedUntil,
   }) => TodoTask(
     id: id ?? this.id,
@@ -136,6 +144,7 @@ class TodoTask {
     done: done ?? this.done,
     focus: focus ?? this.focus,
     sort: sort ?? this.sort,
+    recurrence: recurrence ?? this.recurrence,
     snoozedUntil: snoozedUntil ?? this.snoozedUntil,
   );
 }

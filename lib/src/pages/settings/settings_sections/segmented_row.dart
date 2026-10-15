@@ -31,7 +31,7 @@ class SegmentedRow<T extends Object> extends StatelessWidget {
         color: scheme.surface,
         border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
       ),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -42,14 +42,14 @@ class SegmentedRow<T extends Object> extends StatelessWidget {
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             subtitle.toUpperCase(),
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: scheme.primary, width: 1),

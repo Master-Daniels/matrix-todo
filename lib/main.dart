@@ -1,40 +1,53 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'src/data/providers.dart';
+import 'src/data/recurrence.dart';
 import 'src/notifications/reminder_service.dart';
 import 'src/pages/home/home_providers.dart';
 import 'src/pages/layout/app_shell.dart';
 import 'src/pages/settings/settings_providers.dart';
 import 'src/pages/upcoming/upcoming_providers.dart';
 import 'src/theme/app_theme.dart';
-import 'src/theme/app_typography.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // Fetch once at startup (instant no-op once fonts are bundled).
-  GoogleFonts.config.allowRuntimeFetching = false;
-  await AppTypography.precache();
   // Load settings before the first frame so the saved theme is correct
-  // immediately — no launch flash. Falls back to defaults on failure.
+  // immediately — no launch flash. Single small SQLite read; the heavy
+  // work (tz data, plugin init, schedule heal) warms in the background
+  // after the first frame so the app opens instantly.
   final container = ProviderContainer();
   try {
     await container.read(settingsControllerProvider.notifier).refresh();
   } catch (_) {}
-  // Reminder backend: permission-free init (channels + tap/action routing).
-  // Permissions are NEVER requested here — only after the first dated task
-  // is created, from user interaction. On launch we silently rebuild when
-  // the master switch is on: this heals reboots when permission is already
-  // granted, and is a harmless no-op otherwise. All guarded — a dead
-  // plugin never blocks launch.
+  runApp(
+    UncontrolledProviderScope(container: container, child: const TodoApp()),
+  );
+  // Fire-and-forget: never blocks first paint. Errors stay silent — a dead
+  // plugin must never crash launch.
+  _warmReminders(container);
+}
+
+/// Background reminder warmup: permission-free init (channels + tap/action
+/// routing) plus a heal-only resync when the master switch is on. Never
+/// awaited from [main] — first frame paints before this finishes.
+///
+/// Cold-start taps (app opened from a notification) are applied here as an
+/// override: [AppShell] paints the `default_view` tab immediately, then this
+/// jumps to Upcoming + focus when a launch route exists. Permissions are
+/// NEVER requested here — only from user interaction.
+Future<void> _warmReminders(ProviderContainer container) async {
   try {
     final reminders = container.read(reminderServiceProvider);
     reminders.digestSnoozeReader = () async => int.tryParse(
-      await container.read(appDatabaseProvider).getSetting(
-            'digest_snooze_until',
-          ) ??
+      await container
+              .read(appDatabaseProvider)
+              .getSetting('digest_snooze_until') ??
           '',
+    );
+    reminders.dailyPolicyReader = () async => (
+      briefing: container.read(briefingProvider),
+      streak: container.read(streakReminderProvider),
     );
     await reminders.init(
       onRoute: (route) => handleReminderRoute(container, route),
@@ -48,13 +61,15 @@ void main() async {
         healOnly: true,
       );
     }
+    // AppShell already painted default_view; a cold-start route beats it.
+    final launch = reminders.consumeLaunchRoute();
+    if (launch != null) {
+      container.read(navIndexProvider.notifier).updateIndex(1);
+      if (launch.taskId != null) {
+        container.read(focusedTaskIdProvider.notifier).set(launch.taskId);
+      }
+    }
   } catch (_) {}
-  runApp(
-    UncontrolledProviderScope(
-      container: container,
-      child: const TodoApp(),
-    ),
-  );
 }
 
 /// Foreground notification router: tap or action button. Navigates to
@@ -74,8 +89,13 @@ Future<void> handleReminderRoute(
     // exactly what fired (payload nid) before applying action effects.
     if (route.nid != null) await reminders.dismiss(route.nid!);
     if (route.actionId == actionDone && route.taskId != null) {
-      await db.setTaskDone(route.taskId!, true);
-      await db.setTaskSnooze(route.taskId!, null);
+      final task = await db.getTask(route.taskId!);
+      if (task != null) {
+        await completeTaskWithRecurrence(db, task);
+      } else {
+        await db.setTaskDone(route.taskId!, true);
+        await db.setTaskSnooze(route.taskId!, null);
+      }
     } else if (route.actionId == actionSnooze && route.taskId != null) {
       await reminders.snoozeTask(db, route.taskId!);
     } else if (route.actionId == actionSnooze) {

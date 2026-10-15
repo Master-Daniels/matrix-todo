@@ -10,7 +10,8 @@ import '../data/task_dates.dart';
 import 'notification_service.dart';
 
 /// Reminder slots per task. The index doubles as the notification-id suffix.
-enum ReminderKind { hourBefore, halfHourBefore, overdue }
+/// Append-only: existing indexes are baked into scheduled ids.
+enum ReminderKind { hourBefore, halfHourBefore, overdue, atStart }
 
 /// Deterministic id: rescheduling the same task never duplicates.
 int notificationId(int taskId, ReminderKind kind) => taskId * 10 + kind.index;
@@ -41,7 +42,7 @@ const actionDone = 'done';
 /// [reminderGroupKey], and a live inbox summary ([reminderGroupSummaryId])
 /// heads the stack. Tapping the group header expands the dropdown; each
 /// child expands to its action buttons. Without an explicit summary the OS
-/// auto-groups anyway (e.g. HyperOS `flutter_todo(2)`), but children of
+/// auto-groups anyway (e.g. HyperOS `matrix_todo(2)`), but children of
 /// auto-groups hide their actions on several skins.
 const reminderGroupKey = 'matrix_group';
 const reminderGroupSummaryId = -999999;
@@ -170,6 +171,18 @@ List<ScheduledReminder> remindersFor(TodoTask task, DateTime now) {
       payload: reminderPayload(taskId: task.id, nid: id),
     ));
   }
+  // On-time alarm: fires exactly at the event start.
+  if (eventAt.isAfter(now)) {
+    final id = notificationId(task.id!, ReminderKind.atStart);
+    out.add((
+      id: id,
+      kind: ReminderKind.atStart,
+      fireAt: eventAt,
+      title: task.title,
+      body: 'STARTING NOW // ${task.dueTime!.toUpperCase()}',
+      payload: reminderPayload(taskId: task.id, nid: id),
+    ));
+  }
   return out;
 }
 
@@ -261,13 +274,17 @@ List<String> groupSummaryLines(List<TodoTask> tasks, DateTime now) {
 
 /// Every notification id the schedule wants alive right now: pre-reminder
 /// slots plus digest mornings (post-snooze-shift — shifts never change ids),
-/// plus the group summary when anything is scheduled.
+/// plus the daily toggles when armed ([briefing] always fires; [streak]
+/// only when tasks remain today), plus the group summary when anything
+/// is scheduled.
 /// Pure + unit-tested; drives the stale-sweep in [ReminderService.syncAll].
 Set<int> desiredIdsFor(
   List<TodoTask> tasks,
   DateTime now,
-  int? digestSnoozeMs,
-) {
+  int? digestSnoozeMs, {
+  bool briefing = false,
+  bool streak = false,
+}) {
   final ids = <int>{};
   for (final task in tasks) {
     for (final r in remindersFor(task, now)) {
@@ -278,8 +295,52 @@ Set<int> desiredIdsFor(
     final digest = overdueDigest(morning, tasks);
     if (digest != null) ids.add(applyDigestSnooze(digest, digestSnoozeMs).id);
   }
+  if (briefing) ids.add(briefingNotificationId);
+  if (streak && remainingToday(tasks, now) > 0) {
+    ids.add(streakNotificationId);
+  }
   if (ids.isNotEmpty) ids.add(reminderGroupSummaryId);
   return ids;
+}
+
+/// Fixed ids for the daily toggles (WS11). Negative like digests, far from
+/// `digestId` (-yyyymmdd ≈ -20M) and the group summary (-999999).
+const briefingNotificationId = -900001;
+const streakNotificationId = -900002;
+
+/// Fire hour for the daily toggles: briefing 08:00, streak nudge 20:00.
+const briefingHour = 8;
+const streakHour = 20;
+
+/// Undone tasks due today or overdue as of [now] — the briefing body and
+/// the streak-remainder gate. Pure + unit-testable.
+int remainingToday(List<TodoTask> tasks, DateTime now) {
+  final today = dayOf(now);
+  var n = 0;
+  for (final t in tasks) {
+    if (t.done) continue;
+    final day = tryParseDueDate(t.dueDate);
+    if (day == null) continue;
+    if (!dayOf(day).isAfter(today)) n++;
+  }
+  return n;
+}
+
+/// Next 08:00 briefing fire after [now] (today when still ahead, else
+/// tomorrow). Pure + unit-testable.
+DateTime nextBriefingFire(DateTime now) {
+  final eight = DateTime(now.year, now.month, now.day, briefingHour);
+  return now.isBefore(eight)
+      ? eight
+      : eight.add(const Duration(days: 1));
+}
+
+/// Next 20:00 streak fire after [now]. Pure + unit-testable.
+DateTime nextStreakFire(DateTime now) {
+  final eight = DateTime(now.year, now.month, now.day, streakHour);
+  return now.isBefore(eight)
+      ? eight
+      : eight.add(const Duration(days: 1));
 }
 
 /// Task id to scroll-to + highlight in Upcoming after a notification tap.
@@ -428,10 +489,16 @@ class ReminderService {
   /// with the payload `nid`. Never touches pending sibling schedules.
   Future<void> dismiss(int id) => _notifications.cancel(id);
 
+  /// Hook for the persisted daily toggles (WS11). Wired in `main()`;
+  /// null disables daily scheduling (tests). Read on every [syncAll] so
+  /// mutations refresh the briefing/streak fires and toggle-off is honored.
+  Future<({bool briefing, bool streak})> Function()? dailyPolicyReader;
+
   /// Full rebuild from the DB: per-task cancel-then-schedule plus one
-  /// overdue digest per morning (shifted by a live digest snooze), then a
+  /// overdue digest per morning (shifted by a live digest snooze), the
+  /// daily briefing/streak fires per [dailyPolicyReader], then a
   /// stale-sweep that cancels pending ids nobody wants any more (deleted /
-  /// completed tasks, shifted mornings).
+  /// completed tasks, shifted mornings, disarmed dailies).
   ///
   /// Deliberately NOT a global `cancelAll` (except when the master switch
   /// is off): displayed ongoing reminders stay in the shade across resyncs
@@ -450,14 +517,22 @@ class ReminderService {
     }
     final now = DateTime.now();
     final digestSnooze = await digestSnoozeReader?.call();
+    final policy = await dailyPolicyReader?.call() ??
+        (briefing: false, streak: false);
+    Set<int> wanted() => desiredIdsFor(
+          tasks,
+          now,
+          digestSnooze,
+          briefing: policy.briefing,
+          streak: policy.streak,
+        )..remove(reminderGroupSummaryId);
     if (healOnly) {
       final pending = await _notifications.pendingIds();
       // The summary is shown immediately (displayed, never pending), so it
       // is excluded from the intact-check; children must match exactly.
-      final wanted = desiredIdsFor(tasks, now, digestSnooze)
-        ..remove(reminderGroupSummaryId);
+      final want = wanted();
       final live = pending.where((id) => id != 999998 && id != 999999).toSet();
-      if (live.length == wanted.length && live.containsAll(wanted)) {
+      if (live.length == want.length && live.containsAll(want)) {
         debugPrint(
           '[ReminderService] syncAll heal-only: schedules intact, skip',
         );
@@ -473,7 +548,8 @@ class ReminderService {
         await _schedule(applyDigestSnooze(digest, digestSnooze));
       }
     }
-    final desired = desiredIdsFor(tasks, now, digestSnooze);
+    await _syncDaily(tasks, now, policy);
+    final desired = wanted()..add(reminderGroupSummaryId);
     final pending = await _notifications.pendingIds();
     for (final id in pending) {
       if (id == 999998 || id == 999999) continue;
@@ -485,6 +561,99 @@ class ReminderService {
     if (kDebugMode) {
       final after = await _notifications.pendingIds();
       debugPrint('[ReminderService] syncAll done: ${after.length} pending');
+    }
+  }
+
+  /// Daily toggles (WS11): cancel-then-schedule the 08:00 briefing and the
+  /// 20:00 streak nudge per policy. The briefing lists today's remaining
+  /// rows; the streak nudge fires only when tasks remain. Informational:
+  /// tap opens Upcoming, no action buttons (so SNOOZE/DONE never pollute
+  /// task or digest state).
+  Future<void> _syncDaily(
+    List<TodoTask> tasks,
+    DateTime now,
+    ({bool briefing, bool streak}) policy,
+  ) async {
+    final remaining = remainingToday(tasks, now);
+    if (!policy.briefing) {
+      await _notifications.cancel(briefingNotificationId);
+    } else {
+      await _notifications.cancel(briefingNotificationId);
+      final due = tasks.where((t) {
+        if (t.done) return false;
+        final day = tryParseDueDate(t.dueDate);
+        return day != null && !dayOf(day).isAfter(dayOf(now));
+      }).toList();
+      final titles = due.take(3).map((t) => t.title).join(' • ');
+      final more = due.length > 3 ? ' +${due.length - 3} MORE' : '';
+      final fire = nextBriefingFire(now);
+      await _scheduleDaily(
+        id: briefingNotificationId,
+        fireAt: fire,
+        title: 'MORNING BRIEFING // $remaining TODAY',
+        body: due.isEmpty ? 'DAY CLEAR // NOTHING DUE' : '$titles$more',
+        digest: isoDay(fire),
+      );
+    }
+    if (!policy.streak || remaining == 0) {
+      await _notifications.cancel(streakNotificationId);
+    } else {
+      await _notifications.cancel(streakNotificationId);
+      final fire = nextStreakFire(now);
+      await _scheduleDaily(
+        id: streakNotificationId,
+        fireAt: fire,
+        title: 'STREAK CHECK // $remaining REMAIN',
+        body:
+            'CLOSE THE DAY // $remaining TASK${remaining == 1 ? '' : 'S'} REMAIN',
+        digest: isoDay(fire),
+      );
+    }
+  }
+
+  /// One informational fire: reminders channel + nudge chime, tap-only.
+  Future<void> _scheduleDaily({
+    required int id,
+    required DateTime fireAt,
+    required String title,
+    required String body,
+    required String digest,
+  }) async {
+    if (fireAt.millisecondsSinceEpoch <= DateTime.now().millisecondsSinceEpoch) {
+      return;
+    }
+    try {
+      await _notifications.zonedSchedule(
+        id: id,
+        title: title,
+        body: body,
+        fireAt: fireAt,
+        notificationDetails: NotificationDetails(
+          android: AndroidNotificationDetails(
+            NotificationService.remindersChannelId,
+            'REMINDERS',
+            importance: Importance.high,
+            priority: Priority.high,
+            playSound: true,
+            sound: const RawResourceAndroidNotificationSound('nudge_chime'),
+            audioAttributesUsage: AudioAttributesUsage.alarm,
+            groupKey: reminderGroupKey,
+            visibility: NotificationVisibility.public,
+            styleInformation: BigTextStyleInformation(
+              body,
+              contentTitle: title,
+              summaryText: 'REMINDERS',
+            ),
+          ),
+          iOS: const DarwinNotificationDetails(
+            sound: 'nudge_chime.aiff',
+            threadIdentifier: reminderGroupKey,
+          ),
+        ),
+        payload: reminderPayload(digest: digest, nid: id),
+      );
+    } catch (e) {
+      debugPrint('[ReminderService] _scheduleDaily error: $e');
     }
   }
 

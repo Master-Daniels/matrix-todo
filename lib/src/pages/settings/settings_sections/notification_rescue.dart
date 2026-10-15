@@ -40,7 +40,7 @@ class _NotificationRescueSectionState
           bottom: BorderSide(color: scheme.primary, width: 1),
         ),
       ),
-      padding: const EdgeInsets.all(AppSpacing.md),
+      padding: const EdgeInsets.all(AppSpacing.lg),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
@@ -51,23 +51,23 @@ class _NotificationRescueSectionState
               fontWeight: FontWeight.w700,
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 4),
           Text(
             'SOME PHONE MAKERS KILL BACKGROUND ALARMS. FOLLOW THE STEPS FOR YOUR DEVICE:',
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           for (var i = 0; i < _guidance.steps.length; i++)
             Padding(
-              padding: const EdgeInsets.only(bottom: 4),
+              padding: const EdgeInsets.only(bottom: 8),
               child: Text(
                 '${i + 1}. ${_guidance.steps[i]}',
                 style: theme.textTheme.labelSmall,
               ),
             ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
