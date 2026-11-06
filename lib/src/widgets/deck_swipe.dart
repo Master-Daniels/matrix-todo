@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// Swipe wrapper for deck cards (`today_swipe_gesture_state`):
 /// right = complete, left = reschedule picker. Translates + rotates
@@ -36,6 +37,7 @@ class _HomeDeckSwipeState extends State<HomeDeckSwipe>
     with SingleTickerProviderStateMixin {
   double _dragX = 0;
   double _halfWidth = 160;
+  bool _hapticTriggered = false;
   late AnimationController _spring;
   Animation<double>? _springAnim;
 
@@ -62,10 +64,13 @@ class _HomeDeckSwipeState extends State<HomeDeckSwipe>
   }
 
   void _onRelease() {
+    _hapticTriggered = false;
     final threshold = _halfWidth / 2;
     if (_dragX >= threshold && !widget.done) {
+      HapticFeedback.heavyImpact();
       widget.onComplete();
     } else if (_dragX <= -threshold) {
+      HapticFeedback.mediumImpact();
       widget.onReschedule();
     }
     // Spring back.
@@ -89,14 +94,23 @@ class _HomeDeckSwipeState extends State<HomeDeckSwipe>
       onHorizontalDragUpdate: (details) {
         _measure();
         _spring.stop();
+        final threshold = _halfWidth / 2;
+        final nextX = (_dragX + details.delta.dx).clamp(
+          -_halfWidth,
+          _halfWidth,
+        );
+        if (nextX.abs() >= threshold && !_hapticTriggered) {
+          HapticFeedback.mediumImpact();
+          _hapticTriggered = true;
+        } else if (nextX.abs() < threshold && _hapticTriggered) {
+          _hapticTriggered = false;
+        }
         setState(() {
-          _dragX = (_dragX + details.delta.dx).clamp(
-            -_halfWidth,
-            _halfWidth,
-          );
+          _dragX = nextX;
         });
       },
       onHorizontalDragEnd: (_) => _onRelease(),
+      onHorizontalDragCancel: () => _onRelease(),
       child: Stack(
         clipBehavior: Clip.none,
         children: [
@@ -149,7 +163,7 @@ class _SwipeBody extends StatelessWidget {
                 ),
                 color: scheme.primary,
                 child: Text(
-                  'RELEASE TO COMPLETE',
+                  'Release to complete',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.onPrimary,
                     fontWeight: FontWeight.w700,
@@ -174,7 +188,7 @@ class _SwipeBody extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  'RELEASE TO RESCHEDULE',
+                  'Release to reschedule',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.primary,
                     fontWeight: FontWeight.w700,

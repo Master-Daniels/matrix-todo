@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../theme/app_spacing.dart';
 import 'section_label.dart';
@@ -19,14 +20,14 @@ class PrioritySection extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    const labels = ['LOW [01]', 'MEDIUM [02]', 'HIGH [03]'];
+    const labels = ['Low', 'Medium', 'High'];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
         SectionLabel(
-          '04 // Priority Severity',
-          right: 'STATE: LVL-$priority',
+          'Priority',
+          right: 'Level $priority',
           boldRight: true,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -43,7 +44,10 @@ class PrioritySection extends StatelessWidget {
                   child: Padding(
                     padding: EdgeInsets.only(right: i < 2 ? 4 : 0),
                     child: GestureDetector(
-                      onTap: () => onSelect(i + 1),
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        onSelect(i + 1);
+                      },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
                           vertical: AppSpacing.sm,

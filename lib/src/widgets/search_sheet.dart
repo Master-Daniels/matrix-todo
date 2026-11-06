@@ -26,7 +26,14 @@ class SearchSheet extends ConsumerStatefulWidget {
 }
 
 class _SearchSheetState extends ConsumerState<SearchSheet> {
+  final _controller = TextEditingController();
   String _query = '';
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,8 +49,19 @@ class _SearchSheetState extends ConsumerState<SearchSheet> {
         CustomTextField(
           label: 'Query',
           hint: 'Title, notes, category',
+          controller: _controller,
+          autofocus: true,
           textInputAction: TextInputAction.search,
           onChanged: (v) => setState(() => _query = v),
+          suffixIcon: _query.isEmpty
+              ? null
+              : GestureDetector(
+                  onTap: () {
+                    _controller.clear();
+                    setState(() => _query = '');
+                  },
+                  child: Icon(Icons.close, size: 18, color: scheme.primary),
+                ),
         ),
         tasksAsync.when(
           loading: () => Text(
@@ -53,7 +71,7 @@ class _SearchSheetState extends ConsumerState<SearchSheet> {
             ),
           ),
           error: (e, _) => Text(
-            'ERROR: $e',
+            'Error: $e',
             style: theme.textTheme.labelSmall?.copyWith(color: scheme.error),
           ),
           data: (tasks) {
@@ -66,7 +84,7 @@ class _SearchSheetState extends ConsumerState<SearchSheet> {
                   }).toList();
             if (q.isEmpty) {
               return Text(
-                'TYPE TO FILTER // ${tasks.length} TASKS INDEXED',
+                'Type to filter • ${tasks.length} tasks indexed',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: scheme.secondary,
                 ),
@@ -74,7 +92,7 @@ class _SearchSheetState extends ConsumerState<SearchSheet> {
             }
             if (hits.isEmpty) {
               return Text(
-                'NO MATCHES FOR "${_query.trim().toUpperCase()}"',
+                'No matches for "${_query.trim()}"',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: scheme.secondary,
                 ),
@@ -85,7 +103,7 @@ class _SearchSheetState extends ConsumerState<SearchSheet> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  '${hits.length} MATCH${hits.length == 1 ? '' : 'ES'}',
+                  '${hits.length} ${hits.length == 1 ? 'match' : 'matches'}',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),

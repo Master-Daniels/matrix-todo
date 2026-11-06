@@ -38,7 +38,7 @@ class _NameEditSheetState extends ConsumerState<NameEditSheet> {
         title: 'Edit Profile',
         children: [
           CustomTextField(
-            label: '01 // Display name // Who operates this ledger?',
+            label: 'Display name',
             hint: 'e.g. Alex R.',
             controller: _controller,
             required: true,
@@ -49,12 +49,12 @@ class _NameEditSheetState extends ConsumerState<NameEditSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Button(
-                label: _saving ? 'SAVING...' : 'COMMIT & SAVE PROFILE',
+                label: _saving ? 'Saving...' : 'Save profile',
                 onPressed: _saving ? null : _submit,
               ),
               const SizedBox(height: AppSpacing.sm),
               Button(
-                label: 'DISCARD CHANGES',
+                label: 'Discard changes',
                 kind: ButtonKind.secondary,
                 onPressed: _saving ? null : () => Navigator.of(context).pop(),
               ),

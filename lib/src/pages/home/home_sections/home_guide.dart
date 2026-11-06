@@ -43,25 +43,30 @@ class HomeGuide extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: () => ref
-                  .read(settingsControllerProvider.notifier)
-                  .setGuideSeen(true),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  border: Border.all(color: scheme.primary, width: 1),
-                ),
-                child: Text(
-                  'GOT IT',
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: scheme.onPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
+            Semantics(
+              button: true,
+              label: 'Dismiss gesture guide',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () => ref
+                    .read(settingsControllerProvider.notifier)
+                    .setGuideSeen(true),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 10,
+                  ),
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    border: Border.all(color: scheme.primary, width: 1),
+                  ),
+                  child: Text(
+                    'Got it',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: scheme.onPrimary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
                 ),
               ),
             ),

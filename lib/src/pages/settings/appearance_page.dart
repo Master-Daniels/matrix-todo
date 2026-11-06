@@ -7,7 +7,7 @@ import '../../widgets/section_header.dart';
 import 'settings_providers.dart';
 import 'settings_sections/segmented_row.dart';
 
-/// Appearance sub-screen: theme engine, default view, calendar cadence.
+/// Appearance sub-screen: theme, default screen, week start.
 class AppearancePage extends ConsumerWidget {
   const AppearancePage({super.key});
 
@@ -23,33 +23,33 @@ class AppearancePage extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: 'Appearance',
-        index: 'SETTINGS // 01',
+        index: 'SETTINGS / 01',
       ),
       body: ListView(
         children: [
           const SectionHeader(
-            title: '01 // App preferences',
-            index: '[UI_STATE: SYNCHRONIZED]',
+            title: 'Appearance',
+            index: null,
           ),
           SegmentedRow<ThemeSetting>(
-            title: 'Theme engine',
-            subtitle: 'Structural chromatic runtime settings',
+            title: 'Theme',
+            subtitle: 'Light, dark, or system',
             values: ThemeSetting.values,
             selected: settings.theme,
             label: (v) => v.name,
             onSelect: settingsCtl.setTheme,
           ),
           SegmentedRow<DefaultView>(
-            title: 'Default view matrix',
-            subtitle: 'Initial canvas destination on launch',
+            title: 'Default screen',
+            subtitle: 'Screen shown on launch',
             values: DefaultView.values,
             selected: settings.defaultView,
             label: (v) => v.name,
             onSelect: settingsCtl.setDefaultView,
           ),
           SegmentedRow<WeekStart>(
-            title: 'Calendar cadence',
-            subtitle: 'Day matrix 0-index initializer',
+            title: 'Week start',
+            subtitle: 'First day of the week',
             values: WeekStart.values,
             selected: settings.weekStart,
             label: (v) => v.name,

@@ -17,13 +17,13 @@ class TitleSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SectionLabel(
-          '01 // Task Name // What needs doing?',
-          right: 'REQ*',
+          'Task name',
+          right: 'Required',
           boldRight: true,
         ),
         const SizedBox(height: AppSpacing.sm),
         CustomTextField(
-          hint: 'e.g. Schedule architecture audit',
+          hint: 'e.g. Pay the electric bill',
           controller: controller,
           required: true,
           checks: [FieldChecks.required()],

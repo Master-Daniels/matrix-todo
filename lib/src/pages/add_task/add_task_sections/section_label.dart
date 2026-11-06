@@ -9,7 +9,12 @@ class SectionLabel extends StatelessWidget {
   final String? right;
   final bool boldRight;
 
-  const SectionLabel(this.left, {super.key, this.right, this.boldRight = false});
+  const SectionLabel(
+    this.left, {
+    super.key,
+    this.right,
+    this.boldRight = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +24,7 @@ class SectionLabel extends StatelessWidget {
       children: [
         Expanded(
           child: Text(
-            left.toUpperCase(),
+            left,
             style: theme.textTheme.labelSmall?.copyWith(
               color: theme.colorScheme.secondary,
             ),
@@ -27,7 +32,7 @@ class SectionLabel extends StatelessWidget {
         ),
         if (right != null)
           Text(
-            right!.toUpperCase(),
+            right!,
             style:
                 (boldRight
                         ? AppTypography.indexIndicator(context)

@@ -27,17 +27,14 @@ class NotificationsPage extends ConsumerWidget {
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: 'Notifications',
-        index: 'SETTINGS // 02',
+        index: 'SETTINGS / 02',
       ),
       body: ListView(
         children: [
-          const SectionHeader(
-            title: '02 // Dispatch',
-            index: '[DISPATCH: ARMED]',
-          ),
+          const SectionHeader(title: 'Dispatch', index: null),
           ToggleRow(
             title: 'Daily morning briefing',
-            subtitle: 'Daily 08:00 summary of today index rows',
+            subtitle: 'Daily summary of each day\'s tasks, sent at 8:00 AM',
             badge: '08:00 AM',
             value: settings.briefing,
             onChanged: (v) =>
@@ -45,16 +42,16 @@ class NotificationsPage extends ConsumerWidget {
           ),
           ToggleRow(
             title: 'Streak reminder',
-            subtitle: 'Evening 20:00 nudge when tasks remain',
+            subtitle: 'Evening nudge at 8:00 if tasks remain',
             value: settings.streakReminder,
-            onChanged: (v) => _toggleDaily(
-                ref, () => settingsCtl.setStreakReminder(v)),
+            onChanged: (v) =>
+                _toggleDaily(ref, () => settingsCtl.setStreakReminder(v)),
           ),
           ToggleRow(
             title: 'Task reminders',
             subtitle:
-                '1h + 30m chimes, on-time alarm, morning-after overdue tone',
-            badge: settings.reminders ? 'ARMED' : 'MUTED',
+                'Alerts 1 hour before, 30 minutes before, and at the scheduled task time',
+            badge: settings.reminders ? 'On' : 'Off',
             value: settings.reminders,
             onChanged: (v) => _toggleReminders(ref, v),
           ),

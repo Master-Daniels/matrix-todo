@@ -15,7 +15,7 @@ class EmptyState extends StatelessWidget {
 
   const EmptyState({
     super.key,
-    this.index = '[EMPTY]',
+    this.index = 'Empty',
     required this.title,
     this.hint,
     this.actionLabel,
@@ -38,17 +38,17 @@ class EmptyState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            index.toUpperCase(),
+            index,
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
           ),
           const SizedBox(height: AppSpacing.sm),
-          Text(title.toUpperCase(), style: theme.textTheme.headlineSmall),
+          Text(title, style: theme.textTheme.headlineSmall),
           if (hint != null) ...[
             const SizedBox(height: AppSpacing.xs),
             Text(
-              hint!.toUpperCase(),
+              hint!,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.secondary,
               ),
@@ -70,11 +70,8 @@ class LoadingState extends StatelessWidget {
   final String label;
   final int cells;
 
-  const LoadingState({
-    super.key,
-    this.label = 'LOADING // PLEASE WAIT',
-    this.cells = 8,
-  }) : assert(cells > 1, 'cells must be > 1');
+  const LoadingState({super.key, this.label = 'Loading', this.cells = 8})
+    : assert(cells > 1, 'cells must be > 1');
 
   @override
   Widget build(BuildContext context) {
@@ -93,7 +90,7 @@ class LoadingState extends StatelessWidget {
         ),
         const SizedBox(height: AppSpacing.sm),
         Text(
-          label.toUpperCase(),
+          label,
           style: theme.textTheme.labelMedium?.copyWith(color: scheme.secondary),
         ),
       ],
@@ -168,7 +165,7 @@ class ErrorState extends StatelessWidget {
 
   const ErrorState({
     super.key,
-    this.index = '[ERR]',
+    this.index = 'Error',
     required this.message,
     this.retryLabel = 'Retry',
     this.onRetry,

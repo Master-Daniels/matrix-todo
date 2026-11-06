@@ -94,6 +94,6 @@ jobs:
           body: |
             Matrix Todo ${{ env.PUB_VERSION }} (Android).
 
-            Install: download the APK matching your device ABI (`arm64-v8a` for most modern phones) and sideload it. Enable "Install unknown apps" when prompted.
+            Install: Download the APK for your ABI — `arm64-v8a` for most modern phones (`armeabi-v7a` for old 32-bit, `x86_64` for emulators) and sideload it. Enable "Install unknown apps" when prompted.
 
             iOS is not distributed as a binary (no paid Apple Developer account). Build from source on a Mac: `flutter run`.

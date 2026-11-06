@@ -41,7 +41,7 @@ class LedgerBanner extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                'SYSTEM LEDGER // V.0.0.1',
+                'System status',
                 style: AppTypography.indexIndicator(
                   context,
                   color: scheme.secondary,
@@ -49,7 +49,7 @@ class LedgerBanner extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '$lists ACTIVE LISTS // $tasks TOTAL TASKS',
+                '$lists lists • $tasks tasks',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),

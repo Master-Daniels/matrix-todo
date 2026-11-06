@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../theme/app_spacing.dart';
 import '../../widgets/app_bar.dart';
-import '../../widgets/result_dialog.dart';
 import '../../widgets/section_header.dart';
 import 'settings_sections/data_section.dart';
 
@@ -22,8 +21,8 @@ class DataPage extends ConsumerWidget {
           icon: Icons.arrow_back,
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: 'Data & Vault',
-        index: 'SETTINGS // 03',
+        title: 'Data & backup',
+        index: 'SETTINGS / 03',
       ),
       body: ListView(
         children: [
@@ -35,68 +34,29 @@ class DataPage extends ConsumerWidget {
               ),
             ),
             padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'LOCAL VAULT // NO CLOUD [STUB]',
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        'STATUS: LOCAL VAULT // NO CLOUD BACKEND',
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.secondary,
-                        ),
-                      ),
-                    ],
+                Text(
+                  'Your data stays on this device',
+                  style: theme.textTheme.headlineSmall?.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
-                  ),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: scheme.primary, width: 1),
-                  ),
-                  child: GestureDetector(
-                    onTap: () => showDialog(
-                      context: context,
-                      builder: (_) => const ResultDialog(
-                        title: 'SYNC QUEUED [STUB]',
-                        message:
-                            'LOCAL SQLITE IS THE STORE // NOTHING TO SYNC.\nCLOUD FUNCTIONALITY COMING SOON!',
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.sync, size: 16),
-                        const SizedBox(width: 8),
-                        Text(
-                          'SYNC NOW',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
+                const SizedBox(height: 2),
+                Text(
+                  'Stored locally. Nothing leaves your phone.',
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.secondary,
                   ),
                 ),
               ],
             ),
           ),
           const SectionHeader(
-            title: '03 // Data & backup',
-            index: '[LOCAL_VAULT]',
+            title: 'Data & backup',
+            index: null,
           ),
           const DataSection(),
           const SizedBox(height: AppSpacing.md),

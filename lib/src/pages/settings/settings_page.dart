@@ -9,9 +9,8 @@ import 'data_page.dart';
 import 'notifications_page.dart';
 import 'settings_sections/profile_hero.dart';
 
-/// Settings // Preferences hub — status strip, profile, four section
-/// entries (Appearance / Notifications / Data & Vault / Stats), version.
-/// Detail lives in the sub-screens so this ledger stays scannable.
+/// Settings hub — profile, four section entries, version.
+/// Detail lives in the sub-screens so this page stays scannable.
 class SettingsPage extends ConsumerWidget {
   const SettingsPage({super.key});
 
@@ -19,82 +18,54 @@ class SettingsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final version = const String.fromEnvironment(
+      'APP_VERSION',
+      defaultValue: '0.0.2',
+    );
+
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
 
     return Scaffold(
-      appBar: const CustomAppBar(
-        title: 'Settings // Preferences',
-        leading: Icon(Icons.tune, size: 18),
+      appBar: CustomAppBar(
+        title: 'Settings',
+        leading: const Icon(Icons.tune, size: 18),
+        height: isLandscape ? 72 : null,
       ),
       body: ListView(
         children: [
-          Container(
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLow,
-              border: Border(
-                bottom: BorderSide(color: scheme.primary, width: 1),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppSpacing.md,
-              vertical: AppSpacing.sm,
-            ),
-            child: Row(
-              mainAxisAlignment: .spaceBetween,
-              children: [
-                Text(
-                  'SYSTEM REVISION: ${const String.fromEnvironment('APP_VERSION', defaultValue: '0.0.1')} // RUNTIME',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.secondary,
-                  ),
-                ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(width: 6, height: 6, color: scheme.primary),
-                    const SizedBox(width: 4),
-                    Text(
-                      'CORE ENGINE ACTIVE',
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.secondary,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
           const ProfileHero(),
           _HubCell(
             index: '01',
-            title: 'APPEARANCE',
-            hint: 'THEME // DEFAULT VIEW // CADENCE',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const AppearancePage()),
-            ),
+            title: 'Appearance',
+            hint: 'Theme, home screen, week start',
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const AppearancePage())),
           ),
           _HubCell(
             index: '02',
-            title: 'NOTIFICATIONS',
-            hint: 'BRIEFING // STREAK // REMINDERS',
+            title: 'Notifications',
+            hint: 'Daily updates & reminders',
             onTap: () => Navigator.of(context).push(
               MaterialPageRoute(builder: (_) => const NotificationsPage()),
             ),
           ),
           _HubCell(
             index: '03',
-            title: 'DATA & VAULT',
-            hint: 'EXPORT // IMPORT // PURGE',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const DataPage()),
-            ),
+            title: 'Data & backup',
+            hint: 'Save, restore, reset',
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const DataPage())),
           ),
           _HubCell(
             index: '04',
-            title: 'STATS // LEDGER',
-            hint: 'STREAK // TODAY // WEEK // LISTS',
-            onTap: () => Navigator.of(context).push(
-              MaterialPageRoute(builder: (_) => const StatsPage()),
-            ),
+            title: 'Progress',
+            hint: 'Streak, today, week, lists',
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const StatsPage())),
           ),
           Container(
             padding: const EdgeInsets.all(AppSpacing.lg),
@@ -103,15 +74,7 @@ class SettingsPage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'VERSION ${const String.fromEnvironment('APP_VERSION', defaultValue: '0.0.1')}-BUILD-${const String.fromEnvironment('APP_BUILD', defaultValue: '2026')} // FLUTTER ENGINE',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.secondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'ARCHITECTURAL BRUTALISM • CONTIGUOUS GRID PARADIGM • ZERO LATENCY SYSTEM',
+                  'Version $version',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),
@@ -149,15 +112,13 @@ class _HubCell extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: scheme.surface,
-          border: Border(
-            bottom: BorderSide(color: scheme.primary, width: 1),
-          ),
+          border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
         ),
         padding: const EdgeInsets.all(AppSpacing.lg),
         child: Row(
           children: [
             Text(
-              '$index //',
+              index,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.secondary,
                 fontWeight: FontWeight.w700,

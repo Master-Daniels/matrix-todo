@@ -152,8 +152,7 @@ List<Map<String, Object?>> parseTasksCsv(String csvText) {
   if (pending.isNotEmpty) rows.add(_splitCsvLine(pending.toString()));
   final data = rows.where((r) => r.any((c) => c.trim().isNotEmpty)).toList();
   if (data.isEmpty) throw const FormatException('EMPTY FILE');
-  final header =
-      data.first.map((h) => h.trim().toLowerCase()).toList();
+  final header = data.first.map((h) => h.trim().toLowerCase()).toList();
   final titleIdx = header.indexOf('title');
   final dateIdx = header.indexOf('due_date');
   if (titleIdx < 0 || dateIdx < 0) {
@@ -181,8 +180,7 @@ List<Map<String, Object?>> parseTasksCsv(String csvText) {
     if (!RegExp(r'^\d{4}-\d{2}-\d{2}$').hasMatch(due)) {
       throw FormatException('ROW $line: BAD DUE_DATE "$due"');
     }
-    final priority =
-        int.tryParse(cell(r, col('priority')))?.clamp(1, 3) ?? 1;
+    final priority = int.tryParse(cell(r, col('priority')))?.clamp(1, 3) ?? 1;
     final recurrence = cell(r, col('recurrence')).toUpperCase();
     final category = cell(r, col('category'));
     final time = cell(r, col('due_time'));
@@ -234,7 +232,6 @@ class _DataSectionState extends ConsumerState<DataSection> {
   bool _exportingIcs = false;
   bool _importing = false;
   bool _purging = false;
-  bool _armed = false;
 
   @override
   Widget build(BuildContext context) {
@@ -254,24 +251,26 @@ class _DataSectionState extends ConsumerState<DataSection> {
               children: [
                 Expanded(
                   child: _VaultCell(
-                    index: 'OPT_01/ DUMP',
-                    title: 'EXPORT TO CSV / JSON',
-                    hint: 'Schema-compliant records for local analytical work.',
-                    actionLabel: _exporting ? 'EXPORTING...' : 'EXPORT BUNDLE',
+                    index: 'OPT_01 / BACKUP',
+                    title: 'Export tasks',
+                    hint: 'Save a copy of your tasks as a file',
+                    actionLabel: _exporting ? 'Exporting...' : 'Save backup',
                     onAction: _exporting ? null : _export,
                   ),
                 ),
                 Container(width: 1, color: scheme.primary),
                 Expanded(
                   child: _VaultCell(
-                    index: 'OPT_02/ INGEST',
-                    title: 'IMPORT TASKS',
-                    hint: 'JSON full backup or easy CSV task list // '
-                        'missing lists are created.',
-                    actionLabel:
-                        _importing ? 'IMPORTING...' : 'CHOOSE FILE',
+                    index: 'OPT_02 / IMPORT',
+                    title: 'Import tasks',
+                    hint:
+                        'Pick a JSON backup or CSV task list. New lists are '
+                        'created for unknown categories.',
+                    actionLabel: _importing
+                        ? 'Choosing file...'
+                        : 'Choose file',
                     onAction: _importing ? null : _import,
-                    secondActionLabel: 'View file format',
+                    secondActionLabel: 'View format',
                     onSecondAction: () => _showFormat(context),
                   ),
                 ),
@@ -284,11 +283,10 @@ class _DataSectionState extends ConsumerState<DataSection> {
             border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
           ),
           child: _VaultCell(
-            index: 'OPT_03/ ICS',
-            title: 'EXPORT SCHEDULE (.ICS)',
-            hint: 'Undone scheduled tasks for external calendars.',
-            actionLabel:
-                _exportingIcs ? 'EXPORTING...' : 'SAVE SCHEDULE FILE',
+            index: 'OPT_03 / CALENDAR',
+            title: 'Export to calendar',
+            hint: 'Send upcoming tasks to another calendar app.',
+            actionLabel: _exportingIcs ? 'Exporting...' : 'Save file',
             onAction: _exportingIcs ? null : _exportIcs,
           ),
         ),
@@ -308,7 +306,7 @@ class _DataSectionState extends ConsumerState<DataSection> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'PURGE SCHEMA // RESET ALL DATA',
+                      'Reset all data',
                       style: theme.textTheme.headlineSmall?.copyWith(
                         color: scheme.error,
                         fontWeight: FontWeight.w700,
@@ -319,22 +317,16 @@ class _DataSectionState extends ConsumerState<DataSection> {
               ),
               const SizedBox(height: 8),
               Text(
-                _armed
-                    ? 'ARMED // TAP AGAIN TO IRREVERSIBLY ZERO OUT TASKS AND CUSTOM LISTS.'
-                    : 'IRREVERSIBLY ZERO OUT ALL LOCAL STORAGE CELLS, LISTS, AND METRICS.',
+                'This permanently deletes all tasks and lists. No undo.',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: scheme.secondary,
                 ),
               ),
               const SizedBox(height: 16),
               Button(
-                label: _purging
-                    ? 'PURGING...'
-                    : _armed
-                        ? '[ TAP AGAIN TO CONFIRM ]'
-                        : '[ RESET ALL DATA ]',
+                label: _purging ? 'Purging...' : 'Reset all data',
                 kind: ButtonKind.danger,
-                onPressed: _purging ? null : _purge,
+                onPressed: _purging ? null : _confirmPurge,
               ),
             ],
           ),
@@ -384,8 +376,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) => ResultDialog(
-          title: 'BUNDLE SAVED',
-          message: '${tasks.length} TASKS // $jsonUri // $csvUri',
+          title: 'Backup saved',
+          message: '${tasks.length} tasks saved',
         ),
       );
     } catch (e) {
@@ -393,7 +385,7 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) =>
-            ResultDialog(title: 'EXPORT FAILED', message: '$e', isError: true),
+            ResultDialog(title: 'Export failed', message: '$e', isError: true),
       );
     } finally {
       if (mounted) setState(() => _exporting = false);
@@ -412,8 +404,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
         await showDialog(
           context: context,
           builder: (_) => const ResultDialog(
-            title: 'NOTHING TO EXPORT',
-            message: 'ALL CLEAR // NO UNDONE TASKS SCHEDULED.',
+            title: 'Nothing to export',
+            message: 'All clear. No undone tasks scheduled.',
           ),
         );
         return;
@@ -424,8 +416,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
         await showDialog(
           context: context,
           builder: (_) => const ResultDialog(
-            title: 'EXPORT CANCELLED',
-            message: 'NO FILE SAVED // SAVE DIALOG DISMISSED.',
+            title: 'Export cancelled',
+            message: 'No file was saved. Save dialog dismissed.',
           ),
         );
         return;
@@ -433,8 +425,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) => ResultDialog(
-          title: 'SCHEDULE SAVED',
-          message: '${tasks.length} TASKS // $path',
+          title: 'Schedule saved',
+          message: '${tasks.length} tasks saved',
         ),
       );
     } catch (e) {
@@ -442,7 +434,7 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) =>
-            ResultDialog(title: 'EXPORT FAILED', message: '$e', isError: true),
+            ResultDialog(title: 'Export failed', message: '$e', isError: true),
       );
     } finally {
       if (mounted) setState(() => _exportingIcs = false);
@@ -466,8 +458,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
         await showDialog(
           context: context,
           builder: (_) => const ResultDialog(
-            title: 'IMPORT CANCELLED',
-            message: 'NO FILE PICKED // NOTHING MERGED.',
+            title: 'Import cancelled',
+            message: 'No file was chosen. Nothing changed.',
           ),
         );
         return;
@@ -484,8 +476,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) => ResultDialog(
-          title: 'IMPORT REJECTED',
-          message: 'INVALID FILE // ${e.message}.',
+          title: 'Import rejected',
+          message: e.message,
           isError: true,
         ),
       );
@@ -494,7 +486,7 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) =>
-            ResultDialog(title: 'IMPORT FAILED', message: '$e', isError: true),
+            ResultDialog(title: 'Import failed', message: '$e', isError: true),
       );
     } finally {
       if (mounted) setState(() => _importing = false);
@@ -531,7 +523,9 @@ class _DataSectionState extends ConsumerState<DataSection> {
     required int listsAdded,
   }) async {
     final db = ref.read(appDatabaseProvider);
-    await ref.read(reminderServiceProvider).syncAll(
+    await ref
+        .read(reminderServiceProvider)
+        .syncAll(
           await db.getTasks(),
           enabled: ref.read(remindersEnabledProvider),
         );
@@ -542,9 +536,9 @@ class _DataSectionState extends ConsumerState<DataSection> {
     await showDialog(
       context: context,
       builder: (_) => ResultDialog(
-        title: 'IMPORT COMPLETE',
+        title: 'Import complete',
         message:
-            '$tasksAdded TASKS // $subsAdded SUBTASKS // $listsAdded LISTS ADDED.',
+            '$tasksAdded tasks, $subsAdded subtasks, $listsAdded lists added.',
       ),
     );
   }
@@ -590,8 +584,7 @@ class _DataSectionState extends ConsumerState<DataSection> {
           listId: listIds[raw['list_id']],
           title: (raw['title'] as String).trim(),
           notes: (raw['notes'] as String?) ?? '',
-          category:
-              ((raw['category'] as String?)?.trim().isEmpty ?? true)
+          category: ((raw['category'] as String?)?.trim().isEmpty ?? true)
               ? 'PERSONAL'
               : (raw['category'] as String).trim().toUpperCase(),
           dueDate: (raw['due_date'] as String).trim(),
@@ -675,7 +668,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
   void _showFormat(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    const body = 'JSON — FULL BACKUP (EXPORT BUNDLE SHAPE)\n'
+    const body =
+        'JSON — FULL BACKUP (EXPORT BUNDLE SHAPE)\n'
         '{"lists":[{"name*","code","description","sort"}],\n'
         ' "tasks":[{"title*","due_date* YYYY-MM-DD","due_time",\n'
         '  "notes","category","priority 1-3","recurrence",\n'
@@ -706,7 +700,7 @@ class _DataSectionState extends ConsumerState<DataSection> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'FILE FORMAT',
+                'File format',
                 style: theme.textTheme.headlineSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                 ),
@@ -736,11 +730,17 @@ class _DataSectionState extends ConsumerState<DataSection> {
     );
   }
 
-  Future<void> _purge() async {
-    if (!_armed) {
-      setState(() => _armed = true);
-      return;
-    }
+  Future<void> _confirmPurge() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const _ConfirmResetDialog(),
+    );
+    if (confirmed != true || !mounted) return;
+    await _executePurge();
+  }
+
+  Future<void> _executePurge() async {
     setState(() => _purging = true);
     try {
       await ref.read(appDatabaseProvider).purgeUserData();
@@ -752,8 +752,8 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) => const ResultDialog(
-          title: 'SCHEMA PURGED',
-          message: 'ALL CELLS ZEROED // CORE DIRECTORIES KEPT.',
+          title: 'Data reset',
+          message: 'All tasks and lists were deleted.',
         ),
       );
     } catch (e) {
@@ -761,13 +761,12 @@ class _DataSectionState extends ConsumerState<DataSection> {
       await showDialog(
         context: context,
         builder: (_) =>
-            ResultDialog(title: 'PURGE FAILED', message: '$e', isError: true),
+            ResultDialog(title: 'Reset failed', message: '$e', isError: true),
       );
     } finally {
       if (mounted) {
         setState(() {
           _purging = false;
-          _armed = false;
         });
       }
     }
@@ -821,7 +820,7 @@ class _VaultCell extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            hint.toUpperCase(),
+            hint,
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
@@ -851,6 +850,145 @@ class _VaultCell extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+
+/// Type-to-confirm dialog for the destructive "reset all data" action.
+/// The user must type DELETE (case-insensitive) to unlock the confirm button.
+class _ConfirmResetDialog extends StatefulWidget {
+  const _ConfirmResetDialog();
+
+  @override
+  State<_ConfirmResetDialog> createState() => _ConfirmResetDialogState();
+}
+
+class _ConfirmResetDialogState extends State<_ConfirmResetDialog> {
+  final _controller = TextEditingController();
+  bool _canConfirm = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller.addListener(() {
+      final match = _controller.text.trim().toUpperCase() == 'DELETE';
+      if (match != _canConfirm) setState(() => _canConfirm = match);
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final scheme = theme.colorScheme;
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        side: BorderSide(color: scheme.error, width: 2),
+        borderRadius: BorderRadius.zero,
+      ),
+      elevation: 0,
+      backgroundColor: scheme.surface,
+      insetPadding: const EdgeInsets.all(AppSpacing.lg),
+      child: Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.warning_rounded, size: 22, color: scheme.error),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Delete all data',
+                    style: theme.textTheme.headlineSmall?.copyWith(
+                      color: scheme.error,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Text(
+              'This will permanently delete every task, subtask, and list. '
+              'This action cannot be undone.',
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: scheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Type DELETE to confirm',
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.secondary,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            TextField(
+              controller: _controller,
+              autofocus: true,
+              textCapitalization: TextCapitalization.characters,
+              decoration: InputDecoration(
+                hintText: 'DELETE',
+                hintStyle: TextStyle(
+                  color: scheme.secondary.withValues(alpha: 0.4),
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.zero,
+                  borderSide: BorderSide(color: scheme.primary),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.zero,
+                  borderSide: BorderSide(color: scheme.primary),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.zero,
+                  borderSide: BorderSide(color: scheme.error, width: 2),
+                ),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 14,
+                ),
+              ),
+              style: theme.textTheme.bodyLarge?.copyWith(
+                fontWeight: FontWeight.w700,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Row(
+              children: [
+                Expanded(
+                  child: Button(
+                    label: 'Cancel',
+                    kind: ButtonKind.secondary,
+                    onPressed: () => Navigator.of(context).pop(false),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Button(
+                    label: 'Delete everything',
+                    kind: ButtonKind.danger,
+                    onPressed: _canConfirm
+                        ? () => Navigator.of(context).pop(true)
+                        : null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

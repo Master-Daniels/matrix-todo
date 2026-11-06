@@ -29,7 +29,7 @@ class ListsPage extends ConsumerWidget {
 
     return Scaffold(
       appBar: CustomAppBar(
-        title: 'Lists // Folders',
+        title: 'Lists',
         actions: [
           CustomIconButton(
             icon: Icons.search,
@@ -59,7 +59,7 @@ class ListsPage extends ConsumerWidget {
                 coreAsync.when(
                   loading: () => const Padding(
                     padding: EdgeInsets.all(AppSpacing.md),
-                    child: LoadingState(label: 'LOADING LISTS'),
+                    child: LoadingState(label: 'Loading lists'),
                   ),
                   error: (e, _) => Padding(
                     padding: const EdgeInsets.all(AppSpacing.md),
@@ -74,7 +74,7 @@ class ListsPage extends ConsumerWidget {
                   ),
                 ),
                 const SectionHeader(
-                  title: 'Custom lists & Archives',
+                  title: 'Custom lists',
                   index: '[SEC 02]',
                 ),
                 customAsync.when(
@@ -204,18 +204,11 @@ class _CreateFooter extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Button(
-              label: 'Create New Category',
+              label: 'Create new list',
               leading: const Icon(Icons.add_box_outlined, size: 18),
               onPressed: onCreate,
             ),
             const SizedBox(height: 4),
-            Text(
-              'ARCHITECTURAL TAXONOMY // UNBOUNDED ENTRIES PERMITTED',
-              style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.secondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
           ],
         ),
       ),
@@ -250,7 +243,7 @@ class _DashedEmptyLists extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'NO CUSTOM LISTS',
+              'No custom lists',
               textAlign: TextAlign.center,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -259,7 +252,7 @@ class _DashedEmptyLists extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'CREATE ONE BELOW // UNBOUNDED ENTRIES PERMITTED',
+              'Create your first list',
               textAlign: TextAlign.center,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.secondary,

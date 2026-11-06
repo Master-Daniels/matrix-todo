@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_spacing.dart';
 
@@ -21,9 +22,7 @@ Future<T?> showAnimatedModalBottomSheet<T>({
   return showModalBottomSheet<T>(
     context: context,
     builder: (BuildContext context) {
-      return AnimatedBottomSheetContent(
-        builder: builder,
-      );
+      return AnimatedBottomSheetContent(builder: builder);
     },
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
@@ -45,10 +44,7 @@ Future<T?> showAnimatedModalBottomSheet<T>({
 class AnimatedBottomSheetContent extends StatefulWidget {
   final WidgetBuilder builder;
 
-  const AnimatedBottomSheetContent({
-    super.key,
-    required this.builder,
-  });
+  const AnimatedBottomSheetContent({super.key, required this.builder});
 
   @override
   State<AnimatedBottomSheetContent> createState() =>
@@ -108,19 +104,14 @@ class _AnimatedBottomSheetContentState extends State<AnimatedBottomSheetContent>
       child: Padding(
         padding: EdgeInsets.only(bottom: media.viewInsets.bottom),
         child: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: media.size.height * 0.85,
-          ),
+          constraints: BoxConstraints(maxHeight: media.size.height * 0.85),
           child: widget.builder(context),
         ),
       ),
     );
     return SlideTransition(
       position: _slideAnimation,
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: content,
-      ),
+      child: FadeTransition(opacity: _fadeAnimation, child: content),
     );
   }
 }
@@ -165,116 +156,127 @@ class Sheet extends StatelessWidget {
       ),
       padding: EdgeInsets.only(bottom: bottomPad),
       child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Tactile drag indicator.
-            Padding(
-              padding: const EdgeInsets.only(top: 12, bottom: 8),
-              child: Center(
-                child: Container(
-                  width: 48,
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: scheme.primary,
-                    borderRadius: BorderRadius.zero,
-                  ),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Tactile drag indicator.
+          Padding(
+            padding: const EdgeInsets.only(top: 12, bottom: 8),
+            child: Center(
+              child: Container(
+                width: 48,
+                height: 6,
+                decoration: BoxDecoration(
+                  color: scheme.primary,
+                  borderRadius: BorderRadius.zero,
                 ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppSpacing.md,
-                vertical: AppSpacing.sm,
-              ),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(
-                    color: scheme.primary.withValues(alpha: 0.12),
-                    width: 1,
-                  ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.md,
+              vertical: AppSpacing.sm,
+            ),
+            decoration: BoxDecoration(
+              border: Border(
+                bottom: BorderSide(
+                  color: scheme.primary.withValues(alpha: 0.12),
+                  width: 1,
                 ),
               ),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Flexible(
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: theme.textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      if (tag != null) ...[
+                        const SizedBox(width: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 6,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            border: Border.all(
+                              color: scheme.primary.withValues(alpha: 0.35),
+                              width: 1,
+                            ),
+                            borderRadius: BorderRadius.zero,
+                          ),
                           child: Text(
-                            title.toUpperCase(),
-                            style: theme.textTheme.labelLarge?.copyWith(
-                              fontWeight: FontWeight.w700,
+                            tag!,
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: scheme.secondary,
                             ),
                           ),
                         ),
-                        if (tag != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              border: Border.all(
-                                color: scheme.primary.withValues(alpha: 0.35),
-                                width: 1,
-                              ),
-                              borderRadius: BorderRadius.zero,
-                            ),
-                            child: Text(
-                              tag!.toUpperCase(),
-                              style: theme.textTheme.labelSmall?.copyWith(
-                                color: scheme.secondary,
-                              ),
-                            ),
-                          ),
-                        ],
                       ],
-                    ),
+                    ],
                   ),
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: onClose ?? () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(width: 8),
+                Semantics(
+                  button: true,
+                  label: 'Close sheet',
+                  child: GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      (onClose ?? () => Navigator.of(context).pop())();
+                    },
                     child: Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        border: Border.all(color: scheme.primary, width: 1),
-                        borderRadius: BorderRadius.zero,
+                      constraints: const BoxConstraints(
+                        minWidth: 44,
+                        minHeight: 44,
                       ),
-                      child: Icon(
-                        Icons.close,
-                        size: 16,
-                        color: scheme.primary,
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: scheme.primary, width: 1),
+                          borderRadius: BorderRadius.zero,
+                        ),
+                        child: Icon(Icons.close, size: 16, color: scheme.primary),
                       ),
                     ),
                   ),
+                ),
+              ],
+            ),
+          ),
+          Flexible(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.lg,
+                AppSpacing.md,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (var i = 0; i < children.length; i++) ...[
+                    children[i],
+                    if (i < children.length - 1)
+                      const SizedBox(height: AppSpacing.lg),
+                  ],
                 ],
               ),
             ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.lg,
-                  AppSpacing.md,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < children.length; i++) ...[
-                      children[i],
-                      if (i < children.length - 1)
-                        const SizedBox(height: AppSpacing.lg),
-                    ],
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
+      ),
     );
   }
 }

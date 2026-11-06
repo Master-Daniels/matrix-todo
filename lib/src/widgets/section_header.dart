@@ -42,7 +42,7 @@ class SectionHeader extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                title.toUpperCase(),
+                title,
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: fg,
                   fontWeight: FontWeight.w700,

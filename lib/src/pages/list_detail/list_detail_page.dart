@@ -15,11 +15,12 @@ import '../../widgets/section_header.dart';
 import '../../widgets/state_views.dart';
 import '../../widgets/task_cell.dart';
 import '../../widgets/deck_swipe.dart';
-import '../../data/task_dates.dart';
 import '../add_task/add_task_sheet.dart';
 import '../home/home_sections/reschedule_dialog.dart';
+import '../lists/list_form_sheet.dart';
 import '../lists/lists_providers.dart';
 import '../upcoming/upcoming_sections/upcoming_format.dart';
+import '../upcoming/upcoming_providers.dart';
 import '../settings/settings_providers.dart';
 
 /// Folder view pushed from [ListsPage]: list header with live counts plus
@@ -33,9 +34,17 @@ class ListDetailPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final counts = list.id == null
+    final listsAsync = ref.watch(listsProvider);
+    final currentList = listsAsync.maybeWhen(
+      data: (lists) =>
+          lists.firstWhere((l) => l.id == list.id, orElse: () => list),
+      orElse: () => list,
+    );
+    final isCustom = currentList.sort >= 4;
+
+    final counts = currentList.id == null
         ? null
-        : ref.watch(listCountsProvider(list.id!));
+        : ref.watch(listCountsProvider(currentList.id!));
     final total = counts?.maybeWhen(data: (c) => c.total, orElse: () => 0) ?? 0;
     final done =
         counts?.maybeWhen(data: (c) => c.completed, orElse: () => 0) ?? 0;
@@ -46,8 +55,87 @@ class ListDetailPage extends ConsumerWidget {
           icon: Icons.arrow_back,
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: list.name,
-        index: list.code,
+        title: currentList.name,
+        index: currentList.code,
+        actions: [
+          if (isCustom)
+            PopupMenuButton<String>(
+              icon: Icon(Icons.more_vert, size: 18, color: scheme.primary),
+              padding: EdgeInsets.zero,
+              color: scheme.surface,
+              elevation: 0,
+              shape: RoundedRectangleBorder(
+                side: BorderSide(color: scheme.primary, width: 1),
+                borderRadius: BorderRadius.zero,
+              ),
+              onSelected: (action) async {
+                if (action == 'edit') {
+                  await showAnimatedModalBottomSheet(
+                    context: context,
+                    builder: (_) => ListFormSheet(list: currentList),
+                  );
+                } else if (action == 'delete' && currentList.id != null) {
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder: (dialogContext) => AlertDialog(
+                      title: const Text('Delete list?'),
+                      content: Text(
+                        'Delete "${currentList.name}" and all its tasks? This cannot be undone.',
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(false),
+                          child: const Text('Cancel'),
+                        ),
+                        TextButton(
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(true),
+                          child: Text(
+                            'Delete',
+                            style: TextStyle(
+                              color: scheme.error,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true && context.mounted) {
+                    await ref
+                        .read(appDatabaseProvider)
+                        .deleteList(currentList.id!);
+                    ref.invalidate(listsProvider);
+                    ref.invalidate(coreListsProvider);
+                    ref.invalidate(customListsProvider);
+                    ref.invalidate(listsSummaryProvider);
+                    ref.invalidate(tasksProvider);
+                    if (context.mounted) Navigator.of(context).pop();
+                  }
+                }
+              },
+              itemBuilder: (context) => [
+                PopupMenuItem(
+                  value: 'edit',
+                  child: Text(
+                    'Edit list',
+                    style: Theme.of(context).textTheme.labelSmall,
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'delete',
+                  child: Text(
+                    'Delete list',
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: scheme.error,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+        ],
       ),
       body: Column(
         children: [
@@ -67,9 +155,9 @@ class ListDetailPage extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (list.description.isNotEmpty)
+                      if (currentList.description.isNotEmpty)
                         Text(
-                          list.description,
+                          currentList.description,
                           style: theme.textTheme.bodySmall?.copyWith(
                             color: scheme.secondary,
                           ),
@@ -82,15 +170,18 @@ class ListDetailPage extends ConsumerWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      ProgressBar(total: total == 0 ? 1 : total, completed: done),
+                      ProgressBar(
+                        total: total == 0 ? 1 : total,
+                        completed: done,
+                      ),
                     ],
                   ),
                 ),
-                const SectionHeader(title: 'Tasks // Entries', index: '[SEC 01]'),
+                const SectionHeader(title: 'Tasks', index: '[SEC 01]'),
                 _DetailTaskList(
-                  listId: list.id,
-                  lockedCategory: list.name,
-                  lockedListId: list.id,
+                  listId: currentList.id,
+                  lockedCategory: currentList.name,
+                  lockedListId: currentList.id,
                 ),
               ],
             ),
@@ -106,12 +197,12 @@ class ListDetailPage extends ConsumerWidget {
             child: SafeArea(
               top: false,
               child: Button(
-                label: 'Add task to list',
+                label: 'Add task',
                 onPressed: () => showAnimatedModalBottomSheet(
                   context: context,
                   builder: (_) => AddTaskSheet(
-                    lockedCategory: list.name,
-                    lockedListId: list.id,
+                    lockedCategory: currentList.name,
+                    lockedListId: currentList.id,
                   ),
                 ),
               ),
@@ -165,8 +256,8 @@ class _DetailTaskListState extends ConsumerState<_DetailTaskList> {
       return const Padding(
         padding: EdgeInsets.all(AppSpacing.md),
         child: EmptyState(
-          title: 'No folder selected',
-          hint: 'Go back and pick a list',
+          title: 'No list selected',
+          hint: 'Pick a list from the Lists tab',
         ),
       );
     }
@@ -174,7 +265,7 @@ class _DetailTaskListState extends ConsumerState<_DetailTaskList> {
     return tasksAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(AppSpacing.md),
-        child: LoadingState(label: 'LOADING FOLDER'),
+        child: LoadingState(label: 'Loading tasks'),
       ),
       error: (e, _) => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -188,8 +279,8 @@ class _DetailTaskListState extends ConsumerState<_DetailTaskList> {
           return Padding(
             padding: const EdgeInsets.all(AppSpacing.md),
             child: EmptyState(
-              title: 'No tasks in this folder',
-              hint: 'Add tasks from Today with this category',
+              title: 'No tasks in this list',
+              hint: 'Add tasks from Today to get started',
               actionLabel: '+ Add task',
               onAction: () => showAnimatedModalBottomSheet(
                 context: context,
@@ -255,7 +346,7 @@ class _DetailTaskListState extends ConsumerState<_DetailTaskList> {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 child: EmptyState(
                   title: 'No matches',
-                  hint: 'Adjust filter // ${_filter.name.toUpperCase()}',
+                  hint: 'Adjust filter',
                 ),
               ),
             if (reorderable)
@@ -338,18 +429,51 @@ class _DetailTaskListState extends ConsumerState<_DetailTaskList> {
         active: task.focus && !task.done,
         checked: task.done,
         trailing: task.focus && !task.done
-            ? 'FOCUS'
+            ? 'Focus'
             : task.done
-                ? 'DONE'
+                ? 'Done'
                 : '',
-        priorityBadge: task.priority >= 3 ? 'HIGH PRIORITY' : null,
+        priorityBadge: task.priority >= 3 ? 'High priority' : null,
         onChecked: task.id == null
             ? null
             : (v) => _checkWithUndo(context, ref, task, v),
         subtaskTaskId: task.id,
         recurrence: task.recurrence,
+        onSkip: task.seriesId != null && !task.done
+            ? () => _skipOccurrence(context, ref, task)
+            : null,
       ),
     );
+  }
+
+  /// Skip this occurrence: add its date to the series exceptions and mark it done.
+  /// The recurrence engine will then skip this date when generating future occurrences.
+  Future<void> _skipOccurrence(
+      BuildContext context, WidgetRef ref, TodoTask task) async {
+    if (task.id == null || task.seriesId == null) return;
+    final db = ref.read(appDatabaseProvider);
+    try {
+      await db.insertRecurrenceException(
+        RecurrenceException(
+          seriesId: task.seriesId!,
+          exceptionDate: task.dueDate,
+        ),
+      );
+      await db.setTaskDone(task.id!, true);
+      await db.setTaskSnooze(task.id!, null);
+      await ref.read(reminderServiceProvider).syncAll(
+            await db.getTasks(),
+            enabled: ref.read(remindersEnabledProvider),
+          );
+      ref.invalidate(tasksProvider);
+      ref.invalidate(listTasksProvider);
+      ref.invalidate(listCountsProvider);
+      ref.invalidate(listsSummaryProvider);
+      ref.invalidate(upcomingGroupsProvider);
+      ref.invalidate(weekStripProvider);
+    } catch (_) {
+      // Skip failure is non-fatal.
+    }
   }
 
   /// Manual order (WS13): persists the visible order into `sort`. Handles
@@ -489,7 +613,7 @@ class _DetailTaskListState extends ConsumerState<_DetailTaskList> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  'DELETES DONE TASKS IN THIS FOLDER // UNDONE KEPT.',
+                  'Deletes done tasks in this list. Undone tasks are kept.',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),
@@ -710,7 +834,7 @@ class _DetailFilterSheet extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'FILTER // FOLDER',
+                    'Filter by list',
                     style: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -746,7 +870,7 @@ class _DetailFilterSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'SHOW',
+                  'Show',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),
@@ -769,7 +893,7 @@ class _DetailFilterSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  'SORT',
+                  'Sort',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),

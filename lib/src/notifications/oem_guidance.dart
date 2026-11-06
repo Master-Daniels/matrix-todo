@@ -10,17 +10,17 @@ class OemGuidance {
 }
 
 const _genericSteps = [
-  'SETTINGS → APPS → THIS APP → BATTERY → SET TO UNRESTRICTED / NOT OPTIMIZED.',
-  'DISABLE ANY BACKGROUND RESTRICTION / BACKGROUND LIMIT OPTION ON THE APP INFO PAGE.',
-  'LOCK THIS APP IN THE RECENT-APPS LIST SO THE SYSTEM DOES NOT SWIPE IT AWAY.',
+  'Open Settings, then Apps, then This app, then Battery, and set it to Unrestricted / Not optimized.',
+  'Turn off any background or battery restriction on the App Info page.',
+  'Lock this app in your recent apps list so the system does not swipe it away.',
 ];
 
 const _xiaomiSteps = [
-  'TAP “NOTIFICATIONS” BELOW → ENABLE SHOW NOTIFICATIONS, FLOATING NOTIFICATIONS, LOCK-SCREEN NOTIFICATIONS AND SOUND.',
-  'IN THE SAME SCREEN, OPEN EACH CHANNEL (REMINDERS, OVERDUE) AND SET IMPORTANCE TO HIGH/URGENT.',
-  'SETTINGS → BATTERY → APP BATTERY SAVER → THIS APP → NO RESTRICTIONS.',
-  'SETTINGS → APPS → MANAGE APPS → THIS APP → AUTOSTART → ENABLE.',
-  'LOCK THIS APP IN RECENTS (PULL DOWN ON ITS CARD UNTIL THE LOCK ICON SHOWS).',
+  'Open Notifications below and enable show notifications, floating notifications, lock-screen notifications and sound.',
+  'In that screen, open each channel (Reminders, Overdue) and set importance to High / Urgent.',
+  'Open Settings, then Battery, then App battery saver, then this app, then No restrictions.',
+  'Open Settings, then Apps, then Manage apps, then this app, then Enable Auto-start.',
+  'Lock this app in recents (pull down on its card until the lock icon shows).',
 ];
 
 const Map<String, OemGuidance> _byVendor = {
@@ -35,76 +35,76 @@ const Map<String, OemGuidance> _byVendor = {
   'huawei': OemGuidance(
     vendor: 'HUAWEI / HONOR',
     steps: [
-      'SETTINGS → BATTERY → APP LAUNCH → THIS APP → MANAGE MANUALLY: ENABLE AUTO-LAUNCH, SECONDARY LAUNCH, RUN IN BACKGROUND.',
-      'SETTINGS → APPS → THIS APP → BATTERY → KEEP RUNNING AFTER SCREEN OFF.',
-      'PHONE MANAGER → BATTERY → PROTECTED APPS → ENABLE THIS APP.',
-      'LOCK THIS APP IN RECENTS.',
+      'Open Settings, then Battery, then App launch, then this app, then Manage manually, and enable auto-launch, secondary launch and background running.',
+      'Open Settings, then Apps, then This app, then Battery, and keep it running after screen off.',
+      'Open Phone manager, then Battery, then Protected apps, and enable this app.',
+      'Lock this app in recents.',
     ],
   ),
   'honor': OemGuidance(
     vendor: 'HUAWEI / HONOR',
     steps: [
-      'SETTINGS → BATTERY → APP LAUNCH → THIS APP → MANAGE MANUALLY: ENABLE AUTO-LAUNCH, SECONDARY LAUNCH, RUN IN BACKGROUND.',
-      'SETTINGS → APPS → THIS APP → BATTERY → KEEP RUNNING AFTER SCREEN OFF.',
-      'LOCK THIS APP IN RECENTS.',
+      'Open Settings, then Battery, then App launch, then this app, then Manage manually, and enable auto-launch, secondary launch and background running.',
+      'Open Settings, then Apps, then This app, then Battery, and keep it running after screen off.',
+      'Lock this app in recents.',
     ],
   ),
   'oneplus': OemGuidance(
     vendor: 'ONEPLUS',
     steps: [
-      'SETTINGS → BATTERY → BATTERY OPTIMIZATION → ALL APPS → THIS APP → DON’T OPTIMIZE.',
-      'SETTINGS → BATTERY → ADVANCED OPTIMIZATION → DISABLE DEEP / ADAPTIVE OPTIMIZATION FOR THIS APP.',
+      'Open Settings, then Battery, then Battery optimization, then All apps, then this app, then Do Not Optimize.',
+      'Open Settings, then Battery, then Advanced optimization, and disable deep / adaptive optimization for this app.',
       'LOCK THIS APP IN RECENTS — ONEPLUS REVERTS THE OPTIMIZATION SETTING OTHERWISE.',
-      'DISABLE APP AUTO-LAUNCH RESTRICTIONS FOR THIS APP WHERE PRESENT.',
+      'Disable app auto-launch restrictions for this app where present.',
     ],
   ),
   'samsung': OemGuidance(
     vendor: 'SAMSUNG',
     steps: [
-      'SETTINGS → APPS → THIS APP → BATTERY → UNRESTRICTED.',
-      'SETTINGS → BATTERY → BACKGROUND USAGE LIMITS → NEVER SLEEPING APPS → ADD THIS APP.',
-      'DISABLE ADAPTIVE BATTERY RESTRICTIONS FOR THIS APP IF REMINDERS GO MISSING.',
-      'LOCK THIS APP IN RECENTS.',
+      'Open Settings, then Apps, then This app, then Battery, and set it to Unrestricted.',
+      'Open Settings, then Battery, then Background usage limits, then Never sleeping apps, and add this app.',
+      'Disable adaptive battery restrictions for this app if reminders go missing.',
+      'Lock this app in recents.',
     ],
   ),
   'oppo': OemGuidance(
     vendor: 'OPPO / REALME',
     steps: [
-      'SETTINGS → BATTERY → APP BATTERY MANAGEMENT → THIS APP → ALLOW BACKGROUND ACTIVITY.',
-      'SETTINGS → APP MANAGEMENT → AUTO-START MANAGEMENT → ENABLE THIS APP.',
-      'LOCK THIS APP IN RECENTS.',
+      'Open Settings, then Battery, then App battery management, then this app, then allow background activity.',
+      'Open Settings, then App management, then Auto-start management, and enable this app.',
+      'Lock this app in recents.',
     ],
   ),
   'realme': OemGuidance(
     vendor: 'OPPO / REALME',
     steps: [
-      'SETTINGS → BATTERY → APP BATTERY MANAGEMENT → THIS APP → ALLOW BACKGROUND ACTIVITY.',
-      'SETTINGS → APP MANAGEMENT → AUTO-START MANAGEMENT → ENABLE THIS APP.',
-      'LOCK THIS APP IN RECENTS.',
+      'Open Settings, then Battery, then App battery management, then this app, then allow background activity.',
+      'Open Settings, then App management, then Auto-start management, and enable this app.',
+      'Lock this app in recents.',
     ],
   ),
   'vivo': OemGuidance(
     vendor: 'VIVO / IQOO',
     steps: [
-      'SETTINGS → BATTERY → BACKGROUND POWER CONSUMPTION → THIS APP → ALLOW.',
-      'SETTINGS → MORE SETTINGS → APP MANAGER → AUTOSTART → ENABLE THIS APP.',
-      'LOCK THIS APP IN RECENTS.',
+      'Open Settings, then Battery, then Background power consumption, then this app, then allow.',
+      'Open Settings, then More settings, then App manager, then Autostart, and enable this app.',
+      'Lock this app in recents.',
     ],
   ),
   'nokia': OemGuidance(
     vendor: 'NOKIA (HMD)',
     steps: [
-      'SETTINGS → APPS → THIS APP → BATTERY → UNRESTRICTED / DON’T OPTIMIZE.',
+      'Open Settings, then Apps, then This app, then Battery, and set it to Unrestricted or Not optimized.',
       'DISABLE THE EVENWELL / POWER-SAVER SERVICES IF PRESENT ON YOUR MODEL.',
-      'LOCK THIS APP IN RECENTS.',
+      'Lock this app in recents.',
     ],
   ),
   'hmd': OemGuidance(
     vendor: 'NOKIA (HMD)',
     steps: [
-      'SETTINGS → APPS → THIS APP → BATTERY → UNRESTRICTED / DON’T OPTIMIZE.',
+      'Open Settings, then Apps, then This app, then Battery, and set it to Unrestricted or Not optimized.',
       'DISABLE THE EVENWELL / POWER-SAVER SERVICES IF PRESENT ON YOUR MODEL.',
-      'LOCK THIS APP IN RECENTS.',
+      'Lock this app in recents.',
     ],
   ),
 };

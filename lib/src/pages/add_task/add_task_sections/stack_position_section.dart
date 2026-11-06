@@ -33,7 +33,7 @@ class StackPositionSection extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'DECK STACK POSITION',
+                'Task position',
                 style: theme.textTheme.labelSmall?.copyWith(
                   fontWeight: FontWeight.w700,
                   color: scheme.primary,
@@ -47,8 +47,8 @@ class StackPositionSection extends StatelessWidget {
             children: [
               Expanded(
                 child: _Option(
-                  label: 'TOP OF STACK',
-                  hint: '(Next Up In Queue)',
+                  label: 'Top of list',
+                  hint: 'Next up in the queue',
                   icon: Icons.vertical_align_top,
                   selected: top,
                   onTap: () => onSelect(true),
@@ -57,8 +57,8 @@ class StackPositionSection extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: _Option(
-                  label: 'BOTTOM OF STACK',
-                  hint: '(Append To Ledger)',
+                  label: 'Bottom of list',
+                  hint: 'Append to the list',
                   icon: Icons.vertical_align_bottom,
                   selected: !top,
                   onTap: () => onSelect(false),

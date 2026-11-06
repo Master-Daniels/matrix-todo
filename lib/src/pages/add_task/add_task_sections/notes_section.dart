@@ -18,8 +18,8 @@ class NotesSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SectionLabel(
-          '01B // Task Notes // Description',
-          right: 'OPTIONAL',
+          'Notes',
+          right: 'Optional',
         ),
         const SizedBox(height: AppSpacing.sm),
         CustomTextField(

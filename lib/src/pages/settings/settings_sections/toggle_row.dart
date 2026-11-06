@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../theme/app_spacing.dart';
 
@@ -42,7 +43,7 @@ class ToggleRow extends StatelessWidget {
                   children: [
                     Flexible(
                       child: Text(
-                        title.toUpperCase(),
+                        title,
                         style: theme.textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -56,22 +57,16 @@ class ToggleRow extends StatelessWidget {
                           vertical: 2,
                         ),
                         decoration: BoxDecoration(
-                          border: Border.all(
-                            color: scheme.primary,
-                            width: 1,
-                          ),
+                          border: Border.all(color: scheme.primary, width: 1),
                         ),
-                        child: Text(
-                          badge!.toUpperCase(),
-                          style: theme.textTheme.labelSmall,
-                        ),
+                        child: Text(badge!, style: theme.textTheme.labelSmall),
                       ),
                     ],
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  subtitle.toUpperCase(),
+                  subtitle,
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),
@@ -80,33 +75,46 @@ class ToggleRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          GestureDetector(
-            onTap: () => onChanged(!value),
-            child: Container(
-              width: 64,
-              height: 32,
-              decoration: BoxDecoration(
-                color: scheme.surfaceContainerLowest,
-                border: Border.all(color: scheme.primary, width: 1),
-              ),
-              padding: const EdgeInsets.all(2),
-              alignment:
-                  value ? Alignment.centerRight : Alignment.centerLeft,
+          Semantics(
+            toggled: value,
+            label: title,
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                onChanged(!value);
+              },
               child: Container(
-                width: 28,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                  color: value ? scheme.primary : scheme.surfaceContainerHigh,
-                  border: value
-                      ? null
-                      : Border.all(color: scheme.primary, width: 1),
-                ),
-                child: Center(
-                  child: Text(
-                    value ? 'ON' : 'OFF',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: value ? scheme.onPrimary : scheme.secondary,
-                      fontWeight: FontWeight.w700,
+                constraints: const BoxConstraints(minHeight: 48),
+                alignment: Alignment.center,
+                child: Container(
+                  width: 64,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: scheme.surfaceContainerLowest,
+                    border: Border.all(color: scheme.primary, width: 1),
+                  ),
+                  padding: const EdgeInsets.all(2),
+                  alignment:
+                      value ? Alignment.centerRight : Alignment.centerLeft,
+                  child: Container(
+                    width: 28,
+                    height: double.infinity,
+                    decoration: BoxDecoration(
+                      color:
+                          value ? scheme.primary : scheme.surfaceContainerHigh,
+                      border: value
+                          ? null
+                          : Border.all(color: scheme.primary, width: 1),
+                    ),
+                    child: Center(
+                      child: Text(
+                        value ? 'ON' : 'OFF',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: value ? scheme.onPrimary : scheme.secondary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ),

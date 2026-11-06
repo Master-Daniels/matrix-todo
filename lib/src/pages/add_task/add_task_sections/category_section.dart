@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/providers.dart';
@@ -49,8 +50,8 @@ class CategorySection extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SectionLabel(
-          '02 // Taxonomy Category',
-          right: locked ? 'LOCKED' : 'Select one',
+          'Category',
+          right: locked ? 'Locked' : 'Select one',
           boldRight: locked,
         ),
         const SizedBox(height: AppSpacing.sm),
@@ -106,7 +107,10 @@ class _CategoryPill extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () {
+        HapticFeedback.selectionClick();
+        onTap();
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(

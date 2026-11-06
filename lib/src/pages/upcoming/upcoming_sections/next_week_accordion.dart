@@ -92,7 +92,7 @@ class _NextWeekAccordionState extends ConsumerState<NextWeekAccordion> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'NEXT WEEK & BEYOND',
+                    'Next week & beyond',
                     style: theme.textTheme.headlineSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -107,7 +107,7 @@ class _NextWeekAccordionState extends ConsumerState<NextWeekAccordion> {
                     border: Border.all(color: scheme.primary, width: 1),
                   ),
                   child: Text(
-                    '${widget.tasks.length} TASKS',
+                    '${widget.tasks.length} tasks',
                     style: theme.textTheme.labelSmall?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),

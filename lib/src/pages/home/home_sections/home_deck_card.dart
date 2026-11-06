@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models.dart';
@@ -218,7 +219,16 @@ class HomeDeckCard extends ConsumerWidget {
                 // tap path (the checkbox is display-only here) so taps
                 // never double-fire or miss into the card's edit tap.
                 child: GestureDetector(
-                  onTap: task.id == null ? null : () => onChecked?.call(!done),
+                  onTap: task.id == null
+                      ? null
+                      : () {
+                          if (!done) {
+                            HapticFeedback.mediumImpact();
+                          } else {
+                            HapticFeedback.selectionClick();
+                          }
+                          onChecked?.call(!done);
+                        },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
                     padding: const EdgeInsets.symmetric(vertical: 14),
@@ -228,7 +238,7 @@ class HomeDeckCard extends ConsumerWidget {
                         const SizedBox(width: 10),
                         Flexible(
                           child: Text(
-                            'MARK COMPLETE',
+                            'Mark complete',
                             style: AppTypography.indexIndicator(
                               context,
                               color: scheme.primary,
@@ -242,7 +252,10 @@ class HomeDeckCard extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               GestureDetector(
-                onTap: onActionTap,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  onActionTap?.call();
+                },
                 child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 14,
@@ -256,7 +269,7 @@ class HomeDeckCard extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        focus ? 'OPEN' : 'EDIT',
+                        focus ? 'Open' : 'Edit',
                         style: theme.textTheme.labelSmall?.copyWith(
                           color: scheme.onPrimary,
                           fontWeight: FontWeight.w700,
@@ -301,7 +314,7 @@ class HomeDeckCard extends ConsumerWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'SWIPE OR TAP TO EXPAND',
+                    'Swipe or tap for more',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.onSurfaceVariant,
                     ),

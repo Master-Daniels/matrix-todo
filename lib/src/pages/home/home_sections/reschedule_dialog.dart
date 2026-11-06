@@ -170,16 +170,16 @@ class _RescheduleDialogState extends ConsumerState<RescheduleDialog> {
             ),
             const SizedBox(height: 16),
             _PickerCell(
-              header: 'NEW DATE',
+              header: 'New date',
               value: isoDay(_date),
               icon: Icons.calendar_today,
               onTap: _saving ? null : _pickDate,
             ),
             const SizedBox(height: 8),
             _PickerCell(
-              header: 'NEW TIME',
+              header: 'New time',
               value: _time == null
-                  ? 'TAP TO SET'
+                  ? 'Set time'
                   : '${_time!.hour.toString().padLeft(2, '0')}:${_time!.minute.toString().padLeft(2, '0')} HRS',
               icon: Icons.schedule,
               onTap: _saving ? null : _pickTime,
@@ -198,7 +198,7 @@ class _RescheduleDialogState extends ConsumerState<RescheduleDialog> {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  _saving ? 'SAVING...' : 'RESCHEDULE ->',
+                  _saving ? 'Saving...' : 'Reschedule',
                   style: theme.textTheme.labelLarge?.copyWith(
                     color: scheme.onPrimary,
                     fontWeight: FontWeight.w700,
@@ -271,7 +271,7 @@ class _PickerCell extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(right: 8),
                   child: Text(
-                    'CLEAR',
+                    'Clear',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.secondary,
                       decoration: TextDecoration.underline,

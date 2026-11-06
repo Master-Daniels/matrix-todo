@@ -22,14 +22,15 @@ class StatsPage extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    final streak = ref.watch(streakProvider).maybeWhen(
-          data: (s) => s,
-          orElse: () => 0,
-        );
+    final streak = ref
+        .watch(streakProvider)
+        .maybeWhen(data: (s) => s, orElse: () => 0);
     final counts = ref.watch(todayCountsProvider);
     final total = counts.maybeWhen(data: (d) => d.total, orElse: () => 0);
-    final completed =
-        counts.maybeWhen(data: (d) => d.completed, orElse: () => 0);
+    final completed = counts.maybeWhen(
+      data: (d) => d.completed,
+      orElse: () => 0,
+    );
     final listsAsync = ref.watch(listsProvider);
 
     return Scaffold(
@@ -38,8 +39,8 @@ class StatsPage extends ConsumerWidget {
           icon: Icons.arrow_back,
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: 'Stats // Ledger',
-        index: 'INDEX // 05',
+        title: 'Progress',
+        index: 'PROGRESS',
       ),
       body: ListView(
         children: [
@@ -57,21 +58,21 @@ class StatsPage extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'STREAK // CONSECUTIVE FULL DAYS',
+                  'Streak',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  '$streak ${streak == 1 ? 'DAY' : 'DAYS'}',
+                  '$streak ${streak == 1 ? 'day' : 'days'}',
                   style: theme.textTheme.headlineLarge?.copyWith(
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'EMPTY DAYS SKIPPED // TODAY IN PROGRESS SPARED',
+                  'Consecutive active days',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                   ),
@@ -79,13 +80,23 @@ class StatsPage extends ConsumerWidget {
               ],
             ),
           ),
-          const SectionHeader(title: 'Today // Week', index: '[SEC 01]'),
-          _WeekCells(),
-          const SectionHeader(title: 'Per list', index: '[SEC 02]'),
+          const SectionHeader(title: 'Today', index: '[SEC 01]'),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.md,
+              AppSpacing.sm,
+            ),
+            child: _TodayCell(total: total, completed: completed),
+          ),
+          const SectionHeader(title: 'This week', index: '[SEC 02]'),
+          const _WeekCells(),
+          const SectionHeader(title: 'By list', index: '[SEC 03]'),
           listsAsync.when(
             loading: () => const Padding(
               padding: EdgeInsets.all(AppSpacing.md),
-              child: LoadingState(label: 'LOADING LEDGER'),
+              child: LoadingState(label: 'Loading'),
             ),
             error: (e, _) => Padding(
               padding: const EdgeInsets.all(AppSpacing.md),
@@ -107,15 +118,6 @@ class StatsPage extends ConsumerWidget {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.md,
-                      AppSpacing.sm,
-                    ),
-                    child: _TodayCell(total: total, completed: completed),
-                  ),
                   for (var i = 0; i < lists.length; i++)
                     _ListRow(
                       list: lists[i],
@@ -157,7 +159,7 @@ class _TodayCell extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TODAY',
+                'Today',
                 style: theme.textTheme.labelSmall?.copyWith(
                   color: scheme.secondary,
                   fontWeight: FontWeight.w700,
@@ -265,8 +267,7 @@ class _ListRow extends ConsumerWidget {
     if (list.id == null) return const SizedBox.shrink();
     final counts = ref.watch(listCountsProvider(list.id!));
     final total = counts.maybeWhen(data: (c) => c.total, orElse: () => 0);
-    final done =
-        counts.maybeWhen(data: (c) => c.completed, orElse: () => 0);
+    final done = counts.maybeWhen(data: (c) => c.completed, orElse: () => 0);
     final pct = total == 0 ? 0 : (done / total * 100).round();
     return Container(
       margin: const EdgeInsets.fromLTRB(

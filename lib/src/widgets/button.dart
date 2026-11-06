@@ -27,22 +27,19 @@ class Button extends StatelessWidget {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
     final isPrimary = kind == ButtonKind.primary;
-    var style =
-        (isPrimary
-                ? theme.elevatedButtonTheme.style
-                : theme.outlinedButtonTheme.style)!
-            .copyWith(
-              minimumSize: WidgetStateProperty.all(
-                Size(expanded ? double.infinity : 0, 48),
-              ),
-              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            );
+    var style = (isPrimary
+            ? (theme.elevatedButtonTheme.style ?? ElevatedButton.styleFrom())
+            : (theme.outlinedButtonTheme.style ?? OutlinedButton.styleFrom()))
+        .copyWith(
+          minimumSize: WidgetStateProperty.all(
+            Size(expanded ? double.infinity : 0, 48),
+          ),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        );
     if (kind == ButtonKind.danger) {
       style = style.copyWith(
         foregroundColor: WidgetStatePropertyAll(scheme.error),
-        side: WidgetStatePropertyAll(
-          BorderSide(color: scheme.error, width: 2),
-        ),
+        side: WidgetStatePropertyAll(BorderSide(color: scheme.error, width: 2)),
       );
     }
 
@@ -51,9 +48,7 @@ class Button extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         if (leading != null) ...[leading!, const SizedBox(width: 8)],
-        Flexible(
-          child: Text(label.toUpperCase(), overflow: TextOverflow.ellipsis),
-        ),
+        Flexible(child: Text(label, overflow: TextOverflow.ellipsis)),
       ],
     );
 
@@ -79,7 +74,7 @@ class GhostButton extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            label.toUpperCase(),
+            label,
             style: TextStyle(
               decoration: TextDecoration.underline,
               decorationThickness: 1,

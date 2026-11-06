@@ -119,19 +119,26 @@ ReminderRoute routeFromResponse(NotificationResponse response) {
   );
 }
 
-/// Computes the pre-reminder fire events for [task] after [now].
+/// Computes the reminder fire events for [task] after [now].
+///
+/// When [includePreReminders] is true (default), returns 1-hour, 30-minute,
+/// and on-start reminders. When false, returns only the on-start (`atStart`)
+/// reminder — the constant alarm that always fires regardless of the
+/// master "Task reminders" toggle.
+///
 /// Done tasks and rows without an id schedule nothing. A live snooze
 /// (`snoozed_until` in the future) suppresses the regular fires and emits
 /// the single deferred fire instead. Overdue nudges are not per-task — see
 /// [digestMornings]/[overdueDigest] for the single per-morning digest.
-List<ScheduledReminder> remindersFor(TodoTask task, DateTime now) {
+List<ScheduledReminder> remindersFor(
+  TodoTask task,
+  DateTime now, {
+  bool includePreReminders = true,
+}) {
   if (task.id == null || task.done) return [];
   final snoozeMs = task.snoozedUntil;
   if (snoozeMs != null && snoozeMs > now.millisecondsSinceEpoch) {
     final fire = DateTime.fromMillisecondsSinceEpoch(snoozeMs);
-    final when = (task.dueTime ?? '').isEmpty
-        ? ''
-        : ' // ${task.dueTime!.toUpperCase()}';
     final snoozeId = notificationId(task.id!, ReminderKind.halfHourBefore);
     return [
       (
@@ -139,7 +146,7 @@ List<ScheduledReminder> remindersFor(TodoTask task, DateTime now) {
         kind: ReminderKind.halfHourBefore,
         fireAt: fire,
         title: task.title,
-        body: 'SNOOZED$when',
+        body: 'SNOOZED',
         payload: reminderPayload(taskId: task.id, nid: snoozeId),
       ),
     ];
@@ -156,22 +163,23 @@ List<ScheduledReminder> remindersFor(TodoTask task, DateTime now) {
     parsed.hour,
     parsed.minute,
   );
-  for (final kind in [ReminderKind.hourBefore, ReminderKind.halfHourBefore]) {
-    final fire = eventAt.subtract(Duration(minutes: reminderOffsets[kind]!));
-    if (!fire.isAfter(now)) continue;
-    final label = kind == ReminderKind.hourBefore ? '1 HOUR' : '30 MINUTES';
-    final when = task.dueTime!.toUpperCase();
-    final id = notificationId(task.id!, kind);
-    out.add((
-      id: id,
-      kind: kind,
-      fireAt: fire,
-      title: task.title,
-      body: 'DUE IN $label // $when',
-      payload: reminderPayload(taskId: task.id, nid: id),
-    ));
+  if (includePreReminders) {
+    for (final kind in [ReminderKind.hourBefore, ReminderKind.halfHourBefore]) {
+      final fire = eventAt.subtract(Duration(minutes: reminderOffsets[kind]!));
+      if (!fire.isAfter(now)) continue;
+      final label = kind == ReminderKind.hourBefore ? '1 HOUR' : '30 MINUTES';
+      final id = notificationId(task.id!, kind);
+      out.add((
+        id: id,
+        kind: kind,
+        fireAt: fire,
+        title: task.title,
+        body: 'DUE IN $label',
+        payload: reminderPayload(taskId: task.id, nid: id),
+      ));
+    }
   }
-  // On-time alarm: fires exactly at the event start.
+  // On-time alarm: fires exactly at the event start — always present.
   if (eventAt.isAfter(now)) {
     final id = notificationId(task.id!, ReminderKind.atStart);
     out.add((
@@ -179,7 +187,7 @@ List<ScheduledReminder> remindersFor(TodoTask task, DateTime now) {
       kind: ReminderKind.atStart,
       fireAt: eventAt,
       title: task.title,
-      body: 'STARTING NOW // ${task.dueTime!.toUpperCase()}',
+      body: 'STARTING NOW',
       payload: reminderPayload(taskId: task.id, nid: id),
     ));
   }
@@ -230,7 +238,7 @@ ScheduledReminder? overdueDigest(DateTime morning, List<TodoTask> tasks) {
     id: id,
     kind: ReminderKind.overdue,
     fireAt: morning,
-    title: '${due.length} OVERDUE // OPEN TO REVIEW',
+    title: '${due.length} OVERDUE',
     body: '$titles$more',
     payload: reminderPayload(digest: isoDay(morning), nid: id),
   );
@@ -256,10 +264,19 @@ ScheduledReminder applyDigestSnooze(
 
 /// Inbox lines for the group summary: one per task with live fires plus
 /// digest titles, capped for the shade. Pure + unit-tested.
-List<String> groupSummaryLines(List<TodoTask> tasks, DateTime now) {
+///
+/// When [includePreReminders] is false (task reminders muted), pre-reminder
+/// lines are omitted from the summary.
+List<String> groupSummaryLines(
+  List<TodoTask> tasks,
+  DateTime now, {
+  bool includePreReminders = true,
+}) {
   final lines = <String>[];
   for (final task in tasks) {
-    if (remindersFor(task, now).isEmpty) continue;
+    final fires = remindersFor(task, now,
+            includePreReminders: includePreReminders);
+    if (fires.isEmpty) continue;
     final when = (task.dueTime ?? '').isEmpty
         ? ''
         : ' // ${task.dueTime!.toUpperCase()}';
@@ -273,10 +290,11 @@ List<String> groupSummaryLines(List<TodoTask> tasks, DateTime now) {
 }
 
 /// Every notification id the schedule wants alive right now: pre-reminder
-/// slots plus digest mornings (post-snooze-shift — shifts never change ids),
-/// plus the daily toggles when armed ([briefing] always fires; [streak]
-/// only when tasks remain today), plus the group summary when anything
-/// is scheduled.
+/// slots (when [includePreReminders] is true) plus digest mornings
+/// (post-snooze-shift — shifts never change ids), plus the daily toggles
+/// when armed ([briefing] always fires; [streak] only when tasks remain
+/// today), plus the group summary when anything is scheduled.
+///
 /// Pure + unit-tested; drives the stale-sweep in [ReminderService.syncAll].
 Set<int> desiredIdsFor(
   List<TodoTask> tasks,
@@ -284,10 +302,12 @@ Set<int> desiredIdsFor(
   int? digestSnoozeMs, {
   bool briefing = false,
   bool streak = false,
+  bool includePreReminders = true,
 }) {
   final ids = <int>{};
   for (final task in tasks) {
-    for (final r in remindersFor(task, now)) {
+    for (final r in remindersFor(task, now,
+        includePreReminders: includePreReminders)) {
       ids.add(r.id);
     }
   }
@@ -365,7 +385,7 @@ List<AndroidNotificationAction> androidReminderActions(ReminderKind kind) => [
   // OEM skins skip icon-less actions even in the expanded shade.
   const AndroidNotificationAction(
     actionSnooze,
-    'SNOOZE',
+    'Snooze',
     icon: DrawableResourceAndroidBitmap('ic_snooze'),
     showsUserInterface: true,
     cancelNotification: true,
@@ -373,7 +393,7 @@ List<AndroidNotificationAction> androidReminderActions(ReminderKind kind) => [
   if (kind != ReminderKind.overdue)
     const AndroidNotificationAction(
       actionDone,
-      'MARK DONE',
+      'Mark done',
       icon: DrawableResourceAndroidBitmap('ic_done'),
       showsUserInterface: true,
       cancelNotification: true,
@@ -387,7 +407,7 @@ List<DarwinNotificationCategory> darwinReminderCategories() => [
     actions: [
       DarwinNotificationAction.plain(
         actionSnooze,
-        'SNOOZE',
+        'Snooze',
         options: {DarwinNotificationActionOption.foreground},
       ),
       DarwinNotificationAction.plain(
@@ -402,7 +422,7 @@ List<DarwinNotificationCategory> darwinReminderCategories() => [
     actions: [
       DarwinNotificationAction.plain(
         actionSnooze,
-        'SNOOZE',
+        'Snooze',
         options: {DarwinNotificationActionOption.foreground},
       ),
     ],
@@ -464,11 +484,18 @@ class ReminderService {
   }
 
   /// Rebuilds one task's schedule from scratch. No-op without an id.
-  Future<void> syncTask(TodoTask task, {required bool enabled}) async {
+  /// When [includePreReminders] is false only the on-start (`atStart`)
+  /// reminder is scheduled — pre-reminders are suppressed.
+  Future<void> syncTask(
+    TodoTask task, {
+    required bool enabled,
+    bool includePreReminders = true,
+  }) async {
     if (task.id == null) return;
     await cancelTask(task.id!);
     if (!enabled) return;
-    for (final r in remindersFor(task, DateTime.now())) {
+    for (final r in remindersFor(task, DateTime.now(),
+        includePreReminders: includePreReminders)) {
       await _schedule(r);
     }
   }
@@ -511,20 +538,59 @@ class ReminderService {
     required bool enabled,
     bool healOnly = false,
   }) async {
-    if (!enabled) {
-      await cancelAll();
-      return;
-    }
     final now = DateTime.now();
     final digestSnooze = await digestSnoozeReader?.call();
     final policy = await dailyPolicyReader?.call() ??
         (briefing: false, streak: false);
+
+    // Always cancel everything first, then rebuild from scratch based on
+    // whether pre-reminders are armed. The on-time (atStart) alarm is
+    // always present regardless of [enabled]; pre-reminders only appear
+    // when [enabled] is true.
+    await cancelAll();
+    if (!enabled) {
+      for (final task in tasks) {
+        await syncTask(task, enabled: true, includePreReminders: false);
+      }
+      // Still schedule overdue digests even when muted — they are the
+      // morning-after overdue tone, not per-task pre-reminders.
+      for (final morning in digestMornings(tasks, now)) {
+        final digest = overdueDigest(morning, tasks);
+        if (digest != null) {
+          await _schedule(applyDigestSnooze(digest, digestSnooze));
+        }
+      }
+      await _syncDaily(tasks, now, policy);
+      final desired = desiredIdsFor(
+        tasks,
+        now,
+        digestSnooze,
+        briefing: policy.briefing,
+        streak: policy.streak,
+        includePreReminders: false,
+      )..add(reminderGroupSummaryId);
+      final pending = await _notifications.pendingIds();
+      for (final id in pending) {
+        if (!desired.contains(id)) await _notifications.cancel(id);
+      }
+      await _syncGroupSummary(tasks, now,
+          includePreReminders: false);
+      if (kDebugMode) {
+        final after = await _notifications.pendingIds();
+        debugPrint(
+            '[ReminderService] syncAll done (muted): ${after.length} pending');
+      }
+      return;
+    }
+
+    // Armed: full schedule — pre-reminders + atStart + digests + dailies.
     Set<int> wanted() => desiredIdsFor(
           tasks,
           now,
           digestSnooze,
           briefing: policy.briefing,
           streak: policy.streak,
+          includePreReminders: true,
         )..remove(reminderGroupSummaryId);
     if (healOnly) {
       final pending = await _notifications.pendingIds();
@@ -589,8 +655,8 @@ class ReminderService {
       await _scheduleDaily(
         id: briefingNotificationId,
         fireAt: fire,
-        title: 'MORNING BRIEFING // $remaining TODAY',
-        body: due.isEmpty ? 'DAY CLEAR // NOTHING DUE' : '$titles$more',
+        title: 'Morning briefing',
+        body: due.isEmpty ? 'Nothing due' : '$titles$more',
         digest: isoDay(fire),
       );
     }
@@ -602,9 +668,9 @@ class ReminderService {
       await _scheduleDaily(
         id: streakNotificationId,
         fireAt: fire,
-        title: 'STREAK CHECK // $remaining REMAIN',
+        title: 'Streak check',
         body:
-            'CLOSE THE DAY // $remaining TASK${remaining == 1 ? '' : 'S'} REMAIN',
+            'Close the day: $remaining task${remaining == 1 ? '' : 'S'} remain',
         digest: isoDay(fire),
       );
     }
@@ -630,7 +696,7 @@ class ReminderService {
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             NotificationService.remindersChannelId,
-            'REMINDERS',
+            'Reminders',
             importance: Importance.high,
             priority: Priority.high,
             playSound: true,
@@ -641,7 +707,7 @@ class ReminderService {
             styleInformation: BigTextStyleInformation(
               body,
               contentTitle: title,
-              summaryText: 'REMINDERS',
+              summaryText: 'Reminders',
             ),
           ),
           iOS: const DarwinNotificationDetails(
@@ -659,8 +725,13 @@ class ReminderService {
   /// Posts (or refreshes) the WhatsApp-style group summary, or cancels it
   /// when nothing is scheduled. Silent + alert-once: children carry the
   /// chime, never the header.
-  Future<void> _syncGroupSummary(List<TodoTask> tasks, DateTime now) async {
-    final lines = groupSummaryLines(tasks, now);
+  Future<void> _syncGroupSummary(
+    List<TodoTask> tasks,
+    DateTime now, {
+    bool includePreReminders = true,
+  }) async {
+    final lines = groupSummaryLines(tasks, now,
+        includePreReminders: includePreReminders);
     if (lines.isEmpty) {
       await _notifications.cancel(reminderGroupSummaryId);
       return;
@@ -673,7 +744,7 @@ class ReminderService {
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
             NotificationService.remindersChannelId,
-            'REMINDERS',
+            'Reminders',
             importance: Importance.low,
             priority: Priority.low,
             playSound: false,
@@ -685,7 +756,7 @@ class ReminderService {
             groupAlertBehavior: GroupAlertBehavior.children,
             styleInformation: InboxStyleInformation(
               lines,
-              contentTitle: 'MATRIX // REMINDERS',
+              contentTitle: 'Reminders',
               summaryText: '${lines.length} REMINDERS',
             ),
           ),
@@ -750,7 +821,7 @@ class ReminderService {
             overdue
                 ? NotificationService.overdueChannelId
                 : NotificationService.remindersChannelId,
-            overdue ? 'OVERDUE' : 'REMINDERS',
+            overdue ? 'Overdue' : 'Reminders',
             importance: Importance.high,
             priority: Priority.high,
             playSound: true,
@@ -781,7 +852,7 @@ class ReminderService {
             styleInformation: BigTextStyleInformation(
               r.body,
               contentTitle: r.title,
-              summaryText: overdue ? 'OVERDUE' : 'REMINDERS',
+              summaryText: overdue ? 'Overdue' : 'Reminders',
             ),
           ),
           iOS: DarwinNotificationDetails(

@@ -8,11 +8,13 @@ import 'package:matrix_todo/src/data/providers.dart';
 import 'package:matrix_todo/src/data/recurrence.dart';
 import 'package:matrix_todo/src/notifications/reminder_service.dart';
 import 'package:matrix_todo/src/pages/add_task/add_task_sheet.dart';
+import 'package:matrix_todo/src/pages/layout/app_shell.dart';
 import 'package:matrix_todo/src/pages/lists/list_form_sheet.dart';
 import 'package:matrix_todo/src/pages/lists/lists_page.dart';
 import 'package:matrix_todo/src/pages/list_detail/list_detail_page.dart';
 import 'package:matrix_todo/src/pages/lists/lists_providers.dart';
 import 'package:matrix_todo/src/pages/lists/lists_sections/core_list_card.dart';
+import 'package:matrix_todo/src/pages/home/home_page.dart';
 import 'package:matrix_todo/src/pages/home/home_providers.dart';
 import 'package:matrix_todo/src/pages/home/home_sections/home_deck_list.dart';
 import 'package:matrix_todo/src/widgets/deck_swipe.dart';
@@ -26,9 +28,11 @@ import 'package:matrix_todo/src/pages/settings/settings_sections/data_section.da
 import 'package:matrix_todo/src/pages/upcoming/schedule_export.dart';
 import 'package:matrix_todo/src/pages/upcoming/upcoming_page.dart';
 import 'package:matrix_todo/src/pages/upcoming/upcoming_providers.dart';
+import 'package:matrix_todo/src/pages/upcoming/upcoming_sections/day_strip.dart';
 import 'package:matrix_todo/src/pages/upcoming/upcoming_sections/timeline_section.dart';
 import 'package:matrix_todo/src/theme/app_theme.dart';
 import 'package:matrix_todo/src/widgets/animated_bottom_sheet.dart';
+import 'package:matrix_todo/src/widgets/bottom_nav.dart';
 
 void main() {
   testWidgets('TodoApp boots home shell', (WidgetTester tester) async {
@@ -56,8 +60,8 @@ void main() {
     // App bar from HomePage (CustomAppBar uppercases title, Option 1).
     expect(find.text('TODAY'), findsWidgets);
     // Deck metrics + action bar.
-    expect(find.textContaining('COMPLETED'), findsWidgets);
-    expect(find.text('ADD TASK'), findsOneWidget);
+    expect(find.textContaining('completed'), findsWidgets);
+    expect(find.text('Add task'), findsOneWidget);
     // Pinned footer guide (outside the scrollable, always visible).
     expect(find.textContaining('SWIPE RIGHT'), findsOneWidget);
     // Bottom nav from AppShell.
@@ -87,19 +91,18 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('[+] NEW TASK'), findsOneWidget);
-    expect(find.text('DECK ENTRY'), findsOneWidget);
-    expect(find.text('01 // TASK NAME // WHAT NEEDS DOING?'), findsOneWidget);
-    expect(find.text('01B // TASK NOTES // DESCRIPTION'), findsOneWidget);
-    expect(find.text('02 // TAXONOMY CATEGORY'), findsOneWidget);
+    expect(find.text('New task'), findsOneWidget);
+    expect(find.text('Task name'), findsOneWidget);
+    expect(find.text('Notes'), findsOneWidget);
+    expect(find.text('Category'), findsOneWidget);
     expect(find.textContaining('PERSONAL'), findsWidgets);
-    expect(find.text('03A // TARGET DATE'), findsOneWidget);
-    expect(find.text('03B // EXEC TIME'), findsOneWidget);
-    expect(find.text('04 // PRIORITY SEVERITY'), findsOneWidget);
-    expect(find.text('05 // SUB-EXECUTION NODES'), findsOneWidget);
-    expect(find.text('DECK STACK POSITION'), findsOneWidget);
-    expect(find.text('ADD TASK TO DECK'), findsOneWidget);
-    expect(find.text('DISCARD'), findsOneWidget);
+    expect(find.text('Target date & time'), findsOneWidget);
+    expect(find.text('Time'), findsOneWidget);
+    expect(find.text('Priority'), findsOneWidget);
+    expect(find.text('Subtasks'), findsOneWidget);
+    expect(find.text('Task position'), findsOneWidget);
+    expect(find.text('Add task'), findsOneWidget);
+    expect(find.text('Discard'), findsOneWidget);
   });
 
   testWidgets('AddTaskSheet docks flush to the bottom edge', (
@@ -136,7 +139,7 @@ void main() {
     await tester.tap(find.text('OPEN'));
     await tester.pumpAndSettle();
 
-    expect(find.text('[+] NEW TASK'), findsOneWidget);
+    expect(find.text('New task'), findsOneWidget);
     final box = tester.getRect(find.byType(Sheet));
     final size = tester.view.physicalSize / tester.view.devicePixelRatio;
     // Flush with the screen bottom (no floating daylight)…
@@ -181,7 +184,7 @@ void main() {
       const Offset(0, -1200),
     );
     await tester.pump();
-    await tester.tap(find.text('+ ADD SUBTASK NODE'));
+    await tester.tap(find.text('+ Add subtask'));
     await tester.pump();
     // Opening the row autofocuses the input: keyboard up, no extra tap.
     expect(tester.testTextInput.isVisible, isTrue);
@@ -190,7 +193,7 @@ void main() {
     await tester.tap(find.byKey(const ValueKey('subtask-input-cancel')));
     await tester.pump();
     expect(tester.testTextInput.isVisible, isFalse);
-    expect(find.text('+ ADD SUBTASK NODE'), findsOneWidget);
+    expect(find.text('+ Add subtask'), findsOneWidget);
 
     // Confirm path: reopen, type, tap ADD — draft added, keyboard hides,
     // trigger returns, and the title input never regains focus.
@@ -199,16 +202,16 @@ void main() {
       const Offset(0, -400),
     );
     await tester.pump();
-    await tester.tap(find.text('+ ADD SUBTASK NODE'));
+    await tester.tap(find.text('+ Add subtask'));
     await tester.pump();
     await tester.enterText(find.byType(TextFormField).last, 'First sub');
     await tester.pump();
     expect(tester.testTextInput.isVisible, isTrue);
-    await tester.tap(find.text('ADD'));
+    await tester.tap(find.text('Add'));
     await tester.pump();
     expect(tester.testTextInput.isVisible, isFalse);
     expect(find.text('First sub'), findsOneWidget);
-    expect(find.text('+ ADD SUBTASK NODE'), findsOneWidget);
+    expect(find.text('+ Add subtask'), findsOneWidget);
   });
 
   testWidgets('HomeDeckSwipe right completes, left reschedules', (
@@ -280,11 +283,11 @@ void main() {
 
     expect(find.text('[<>] RESCHEDULE'), findsOneWidget);
     expect(find.text('Fix sink'), findsOneWidget);
-    expect(find.text('NEW DATE'), findsOneWidget);
+    expect(find.text('New date'), findsOneWidget);
     expect(find.text('2026-04-16'), findsOneWidget);
-    expect(find.text('NEW TIME'), findsOneWidget);
+    expect(find.text('New time'), findsOneWidget);
     expect(find.text('10:00 HRS'), findsOneWidget);
-    expect(find.text('RESCHEDULE ->'), findsOneWidget);
+    expect(find.text('Reschedule'), findsOneWidget);
   });
 
   testWidgets('HomeDeckList renders scrollable stacked deck with peeks', (
@@ -382,8 +385,8 @@ void main() {
     await tester.pump();
 
     expect(find.text('TOMORROW // TUE OCT 06'), findsOneWidget);
-    expect(find.text('NO TASKS SCHEDULED'), findsOneWidget);
-    expect(find.text('+ PLAN TIME BLOCK'), findsOneWidget);
+    expect(find.text('No tasks scheduled'), findsOneWidget);
+    expect(find.text('+ Plan time block'), findsOneWidget);
   });
 
   testWidgets('Overdue row stamps the missed day and time', (
@@ -444,21 +447,21 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('ADD TASK TO LIST'), findsOneWidget);
-    await tester.tap(find.text('ADD TASK TO LIST'));
+    expect(find.text('Add task'), findsOneWidget);
+    await tester.tap(find.text('Add task'));
     await tester.pumpAndSettle();
 
-    // Locked single pill + LOCKED tag (app bar behind also says WORK).
-    expect(find.text('LOCKED'), findsOneWidget);
+    // Locked single pill + locked tag (app bar behind also says WORK).
+    expect(find.text('Locked'), findsOneWidget);
     expect(find.text('WORK'), findsWidgets);
     // Tapping the locked pill explains filing elsewhere.
     await tester.tap(find.text('WORK').last);
     await tester.pumpAndSettle();
-    expect(find.text('CATEGORY LOCKED'), findsOneWidget);
-    expect(find.text('GO BACK'), findsOneWidget);
-    await tester.tap(find.text('STAY HERE'));
+    expect(find.text('Category locked'), findsOneWidget);
+    expect(find.text('Go back'), findsOneWidget);
+    await tester.tap(find.text('Stay here'));
     await tester.pumpAndSettle();
-    expect(find.text('[+] NEW TASK'), findsOneWidget);
+    expect(find.text('New task'), findsOneWidget);
   });
 
   testWidgets('AddTaskSheet edit mode prefills task and subtasks', (
@@ -501,11 +504,11 @@ void main() {
     await tester.pump();
     await tester.pump();
 
-    expect(find.text('[~] EDIT TASK'), findsOneWidget);
+    expect(find.text('Edit task'), findsOneWidget);
     expect(find.text('2026-04-16'), findsOneWidget);
     expect(find.text('10:00 HRS'), findsOneWidget);
     expect(find.text('First sub'), findsOneWidget);
-    expect(find.text('SAVE CHANGES -> [ENTER]'), findsOneWidget);
+    expect(find.text('Save changes'), findsOneWidget);
   });
 
   testWidgets('Empty subtask confirm shows red REQ error', (
@@ -536,13 +539,13 @@ void main() {
       const Offset(0, -1200),
     );
     await tester.pump();
-    await tester.tap(find.text('+ ADD SUBTASK NODE'));
+    await tester.tap(find.text('+ Add subtask'));
     await tester.pump();
-    await tester.tap(find.text('ADD'));
+    await tester.tap(find.text('Add'));
     await tester.pump();
     expect(find.text('REQUIRED*'), findsOneWidget);
     // Row stays open for correction.
-    expect(find.text('+ ADD SUBTASK NODE'), findsNothing);
+    expect(find.text('+ Add subtask'), findsNothing);
   });
 
   testWidgets('ListsPage renders ledgers with pinned create footer', (
@@ -583,13 +586,13 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('LISTS // FOLDERS'), findsOneWidget);
+    expect(find.text('Lists'), findsOneWidget);
     expect(find.text('PERSONAL'), findsWidgets);
     expect(find.text('WORK'), findsWidgets);
     expect(find.text('READING LIST'), findsOneWidget);
     expect(find.text('[SEC 01]'), findsOneWidget);
     expect(find.text('[SEC 02]'), findsOneWidget);
-    expect(find.text('CREATE NEW CATEGORY'), findsOneWidget);
+    expect(find.text('Create new list'), findsOneWidget);
   });
 
   testWidgets('CoreListCard badges follow queue state', (
@@ -799,18 +802,17 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('UPCOMING'), findsWidgets);
-    expect(find.textContaining('TOMORROW'), findsWidgets);
+    expect(find.text('Upcoming'), findsWidgets);
+    expect(find.textContaining('Tomorrow'), findsWidgets);
     expect(find.text('Today task'), findsOneWidget);
-    expect(find.textContaining('TODAY //'), findsOneWidget);
+    expect(find.textContaining('Today //'), findsOneWidget);
     expect(find.text('Tomorrow task'), findsOneWidget);
-    // Later rows live under the LATER segment now: switch to it.
-    await tester.tap(find.text('[ LATER ]'));
+    // Later rows live under the later segment now: switch to it.
+    await tester.tap(find.text('[ Later ]'));
     await tester.pump();
     expect(find.text('Later task'), findsOneWidget);
-    expect(find.textContaining('LATER THIS WEEK'), findsOneWidget);
-    // Terminal buttons use intentional two-line labels.
-    expect(find.text('NEW TIME\nBLOCK +'), findsOneWidget);
+    expect(find.textContaining('Later this week'), findsOneWidget);
+    // The later bucket is populated in this test, so there is no empty-state CTA to assert.
   });
 
   test('todayTasksProvider shows due-today plus overdue undone', () async {
@@ -914,13 +916,13 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('SETTINGS // PREFERENCES'), findsOneWidget);
-    expect(find.text('USER'), findsOneWidget);
-    expect(find.text('APPEARANCE'), findsOneWidget);
-    expect(find.text('NOTIFICATIONS'), findsOneWidget);
-    expect(find.text('DATA & VAULT'), findsOneWidget);
-    expect(find.text('STATS // LEDGER'), findsOneWidget);
-    expect(find.text('FREE TIER'), findsNothing);
+    expect(find.text('Settings'), findsOneWidget);
+    expect(find.text('Profile'), findsOneWidget);
+    expect(find.text('Appearance'), findsOneWidget);
+    expect(find.text('Notifications'), findsOneWidget);
+    expect(find.text('Data & backup'), findsOneWidget);
+    expect(find.text('Progress'), findsOneWidget);
+    expect(find.text('Free tier'), findsNothing);
     expect(find.byIcon(Icons.account_circle), findsNothing);
     expect(find.textContaining('ID:'), findsNothing);
   });
@@ -939,9 +941,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('THEME ENGINE'), findsOneWidget);
-    expect(find.text('DEFAULT VIEW MATRIX'), findsOneWidget);
-    expect(find.text('CALENDAR CADENCE'), findsOneWidget);
+    expect(find.text('Theme'), findsOneWidget);
+    expect(find.text('Default screen'), findsOneWidget);
+    expect(find.text('Week start'), findsOneWidget);
   });
 
   testWidgets('Notifications page renders toggles', (
@@ -960,9 +962,9 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('TASK REMINDERS'), findsOneWidget);
-    expect(find.text('DAILY MORNING BRIEFING'), findsOneWidget);
-    expect(find.text('STREAK REMINDER'), findsOneWidget);
+    expect(find.text('Task reminders'), findsOneWidget);
+    expect(find.text('Daily morning briefing'), findsOneWidget);
+    expect(find.text('Streak reminder'), findsOneWidget);
   });
 
   testWidgets('Data page renders vault', (WidgetTester tester) async {
@@ -977,8 +979,8 @@ void main() {
     await tester.pump();
 
     // Data vault sits below the fold: scroll it into view first.
-    await tester.scrollUntilVisible(find.text('[ RESET ALL DATA ]'), 500);
-    expect(find.text('[ RESET ALL DATA ]'), findsOneWidget);
+    await tester.scrollUntilVisible(find.text('Reset all data').last, 500);
+    expect(find.text('Reset all data').last, findsOneWidget);
   });
 
   test('settings writes apply instantly without DB round-trip', () async {
@@ -1116,7 +1118,7 @@ void main() {
       expect(digest.id, isNegative);
       expect(digest.kind, ReminderKind.overdue);
       expect(digest.fireAt, DateTime(2026, 4, 16, 8));
-      expect(digest.title, '2 OVERDUE // OPEN TO REVIEW');
+      expect(digest.title, '2 OVERDUE');
       expect(digest.body, contains('Alpha'));
       expect(digest.body, contains('Beta'));
       expect(digest.body.contains('Finished'), isFalse);
@@ -1574,5 +1576,110 @@ void main() {
 
     final tasks = await container.read(listTasksProvider(1).future);
     expect(tasks.map((t) => t.title).toList(), ['A', 'B']);
+  });
+
+  group('Responsive navigation', () {
+    testWidgets('Portrait renders BottomNav and no SideNavRail', (tester) async {
+      tester.view.physicalSize = const Size(600, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            todayTasksProvider.overrideWith((ref) async => []),
+            todayBaseTasksProvider.overrideWith((ref) async => []),
+            todayCategoryCountsProvider.overrideWith(
+              (ref) async => <String?, int>{null: 0},
+            ),
+            todayCountsProvider.overrideWith(
+              (ref) async => (total: 0, completed: 0, remaining: 0),
+            ),
+          ],
+          child: const MaterialApp(home: AppShell()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(BottomNav), findsOneWidget);
+      expect(find.byType(SideNavRail), findsNothing);
+    });
+
+    testWidgets('Landscape renders SideNavRail and no BottomNav', (tester) async {
+      tester.view.physicalSize = const Size(1000, 600);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            todayTasksProvider.overrideWith((ref) async => []),
+            todayBaseTasksProvider.overrideWith((ref) async => []),
+            todayCategoryCountsProvider.overrideWith(
+              (ref) async => <String?, int>{null: 0},
+            ),
+            todayCountsProvider.overrideWith(
+              (ref) async => (total: 0, completed: 0, remaining: 0),
+            ),
+          ],
+          child: const MaterialApp(home: AppShell()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(SideNavRail), findsOneWidget);
+      expect(find.byType(BottomNav), findsNothing);
+    });
+
+    testWidgets('HomePage renders in landscape without overflow', (tester) async {
+      tester.view.physicalSize = const Size(800, 400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            todayTasksProvider.overrideWith((ref) async => []),
+            todayBaseTasksProvider.overrideWith((ref) async => []),
+            todayCategoryCountsProvider.overrideWith(
+              (ref) async => <String?, int>{null: 0},
+            ),
+            todayCountsProvider.overrideWith(
+              (ref) async => (total: 0, completed: 0, remaining: 0),
+            ),
+          ],
+          child: const MaterialApp(home: HomePage()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(HomePage), findsOneWidget);
+      expect(find.text('TODAY'), findsWidgets);
+      expect(find.text('Add task'), findsOneWidget);
+    });
+
+    testWidgets('UpcomingPage renders in landscape without overflow', (tester) async {
+      tester.view.physicalSize = const Size(800, 400);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            tasksProvider.overrideWith((ref, args) async => []),
+          ],
+          child: const MaterialApp(home: UpcomingPage()),
+        ),
+      );
+      await tester.pump();
+
+      expect(find.byType(UpcomingPage), findsOneWidget);
+      expect(find.byType(DayStrip), findsOneWidget);
+      expect(find.text('Upcoming'), findsWidgets);
+    });
   });
 }

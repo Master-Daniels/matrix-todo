@@ -43,7 +43,7 @@ class HomeFilterSheet extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    'FILTER // CATEGORY',
+                    'Show tasks by category',
                     style: theme.textTheme.labelLarge?.copyWith(
                       fontWeight: FontWeight.w700,
                     ),
@@ -57,11 +57,7 @@ class HomeFilterSheet extends ConsumerWidget {
                     decoration: BoxDecoration(
                       border: Border.all(color: scheme.primary, width: 1),
                     ),
-                    child: Icon(
-                      Icons.close,
-                      size: 16,
-                      color: scheme.primary,
-                    ),
+                    child: Icon(Icons.close, size: 16, color: scheme.primary),
                   ),
                 ),
               ],
@@ -91,8 +87,7 @@ class HomeFilterSheet extends ConsumerWidget {
                         Padding(
                           padding: const EdgeInsets.only(bottom: 6),
                           child: _FilterRow(
-                            label:
-                                '${k ?? 'ALL'} (${(map[k] ?? 0).toString().padLeft(2, '0')})',
+                            label: '${k ?? 'All'} (${map[k] ?? 0})',
                             selected: k == active,
                             onTap: () {
                               ref

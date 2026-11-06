@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../theme/app_spacing.dart';
 import '../theme/app_typography.dart';
@@ -10,6 +11,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? index;
   final List<Widget> actions;
   final Widget? leading;
+  final double? height;
 
   const CustomAppBar({
     super.key,
@@ -17,26 +19,32 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
     this.index,
     this.actions = const [],
     this.leading,
+    this.height,
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(kToolbarHeight);
+  Size get preferredSize => Size.fromHeight(height ?? 60);
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
     return Container(
+      height: height,
       decoration: BoxDecoration(
         color: scheme.surface,
         border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
       ),
       child: SafeArea(
         bottom: false,
+        left: !isLandscape,
         child: Padding(
-          padding: const EdgeInsets.symmetric(
+          padding: EdgeInsets.symmetric(
             horizontal: AppSpacing.md,
-            vertical: AppSpacing.sm,
+            vertical: (height != null && height! > 60) ? 8 : 4,
           ),
           child: Row(
             children: [
@@ -57,7 +65,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
                       ),
                     SizedBox(height: 3),
                     Text(
-                      title.toUpperCase(),
+                      title,
                       style: theme.textTheme.headlineSmall,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -91,24 +99,40 @@ class CustomIconButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    return Tooltip(
-      message: tooltip ?? '',
+    Widget button = Semantics(
+      button: true,
+      label: tooltip,
       child: GestureDetector(
-        onTap: onPressed,
+        behavior: HitTestBehavior.opaque,
+        onTap: onPressed == null
+            ? null
+            : () {
+                HapticFeedback.selectionClick();
+                onPressed!();
+              },
         child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: inverted ? scheme.primary : scheme.surface,
-            border: Border.all(color: scheme.primary, width: 1),
-          ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: inverted ? scheme.onPrimary : scheme.primary,
+          constraints: const BoxConstraints(minWidth: 44, minHeight: 44),
+          alignment: Alignment.center,
+          child: Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: inverted ? scheme.primary : scheme.surface,
+              border: Border.all(color: scheme.primary, width: 1),
+            ),
+            child: Icon(
+              icon,
+              size: 18,
+              color: inverted ? scheme.onPrimary : scheme.primary,
+            ),
           ),
         ),
       ),
     );
+
+    if (tooltip != null && tooltip!.isNotEmpty) {
+      button = Tooltip(message: tooltip!, child: button);
+    }
+    return button;
   }
 }

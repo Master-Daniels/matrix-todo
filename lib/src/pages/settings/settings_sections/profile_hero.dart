@@ -30,7 +30,7 @@ class ProfileHero extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            '00/ PROFILE',
+            'Profile',
             style: AppTypography.indexIndicator(
               context,
               color: scheme.secondary,
@@ -45,7 +45,7 @@ class ProfileHero extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'LOCAL OPERATOR • ON-DEVICE VAULT',
+            'Saved on this device',
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
@@ -53,7 +53,7 @@ class ProfileHero extends ConsumerWidget {
           const SizedBox(height: 16),
           Button(
             label: 'Edit profile',
-            leading: const Icon(Icons.arrow_forward, size: 18),
+            leading: const Icon(Icons.edit, size: 16),
             expanded: false,
             onPressed: () => showAnimatedModalBottomSheet(
               context: context,

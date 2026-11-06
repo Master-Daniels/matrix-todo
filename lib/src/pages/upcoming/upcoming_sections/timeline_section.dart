@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../data/models.dart';
@@ -45,9 +46,7 @@ class TimelineHeader extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: bg,
-        border: Border(
-          bottom: BorderSide(color: scheme.primary, width: 1),
-        ),
+        border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppSpacing.md,
@@ -65,7 +64,7 @@ class TimelineHeader extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              title.toUpperCase(),
+              title,
               style: theme.textTheme.headlineSmall?.copyWith(
                 color: fg,
                 fontWeight: FontWeight.w700,
@@ -73,10 +72,7 @@ class TimelineHeader extends StatelessWidget {
             ),
           ),
           Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 8,
-              vertical: 2,
-            ),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
             decoration: BoxDecoration(
               color: scheme.surface,
               border: Border.all(
@@ -85,7 +81,7 @@ class TimelineHeader extends StatelessWidget {
               ),
             ),
             child: Text(
-              '$count TASKS',
+              '$count tasks',
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.primary,
                 fontWeight: FontWeight.w700,
@@ -188,7 +184,7 @@ class _DashedEmpty extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              'NO TASKS SCHEDULED',
+              'No tasks scheduled',
               textAlign: TextAlign.center,
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.w700,
@@ -197,7 +193,7 @@ class _DashedEmpty extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              'ENJOY THE SPACE — CALENDAR IS FULLY CLEAR',
+              'The schedule is clear',
               textAlign: TextAlign.center,
               style: theme.textTheme.labelSmall?.copyWith(
                 color: scheme.secondary,
@@ -215,7 +211,7 @@ class _DashedEmpty extends StatelessWidget {
                   border: Border.all(color: scheme.primary, width: 1),
                 ),
                 child: Text(
-                  '+ PLAN TIME BLOCK',
+                  '+ Plan time block',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.primary,
                     fontWeight: FontWeight.w700,
@@ -342,9 +338,7 @@ class _UpcomingTaskRowState extends ConsumerState<UpcomingTaskRow> {
       child: Container(
         decoration: BoxDecoration(
           color: bg,
-          border: Border(
-            bottom: BorderSide(color: scheme.primary, width: 1),
-          ),
+          border: Border(bottom: BorderSide(color: scheme.primary, width: 1)),
         ),
         // Deep-link highlight while this row is the notification target.
         foregroundDecoration: focused
@@ -360,143 +354,139 @@ class _UpcomingTaskRowState extends ConsumerState<UpcomingTaskRow> {
                 horizontal: AppSpacing.md,
                 vertical: AppSpacing.sm,
               ),
-            decoration: BoxDecoration(
-              color: scheme.surfaceContainerLowest,
-              border: Border(
-                bottom: BorderSide(color: scheme.primary, width: 1),
+              decoration: BoxDecoration(
+                color: scheme.surfaceContainerLowest,
+                border: Border(
+                  bottom: BorderSide(color: scheme.primary, width: 1),
+                ),
+              ),
+              child: Row(
+                children: [
+                  Text(
+                    '$index/',
+                    style: AppTypography.indexIndicator(
+                      context,
+                      color: scheme.secondary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
+                    decoration: BoxDecoration(
+                      color: task.priority >= 3
+                          ? scheme.primary
+                          : Colors.transparent,
+                      border: Border.all(color: scheme.primary, width: 1),
+                    ),
+                    child: Text(
+                      task.category.toUpperCase(),
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: task.priority >= 3
+                            ? scheme.onPrimary
+                            : scheme.primary,
+                        fontWeight: task.priority >= 3
+                            ? FontWeight.w700
+                            : FontWeight.w400,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    fmtDueStamp(task, showDate: widget.showDueDate),
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: widget.showDueDate && !done ? scheme.error : fg,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
               ),
             ),
-            child: Row(
-              children: [
-                Text(
-                  '$index/',
-                  style: AppTypography.indexIndicator(
-                    context,
-                    color: scheme.secondary,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 2,
-                  ),
-                  decoration: BoxDecoration(
-                    color: task.priority >= 3
-                        ? scheme.primary
-                        : Colors.transparent,
-                    border: Border.all(
-                      color: scheme.primary,
-                      width: 1,
+            Padding(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: CustomCheckbox(
+                      value: done,
+                      onChanged: task.id == null
+                          ? null
+                          : (v) => _checkWithUndo(task, v),
                     ),
                   ),
-                  child: Text(
-                    task.category.toUpperCase(),
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: task.priority >= 3
-                          ? scheme.onPrimary
-                          : scheme.primary,
-                      fontWeight: task.priority >= 3
-                          ? FontWeight.w700
-                          : FontWeight.w400,
-                    ),
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  fmtDueStamp(task, showDate: widget.showDueDate),
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: widget.showDueDate && !done
-                        ? scheme.error
-                        : fg,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.only(top: 2),
-                  child: CustomCheckbox(
-                    value: done,
-                    onChanged: task.id == null
-                        ? null
-                        : (v) => _checkWithUndo(task, v),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        task.title,
-                        style: theme.textTheme.headlineSmall?.copyWith(
-                          color: fg,
-                          decoration: done
-                              ? TextDecoration.lineThrough
-                              : TextDecoration.none,
-                        ),
-                      ),
-                      if (task.notes.isNotEmpty) ...[
-                        const SizedBox(height: 8),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
                         Text(
-                          task.notes,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.secondary,
+                          task.title,
+                          style: theme.textTheme.headlineSmall?.copyWith(
+                            color: fg,
+                            decoration: done
+                                ? TextDecoration.lineThrough
+                                : TextDecoration.none,
                           ),
                         ),
-                      ],
-                      if (task.id != null) SubtaskSlot(taskId: task.id),
-                      if (task.recurrence.trim().toUpperCase() == 'DAILY' ||
-                          task.recurrence.trim().toUpperCase() == 'WEEKLY')
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: Text(
-                            '↻ ${task.recurrence.trim().toUpperCase()}',
+                        if (task.notes.isNotEmpty) ...[
+                          const SizedBox(height: 8),
+                          Text(
+                            task.notes,
                             style: theme.textTheme.labelSmall?.copyWith(
                               color: scheme.secondary,
-                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                        if (task.id != null) SubtaskSlot(taskId: task.id),
+                        if (task.recurrence.trim().toUpperCase() == 'DAILY' ||
+                            task.recurrence.trim().toUpperCase() == 'WEEKLY')
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              '↻ ${task.recurrence.trim().toUpperCase()}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.secondary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      if (task.priority >= 3 && !done)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Text(
+                            'PRIORITY: HIGH',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: scheme.secondary,
                             ),
                           ),
                         ),
+                      TaskPopover(task: task),
                     ],
                   ),
-                ),
-                const SizedBox(width: 8),
-                Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    if (task.priority >= 3 && !done)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Text(
-                          'PRIORITY: HIGH',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: scheme.secondary,
-                          ),
-                        ),
-                      ),
-                    TaskPopover(task: task),
-                  ],
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
           ],
         ),
       ),
     );
   }
 
-  void _openEdit(BuildContext context, TodoTask task) {    showAnimatedModalBottomSheet(
+  void _openEdit(BuildContext context, TodoTask task) {
+    showAnimatedModalBottomSheet(
       context: context,
       builder: (_) => AddTaskSheet(task: task),
     );
@@ -509,11 +499,15 @@ class _UpcomingTaskRowState extends ConsumerState<UpcomingTaskRow> {
     final db = ref.read(appDatabaseProvider);
     int? cloneId;
     if (done) {
+      HapticFeedback.mediumImpact();
       cloneId = await completeTaskWithRecurrence(db, task);
     } else {
+      HapticFeedback.selectionClick();
       await db.setTaskDone(id, false);
     }
-    await ref.read(reminderServiceProvider).syncAll(
+    await ref
+        .read(reminderServiceProvider)
+        .syncAll(
           await db.getTasks(),
           enabled: ref.read(remindersEnabledProvider),
         );
@@ -535,23 +529,13 @@ class _UpcomingTaskRowState extends ConsumerState<UpcomingTaskRow> {
   Future<void> _completeWithUndo(TodoTask task) async {
     final cloneId = await _toggleDone(ref, task, true);
     if (!mounted || !context.mounted) return;
-    showDoneUndo(
-      context,
-      ref,
-      task,
-      () => _undoComplete(ref, task, cloneId),
-    );
+    showDoneUndo(context, ref, task, () => _undoComplete(ref, task, cloneId));
   }
 
   Future<void> _checkWithUndo(TodoTask task, bool done) async {
     final cloneId = await _toggleDone(ref, task, done);
     if (done && mounted && context.mounted) {
-      showDoneUndo(
-        context,
-        ref,
-        task,
-        () => _undoComplete(ref, task, cloneId),
-      );
+      showDoneUndo(context, ref, task, () => _undoComplete(ref, task, cloneId));
     }
   }
 }

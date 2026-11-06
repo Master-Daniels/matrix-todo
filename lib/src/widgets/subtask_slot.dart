@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/providers.dart';
@@ -49,63 +50,78 @@ class _SubtaskSlotState extends ConsumerState<SubtaskSlot> {
           crossAxisAlignment: CrossAxisAlignment.start,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${allDone ? '▣' : '▢'} $done/${subs.length} SUBTASKS',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: fg,
-                      fontWeight: FontWeight.w700,
-                    ),
+            const SizedBox(height: 4),
+            Semantics(
+              button: true,
+              label:
+                  '${_expanded ? "Collapse" : "Expand"} checklist items, $done of ${subs.length} done',
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  HapticFeedback.selectionClick();
+                  setState(() => _expanded = !_expanded);
+                },
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '${allDone ? '▣' : '▢'} $done/${subs.length} ${subs.length == 1 ? 'checklist item' : 'checklist items'}',
+                        style: theme.textTheme.labelSmall?.copyWith(
+                          color: fg,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _expanded ? Icons.expand_less : Icons.expand_more,
+                        size: 16,
+                        color: muted,
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    _expanded ? Icons.expand_less : Icons.expand_more,
-                    size: 14,
-                    color: muted,
-                  ),
-                ],
+                ),
               ),
             ),
             if (_expanded) ...[
               const SizedBox(height: 4),
               for (final sub in subs)
                 Padding(
-                  padding: const EdgeInsets.only(bottom: 4),
+                  padding: const EdgeInsets.only(bottom: 2),
                   child: GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onTap: sub.id == null
                         ? null
                         : () => _toggle(taskId, sub.id!, !sub.done),
-                    child: Row(
-                      children: [
-                        CustomCheckbox(
-                          value: sub.done,
-                          inverted: inverted,
-                          onChanged: sub.id == null
-                              ? null
-                              : (v) => _toggle(taskId, sub.id!, v),
-                        ),
-                        const SizedBox(width: AppSpacing.sm),
-                        Expanded(
-                          child: Text(
-                            sub.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: sub.done ? muted : fg,
-                              decoration: sub.done
-                                  ? TextDecoration.lineThrough
-                                  : TextDecoration.none,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4),
+                      child: Row(
+                        children: [
+                          CustomCheckbox(
+                            value: sub.done,
+                            inverted: inverted,
+                            semanticLabel: sub.title,
+                            onChanged: sub.id == null
+                                ? null
+                                : (v) => _toggle(taskId, sub.id!, v),
+                          ),
+                          const SizedBox(width: AppSpacing.sm),
+                          Expanded(
+                            child: Text(
+                              sub.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: sub.done ? muted : fg,
+                                decoration: sub.done
+                                    ? TextDecoration.lineThrough
+                                    : TextDecoration.none,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

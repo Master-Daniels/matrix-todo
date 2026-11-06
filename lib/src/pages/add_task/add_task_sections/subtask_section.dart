@@ -64,8 +64,8 @@ class SubtaskSection extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         SectionLabel(
-          '05 // Sub-Execution Nodes',
-          right: '${drafts.length} ITEMS',
+          'Subtasks',
+          right: '${drafts.length} items',
         ),
         const SizedBox(height: AppSpacing.sm),
         Container(
@@ -84,7 +84,7 @@ class SubtaskSection extends StatelessWidget {
                     controller: controller,
                     focusNode: focusNode,
                     formKey: inputFormKey,
-                    confirmLabel: 'SAVE',
+                    confirmLabel: 'Save',
                     onConfirm: onConfirmEdit,
                     onCancel: onCancelInput,
                     hasTopBorder: i > 0,
@@ -128,7 +128,7 @@ class SubtaskSection extends StatelessWidget {
                           ),
                         ),
                         Text(
-                          drafts[i].done ? 'DONE' : 'PENDING',
+                          drafts[i].done ? 'Done' : 'Pending',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.secondary,
                           ),
@@ -147,7 +147,7 @@ class SubtaskSection extends StatelessWidget {
                   controller: controller,
                   focusNode: focusNode,
                   formKey: inputFormKey,
-                  confirmLabel: 'ADD',
+                  confirmLabel: 'Add',
                   onConfirm: onConfirmAdd,
                   onCancel: onCancelInput,
                   hasTopBorder: drafts.isNotEmpty,
@@ -172,7 +172,7 @@ class SubtaskSection extends StatelessWidget {
                         const Icon(Icons.add, size: 16),
                         const SizedBox(width: 8),
                         Text(
-                          '+ ADD SUBTASK NODE',
+                          '+ Add subtask',
                           style: theme.textTheme.labelSmall?.copyWith(
                             color: scheme.primary,
                           ),
@@ -233,8 +233,8 @@ class _InputRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: CustomTextField(
-                    label: 'SUBTASK // TITLE',
-                    hint: 'SUBTASK TITLE',
+                    label: 'Subtask title',
+                    hint: 'Subtask title',
                     controller: controller,
                     focusNode: focusNode,
                     required: true,

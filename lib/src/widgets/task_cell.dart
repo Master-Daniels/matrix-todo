@@ -5,8 +5,8 @@ import '../theme/app_typography.dart';
 import 'checkbox.dart';
 import 'subtask_slot.dart';
 
-/// `↻` chip visibility: DAILY or WEEKLY only.
-bool _showsRecurrence(String rule) => rule == 'DAILY' || rule == 'WEEKLY';
+/// `↻` chip visibility: any non-NONE recurrence rule.
+bool _showsRecurrence(String rule) => rule != 'NONE';
 
 /// Contiguous task row: shared 1px rules (no outer margin), index header
 /// (`01/`), mono tag + time, Megrim title, optional description.
@@ -37,6 +37,10 @@ class TaskCell extends StatelessWidget {
   /// Recurrence rule (`NONE` hides). Renders a `↻ DAILY` chip.
   final String recurrence;
 
+  /// Optional skip action for recurring tasks. Shows a `SKIP` icon button;
+  /// tapping adds the occurrence's date to the series exceptions and marks it done.
+  final VoidCallback? onSkip;
+
   const TaskCell({
     super.key,
     required this.index,
@@ -54,6 +58,7 @@ class TaskCell extends StatelessWidget {
     this.onActionTap,
     this.subtaskTaskId,
     this.recurrence = 'NONE',
+    this.onSkip,
   });
 
   @override
@@ -86,6 +91,7 @@ class TaskCell extends StatelessWidget {
               child: CustomCheckbox(
                 value: checked || completed,
                 inverted: active,
+                semanticLabel: title,
                 onChanged: onChecked,
               ),
             ),
@@ -179,14 +185,41 @@ class TaskCell extends StatelessWidget {
                               ),
                             ),
                           ),
+                        if (_showsRecurrence(rule) && onSkip != null)
+                          const SizedBox(width: 8),
+                        if (onSkip != null)
+                          Semantics(
+                            button: true,
+                            label: 'Skip this occurrence',
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: onSkip,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 4,
+                                ),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: muted),
+                                ),
+                                child: Text(
+                                  'Skip',
+                                  style: AppTypography.indexIndicator(
+                                    context,
+                                    color: muted,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
                         if (_showsRecurrence(rule) &&
                             (priorityBadge != null || actionLabel != null))
                           const SizedBox(width: 8),
                         if (priorityBadge != null)
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 4,
-                              vertical: 2,
+                              horizontal: 6,
+                              vertical: 4,
                             ),
                             decoration: BoxDecoration(
                               border: Border.all(
@@ -206,15 +239,24 @@ class TaskCell extends StatelessWidget {
                         if (priorityBadge != null && actionLabel != null)
                           const SizedBox(width: 8),
                         if (actionLabel != null)
-                          GestureDetector(
-                            onTap: onActionTap,
-                            child: Text(
-                              '${actionLabel!.toUpperCase()} ->',
-                              style: AppTypography.indexIndicator(
-                                context,
-                                color: fg,
-                              ).copyWith(
-                                decoration: TextDecoration.underline,
+                          Semantics(
+                            button: true,
+                            label: actionLabel,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onTap: onActionTap,
+                              child: Padding(
+                                padding:
+                                    const EdgeInsets.symmetric(vertical: 4),
+                                child: Text(
+                                  '${actionLabel!.toUpperCase()} ->',
+                                  style: AppTypography.indexIndicator(
+                                    context,
+                                    color: fg,
+                                  ).copyWith(
+                                    decoration: TextDecoration.underline,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -226,7 +268,7 @@ class TaskCell extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             Text(
-              (trailing ?? (completed ? 'DONE' : '')).toUpperCase(),
+              (trailing ?? (completed ? 'Done' : '')).toUpperCase(),
               style: AppTypography.indexIndicator(context, color: muted),
             ),
           ],

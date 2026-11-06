@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models.dart';
 import '../../../data/providers.dart';
 import '../../../data/recurrence.dart';
-import '../../../data/task_dates.dart';
 import '../../../notifications/reminder_service.dart';
 import '../../../theme/app_spacing.dart';
 import '../../../widgets/animated_bottom_sheet.dart';
@@ -14,11 +13,11 @@ import '../../../widgets/task_cell.dart';
 import '../../add_task/add_task_sheet.dart';
 import '../../settings/settings_providers.dart';
 import '../home_providers.dart';
+import '../../upcoming/upcoming_providers.dart';
 import 'home_deck.dart';
 import 'home_deck_card.dart';
 import '../../../widgets/deck_swipe.dart';
 import 'reschedule_dialog.dart';
-
 /// Scrollable deck (takes majority of viewport, no tap-to-expand).
 /// Deck density = swipeable rounded cards, compact = flat ledger rows.
 class HomeDeckList extends ConsumerWidget {
@@ -32,7 +31,7 @@ class HomeDeckList extends ConsumerWidget {
     return tasksAsync.when(
       loading: () => const Padding(
         padding: EdgeInsets.all(AppSpacing.md),
-        child: LoadingState(label: 'LOADING TODAY // PLEASE WAIT'),
+        child: LoadingState(label: 'Loading today'),
       ),
       error: (e, _) => Padding(
         padding: const EdgeInsets.all(AppSpacing.md),
@@ -50,8 +49,8 @@ class HomeDeckList extends ConsumerWidget {
             padding: EdgeInsets.all(AppSpacing.md),
             child: EmptyState(
               index: '[EMPTY // 00]',
-              title: 'No tasks for this filter',
-              hint: 'Add a task dated today to get started',
+              title: 'No tasks here',
+              hint: 'Add a task to get started',
             ),
           );
         }
@@ -67,8 +66,8 @@ class HomeDeckList extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _Cue(icon: Icons.west, label: 'RESCHEDULE'),
-                  _Cue(icon: Icons.east, label: 'COMPLETE', trailing: true),
+                  _Cue(icon: Icons.west, label: 'Reschedule'),
+                  _Cue(icon: Icons.east, label: 'Complete', trailing: true),
                 ],
               ),
             ),
@@ -134,11 +133,11 @@ class HomeDeckList extends ConsumerWidget {
                       active: tasks[i].focus && !tasks[i].done,
                       checked: tasks[i].done,
                       trailing: tasks[i].focus && !tasks[i].done
-                          ? 'FOCUS'
+                          ? 'Focus'
                           : tasks[i].done
-                          ? 'DONE'
+                          ? 'Done'
                           : tasks[i].priority >= 3
-                          ? 'HIGH'
+                          ? 'High'
                           : '',
                       onChecked: tasks[i].id == null
                           ? null
@@ -146,6 +145,9 @@ class HomeDeckList extends ConsumerWidget {
                               _checkWithUndo(context, ref, tasks[i], v),
                       subtaskTaskId: tasks[i].id,
                       recurrence: tasks[i].recurrence,
+                      onSkip: tasks[i].seriesId != null && !tasks[i].done
+                          ? () => _skipOccurrence(context, ref, tasks[i])
+                          : null,
                     ),
                   ),
                 ),
@@ -160,6 +162,34 @@ class HomeDeckList extends ConsumerWidget {
       context: context,
       builder: (_) => AddTaskSheet(task: task),
     );
+  }
+
+  /// Skip this occurrence: add its date to the series exceptions and mark it done.
+  Future<void> _skipOccurrence(
+      BuildContext context, WidgetRef ref, TodoTask task) async {
+    if (task.id == null || task.seriesId == null) return;
+    final db = ref.read(appDatabaseProvider);
+    try {
+      await db.insertRecurrenceException(
+        RecurrenceException(
+          seriesId: task.seriesId!,
+          exceptionDate: task.dueDate,
+        ),
+      );
+      await db.setTaskDone(task.id!, true);
+      await db.setTaskSnooze(task.id!, null);
+      await ref.read(reminderServiceProvider).syncAll(
+            await db.getTasks(),
+            enabled: ref.read(remindersEnabledProvider),
+          );
+      ref.invalidate(tasksProvider);
+      ref.invalidate(todayTasksProvider);
+      ref.invalidate(todayCountsProvider);
+      ref.invalidate(upcomingGroupsProvider);
+      ref.invalidate(weekStripProvider);
+    } catch (_) {
+      // Skip failure is non-fatal.
+    }
   }
 
   Future<int?> _toggleDone(WidgetRef ref, TodoTask task, bool done) async {

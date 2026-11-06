@@ -94,6 +94,11 @@ class _HomeDeckState extends State<HomeDeck> {
             task: tasks[viewed[v]],
             number: viewed[v] + 1,
             depth: viewed.length - v,
+            onTap: () => _pages.animateToPage(
+              viewed[v],
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeInOut,
+            ),
           ),
         SizedBox(
           // Stable key: siblings above/below (edges, strips) come and go
@@ -123,6 +128,11 @@ class _HomeDeckState extends State<HomeDeck> {
             task: tasks[buried[s]],
             number: buried[s] + 1,
             depth: s + 1,
+            onTap: () => _pages.animateToPage(
+              buried[s],
+              duration: const Duration(milliseconds: 260),
+              curve: Curves.easeInOut,
+            ),
           ),
       ],
     );
@@ -135,12 +145,14 @@ class _DeckStrip extends StatelessWidget {
   final TodoTask task;
   final int number;
   final int depth;
+  final VoidCallback? onTap;
 
   const _DeckStrip({
     super.key,
     required this.task,
     required this.number,
     required this.depth,
+    this.onTap,
   });
 
   @override
@@ -151,66 +163,70 @@ class _DeckStrip extends StatelessWidget {
     final due = rawDue.isEmpty ? 'ANYTIME' : rawDue;
     // Outer outline following the rounded border (3px gap), mirroring
     // the double-frame treatment.
-    return Container(
-      margin: EdgeInsets.fromLTRB(9.0 * depth, 8, 9.0 * depth, 0),
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        border: Border.all(color: scheme.primary, width: 1),
-        borderRadius: BorderRadius.zero,
-      ),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: scheme.surfaceContainerLow,
-        borderRadius: BorderRadius.zero,
-        border: Border.all(color: scheme.primary, width: 1.5),
-      ),
-      child: Row(
-        children: [
-          Text(
-            '#${number.toString().padLeft(2, '0')}',
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              border: Border.all(color: scheme.primary, width: 1),
-            ),
-            child: Text(
-              task.category.toUpperCase(),
+        margin: EdgeInsets.fromLTRB(9.0 * depth, 8, 9.0 * depth, 0),
+        padding: const EdgeInsets.all(3),
+        decoration: BoxDecoration(
+          border: Border.all(color: scheme.primary, width: 1),
+          borderRadius: BorderRadius.zero,
+        ),
+        child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: scheme.surfaceContainerLow,
+          borderRadius: BorderRadius.zero,
+          border: Border.all(color: scheme.primary, width: 1.5),
+        ),
+        child: Row(
+          children: [
+            Text(
+              '#${number.toString().padLeft(2, '0')}',
               style: theme.textTheme.labelSmall?.copyWith(
-                color: scheme.primary,
+                color: scheme.onSurfaceVariant,
                 fontWeight: FontWeight.w700,
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              task.title,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.textTheme.labelMedium?.copyWith(
-                color: scheme.primary,
-                fontWeight: FontWeight.w600,
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                border: Border.all(color: scheme.primary, width: 1),
+              ),
+              child: Text(
+                task.category.toUpperCase(),
+                style: theme.textTheme.labelSmall?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            due.toUpperCase(),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: theme.textTheme.labelSmall?.copyWith(
-              color: scheme.onSurfaceVariant,
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                task.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.labelMedium?.copyWith(
+                  color: scheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 8),
+            Text(
+              due.toUpperCase(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: scheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+        ),
       ),
     );
   }

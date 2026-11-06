@@ -21,18 +21,33 @@ String deriveListCode(String name) {
 /// (optional, auto-derived), `03` description. New lists land in
 /// `SEC 02` (`sort` continues past the seeded core directories).
 class ListFormSheet extends ConsumerStatefulWidget {
-  const ListFormSheet({super.key});
+  final TaskList? list;
+
+  const ListFormSheet({super.key, this.list});
 
   @override
   ConsumerState<ListFormSheet> createState() => _ListFormSheetState();
 }
 
 class _ListFormSheetState extends ConsumerState<ListFormSheet> {
+  bool get isEditing => widget.list != null;
+
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _codeController = TextEditingController();
   final _descController = TextEditingController();
   bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final list = widget.list;
+    if (list != null) {
+      _nameController.text = list.name;
+      _codeController.text = list.code;
+      _descController.text = list.description;
+    }
+  }
 
   @override
   void dispose() {
@@ -47,7 +62,7 @@ class _ListFormSheetState extends ConsumerState<ListFormSheet> {
     return Form(
       key: _formKey,
       child: Sheet(
-        title: '[+] New Category',
+        title: isEditing ? '[~] Edit Category' : '[+] New Category',
         children: [
           CustomTextField(
             label: '01 // List name // What is this folder for?',
@@ -71,12 +86,14 @@ class _ListFormSheetState extends ConsumerState<ListFormSheet> {
             mainAxisSize: MainAxisSize.min,
             children: [
               Button(
-                label: _saving ? 'SAVING...' : 'COMMIT & SAVE LIST',
+                label: _saving
+                    ? 'Saving...'
+                    : (isEditing ? 'Save changes' : 'Save list'),
                 onPressed: _saving ? null : _submit,
               ),
               const SizedBox(height: AppSpacing.sm),
               Button(
-                label: 'DISCARD CHANGES',
+                label: 'Discard changes',
                 kind: ButtonKind.secondary,
                 onPressed: _saving ? null : () => Navigator.of(context).pop(),
               ),
@@ -95,19 +112,30 @@ class _ListFormSheetState extends ConsumerState<ListFormSheet> {
       final code = _codeController.text.trim().isEmpty
           ? deriveListCode(name)
           : _codeController.text.trim().toUpperCase();
-      final existing = await ref.read(listsProvider.future);
-      var maxSort = 3;
-      for (final l in existing) {
-        if (l.sort > maxSort) maxSort = l.sort;
+      final db = ref.read(appDatabaseProvider);
+      if (isEditing) {
+        await db.updateList(
+          widget.list!.copyWith(
+            name: name,
+            code: code,
+            description: _descController.text.trim(),
+          ),
+        );
+      } else {
+        final existing = await ref.read(listsProvider.future);
+        var maxSort = 3;
+        for (final l in existing) {
+          if (l.sort > maxSort) maxSort = l.sort;
+        }
+        await db.insertList(
+          TaskList(
+            name: name,
+            code: code,
+            description: _descController.text.trim(),
+            sort: maxSort + 1,
+          ),
+        );
       }
-      await ref.read(appDatabaseProvider).insertList(
-            TaskList(
-              name: name,
-              code: code,
-              description: _descController.text.trim(),
-              sort: maxSort + 1,
-            ),
-          );
       ref.invalidate(listsProvider);
       ref.invalidate(coreListsProvider);
       ref.invalidate(customListsProvider);

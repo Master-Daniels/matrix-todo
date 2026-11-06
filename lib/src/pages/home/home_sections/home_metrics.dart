@@ -47,13 +47,17 @@ class HomeMetrics extends ConsumerWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '${completed.toString().padLeft(2, '0')} / ${total.toString().padLeft(2, '0')} COMPLETED • $pct%',
-                style: theme.textTheme.labelMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: scheme.primary,
+              Flexible(
+                child: Text(
+                  '$completed of $total completed • $pct%',
+                  style: theme.textTheme.labelMedium?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: scheme.primary,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
+              const SizedBox(width: 8),
               GestureDetector(
                 behavior: HitTestBehavior.opaque,
                 onTap: () => Navigator.of(context).push(
@@ -65,7 +69,7 @@ class HomeMetrics extends ConsumerWidget {
                     Container(width: 6, height: 6, color: scheme.primary),
                     const SizedBox(width: 6),
                     Text(
-                      '$streak-DAY STREAK',
+                      '$streak ${streak == 1 ? 'day' : 'days'} streak',
                       style: theme.textTheme.labelSmall?.copyWith(
                         color: scheme.secondary,
                       ),
@@ -100,7 +104,7 @@ class HomeMetrics extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      'FILTER: ${activeFilter ?? 'ALL'}',
+                      'Filter: ${activeFilter ?? 'All'}',
                       style: theme.textTheme.labelMedium?.copyWith(
                         fontWeight: FontWeight.w700,
                         color: scheme.primary,

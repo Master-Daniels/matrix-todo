@@ -5,12 +5,15 @@ import 'models.dart';
 
 class AppDatabase {
   static const _name = 'todo.db';
-  static const version = 3;
+  static const version = 6;
 
   static const tableLists = 'lists';
   static const tableTasks = 'tasks';
   static const tableSubtasks = 'subtasks';
   static const tableSettings = 'settings';
+  static const tableRecurrenceRules = 'task_recurrence_rules';
+  static const tableRecurrenceTimes = 'task_recurrence_times';
+  static const tableRecurrenceExceptions = 'task_recurrence_exceptions';
 
   Database? _db;
 
@@ -29,7 +32,10 @@ class AppDatabase {
 
   /// Future schema migrations go here. v2 adds the notification SNOOZE
   /// persistence (`tasks.snoozed_until`, epoch millis, nullable); v3 adds
-  /// the recurrence rule (`tasks.recurrence`, `NONE` default).
+  /// the recurrence rule (`tasks.recurrence`, `NONE` default); v4 adds
+  /// the `task_recurrence_rules` table and `tasks.series_id` column; v5 adds
+  /// multiple times per day (`task_recurrence_times`) and skipped-occurrence
+  /// exceptions (`task_recurrence_exceptions`); v6 adds composite query indexes.
   Future<void> _upgrade(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute(
@@ -39,6 +45,71 @@ class AppDatabase {
     if (oldVersion < 3) {
       await db.execute(
         "ALTER TABLE $tableTasks ADD COLUMN recurrence TEXT NOT NULL DEFAULT 'NONE'",
+      );
+    }
+    if (oldVersion < 4) {
+      // Add series_id to tasks (nullable; standalone tasks keep null).
+      await db.execute(
+        'ALTER TABLE $tableTasks ADD COLUMN series_id INTEGER',
+      );
+      // Create the recurrence rules table.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableRecurrenceRules(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          frequency TEXT NOT NULL DEFAULT 'NONE',
+          interval INTEGER NOT NULL DEFAULT 1,
+          weekdays TEXT NOT NULL DEFAULT '[]',
+          month_day INTEGER,
+          month_last_day INTEGER NOT NULL DEFAULT 0,
+          month_nth INTEGER,
+          month_nth_weekday INTEGER,
+          start_date TEXT NOT NULL,
+          end_date TEXT,
+          end_condition TEXT NOT NULL DEFAULT 'never'
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_tasks_series_id ON $tableTasks(series_id)',
+      );
+    }
+    if (oldVersion < 5) {
+      // Multiple times per day for a recurring series.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableRecurrenceTimes(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          rule_id INTEGER NOT NULL REFERENCES $tableRecurrenceRules(id),
+          time_of_day TEXT NOT NULL,
+          sort INTEGER NOT NULL DEFAULT 0
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recurrence_times_rule_id ON $tableRecurrenceTimes(rule_id)',
+      );
+      // Skipped occurrences: dates within a series that should not recur.
+      await db.execute('''
+        CREATE TABLE IF NOT EXISTS $tableRecurrenceExceptions(
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          series_id INTEGER NOT NULL REFERENCES $tableRecurrenceRules(id),
+          exception_date TEXT NOT NULL
+        )
+      ''');
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_recurrence_exceptions_series ON $tableRecurrenceExceptions(series_id)',
+      );
+    }
+    if (oldVersion < 6) {
+      // Query performance indexes for filtering tasks and subtasks.
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON $tableSubtasks(task_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_tasks_due_done ON $tableTasks(due_date, done)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON $tableTasks(list_id)',
+      );
+      await db.execute(
+        'CREATE INDEX IF NOT EXISTS idx_tasks_category ON $tableTasks(category)',
       );
     }
   }
@@ -57,6 +128,7 @@ class AppDatabase {
       CREATE TABLE IF NOT EXISTS $tableTasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         list_id INTEGER REFERENCES $tableLists(id),
+        series_id INTEGER,
         title TEXT NOT NULL,
         notes TEXT NOT NULL DEFAULT '',
         category TEXT NOT NULL DEFAULT 'PERSONAL',
@@ -71,6 +143,45 @@ class AppDatabase {
       )
     ''');
     await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableRecurrenceRules(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        frequency TEXT NOT NULL DEFAULT 'NONE',
+        interval INTEGER NOT NULL DEFAULT 1,
+        weekdays TEXT NOT NULL DEFAULT '[]',
+        month_day INTEGER,
+        month_last_day INTEGER NOT NULL DEFAULT 0,
+        month_nth INTEGER,
+        month_nth_weekday INTEGER,
+        start_date TEXT NOT NULL,
+        end_date TEXT,
+        end_condition TEXT NOT NULL DEFAULT 'never'
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tasks_series_id ON $tableTasks(series_id)',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableRecurrenceTimes(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        rule_id INTEGER NOT NULL REFERENCES $tableRecurrenceRules(id),
+        time_of_day TEXT NOT NULL,
+        sort INTEGER NOT NULL DEFAULT 0
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_recurrence_times_rule_id ON $tableRecurrenceTimes(rule_id)',
+    );
+    await db.execute('''
+      CREATE TABLE IF NOT EXISTS $tableRecurrenceExceptions(
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        series_id INTEGER NOT NULL REFERENCES $tableRecurrenceRules(id),
+        exception_date TEXT NOT NULL
+      )
+    ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_recurrence_exceptions_series ON $tableRecurrenceExceptions(series_id)',
+    );
+    await db.execute('''
       CREATE TABLE IF NOT EXISTS $tableSubtasks(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         task_id INTEGER NOT NULL REFERENCES $tableTasks(id),
@@ -78,6 +189,18 @@ class AppDatabase {
         done INTEGER NOT NULL DEFAULT 0
       )
     ''');
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_subtasks_task_id ON $tableSubtasks(task_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tasks_due_done ON $tableTasks(due_date, done)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tasks_list_id ON $tableTasks(list_id)',
+    );
+    await db.execute(
+      'CREATE INDEX IF NOT EXISTS idx_tasks_category ON $tableTasks(category)',
+    );
     await db.execute('''
       CREATE TABLE IF NOT EXISTS $tableSettings(
         key TEXT PRIMARY KEY,
@@ -244,6 +367,147 @@ class AppDatabase {
     final db = await open();
     await db.delete(tableSubtasks, where: 'task_id = ?', whereArgs: [id]);
     return db.delete(tableTasks, where: 'id = ?', whereArgs: [id]);
+  }
+
+  // ---- Recurrence rules ----
+
+  Future<List<RecurrenceRule>> getRecurrenceRules() async {
+    final db = await open();
+    final rows = await db.query(
+      tableRecurrenceRules,
+      orderBy: 'id ASC',
+    );
+    return rows.map(RecurrenceRule.fromMap).toList();
+  }
+
+  /// Single rule by id (which doubles as the series_id).
+  Future<RecurrenceRule?> getRecurrenceRule(int ruleId) async {
+    final db = await open();
+    final rows = await db.query(
+      tableRecurrenceRules,
+      where: 'id = ?',
+      whereArgs: [ruleId],
+      limit: 1,
+    );
+    if (rows.isEmpty) return null;
+    return RecurrenceRule.fromMap(rows.first);
+  }
+
+  /// Rules for tasks belonging to a given list (via tasks.series_id).
+  Future<List<RecurrenceRule>> getRecurrenceRulesForList(int listId) async {
+    final db = await open();
+    final rows = await db.query(
+      tableRecurrenceRules,
+      where: 'id IN (SELECT series_id FROM $tableTasks WHERE list_id = ? AND series_id IS NOT NULL)',
+      whereArgs: [listId],
+      orderBy: 'id ASC',
+    );
+    return rows.map(RecurrenceRule.fromMap).toList();
+  }
+
+  Future<int> insertRecurrenceRule(RecurrenceRule rule) async {
+    final db = await open();
+    return db.insert(tableRecurrenceRules, rule.toMap());
+  }
+
+  Future<int> updateRecurrenceRule(RecurrenceRule rule) async {
+    if (rule.id == null) return 0;
+    final db = await open();
+    return db.update(
+      tableRecurrenceRules,
+      rule.toMap(),
+      where: 'id = ?',
+      whereArgs: [rule.id],
+    );
+  }
+
+  Future<int> deleteRecurrenceRule(int ruleId) async {
+    final db = await open();
+    return db.delete(tableRecurrenceRules, where: 'id = ?', whereArgs: [ruleId]);
+  }
+
+  // ---- Recurrence times (multiple times per day) ----
+
+  Future<List<RecurrenceTime>> getRecurrenceTimes(int ruleId) async {
+    final db = await open();
+    final rows = await db.query(
+      tableRecurrenceTimes,
+      where: 'rule_id = ?',
+      whereArgs: [ruleId],
+      orderBy: 'sort ASC, time_of_day ASC',
+    );
+    return rows.map(RecurrenceTime.fromMap).toList();
+  }
+
+  Future<int> insertRecurrenceTime(RecurrenceTime time) async {
+    final db = await open();
+    return db.insert(tableRecurrenceTimes, time.toMap());
+  }
+
+  Future<int> updateRecurrenceTime(RecurrenceTime time) async {
+    if (time.id == null) return 0;
+    final db = await open();
+    return db.update(
+      tableRecurrenceTimes,
+      time.toMap(),
+      where: 'id = ?',
+      whereArgs: [time.id],
+    );
+  }
+
+  Future<int> deleteRecurrenceTime(int timeId) async {
+    final db = await open();
+    return db.delete(tableRecurrenceTimes, where: 'id = ?', whereArgs: [timeId]);
+  }
+
+  /// Replace all times for a rule (used when editing the time list).
+  Future<void> setRecurrenceTimes(int ruleId, List<RecurrenceTime> times) async {
+    final db = await open();
+    await db.delete(tableRecurrenceTimes, where: 'rule_id = ?', whereArgs: [ruleId]);
+    for (final t in times) {
+      await db.insert(tableRecurrenceTimes, t.toMap());
+    }
+  }
+
+  // ---- Recurrence exceptions (skipped occurrences) ----
+
+  Future<List<RecurrenceException>> getRecurrenceExceptions(int seriesId) async {
+    final db = await open();
+    final rows = await db.query(
+      tableRecurrenceExceptions,
+      where: 'series_id = ?',
+      whereArgs: [seriesId],
+      orderBy: 'exception_date ASC',
+    );
+    return rows.map(RecurrenceException.fromMap).toList();
+  }
+
+  Future<int> insertRecurrenceException(RecurrenceException exception) async {
+    final db = await open();
+    return db.insert(tableRecurrenceExceptions, exception.toMap());
+  }
+
+  Future<int> deleteRecurrenceException(int exceptionId) async {
+    final db = await open();
+    return db.delete(tableRecurrenceExceptions, where: 'id = ?', whereArgs: [exceptionId]);
+  }
+
+  /// Delete all exception dates for a series (used when replacing exceptions).
+  Future<int> deleteAllRecurrenceExceptions(int seriesId) async {
+    final db = await open();
+    return db.delete(tableRecurrenceExceptions, where: 'series_id = ?', whereArgs: [seriesId]);
+  }
+
+  /// Check whether a given date is skipped for a series.
+  Future<bool> isExceptionDate(int seriesId, String date) async {
+    final db = await open();
+    final rows = await db.query(
+      tableRecurrenceExceptions,
+      where: 'series_id = ? AND exception_date = ?',
+      whereArgs: [seriesId, date],
+      limit: 1,
+    );
+    return rows.isNotEmpty;
   }
 
   // ---- Subtasks ----

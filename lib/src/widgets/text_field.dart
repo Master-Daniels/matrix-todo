@@ -116,6 +116,12 @@ class CustomTextField extends StatelessWidget {
   /// Lines for multiline inputs (e.g. notes). Defaults to 1.
   final int maxLines;
 
+  /// Whether the input should autofocus when mounted.
+  final bool autofocus;
+
+  /// Optional trailing icon or action inside the input box.
+  final Widget? suffixIcon;
+
   const CustomTextField({
     super.key,
     this.label,
@@ -133,6 +139,8 @@ class CustomTextField extends StatelessWidget {
     this.focusNode,
     this.radius = 0,
     this.maxLines = 1,
+    this.autofocus = false,
+    this.suffixIcon,
   });
 
   FormFieldValidator<String>? get _effectiveValidator {
@@ -189,6 +197,7 @@ class CustomTextField extends StatelessWidget {
         TextFormField(
           controller: controller,
           focusNode: focusNode,
+          autofocus: autofocus,
           maxLines: maxLines,
           keyboardType: maxLines > 1
               ? TextInputType.multiline
@@ -210,6 +219,7 @@ class CustomTextField extends StatelessWidget {
               ? InputDecoration(
                   hintText: hint?.toUpperCase(),
                   errorText: errorText,
+                  suffixIcon: suffixIcon,
                   border: borderOf(thick),
                   enabledBorder: borderOf(thick),
                   focusedBorder: borderOf(thick),
@@ -224,6 +234,7 @@ class CustomTextField extends StatelessWidget {
               : InputDecoration(
                   hintText: hint?.toUpperCase(),
                   errorText: errorText,
+                  suffixIcon: suffixIcon,
                 ),
         ),
       ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/providers.dart';
@@ -22,6 +23,8 @@ class AppShell extends ConsumerStatefulWidget {
 }
 
 class _AppShellState extends ConsumerState<AppShell> {
+  Orientation? _lastOrientation;
+
   @override
   void initState() {
     super.initState();
@@ -46,28 +49,78 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final orientation = MediaQuery.orientationOf(context);
+    if (_lastOrientation != orientation) {
+      _lastOrientation = orientation;
+      if (orientation == Orientation.landscape) {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      } else {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+      }
+    }
+  }
+
+  @override
+  void dispose() {
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final navIndex = ref.watch(navIndexProvider);
+    final isLandscape =
+        MediaQuery.orientationOf(context) == Orientation.landscape;
+
+    const navItems = [
+      NavItem(label: 'Today', icon: Icons.check_box_outlined),
+      NavItem(label: 'Upcoming', icon: Icons.calendar_month_outlined),
+      NavItem(label: 'Lists', icon: Icons.format_list_bulleted),
+      NavItem(label: 'Settings', icon: Icons.tune),
+    ];
+
+    final content = IndexedStack(
+      index: navIndex,
+      children: const [
+        HomePage(),
+        UpcomingPage(),
+        ListsPage(),
+        SettingsPage(),
+      ],
+    );
+
+    if (isLandscape) {
+      final media = MediaQuery.of(context);
+      return Scaffold(
+        body: Row(
+          children: [
+            SideNavRail(
+              currentIndex: navIndex,
+              onTap: (i) => ref.read(navIndexProvider.notifier).updateIndex(i),
+              items: navItems,
+            ),
+            Expanded(
+              child: MediaQuery(
+                data: media.copyWith(
+                  padding: media.padding.copyWith(left: 0),
+                  viewPadding: media.viewPadding.copyWith(left: 0),
+                ),
+                child: content,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
 
     return Scaffold(
-      body: IndexedStack(
-        index: navIndex,
-        children: const [
-          HomePage(),
-          UpcomingPage(),
-          ListsPage(),
-          SettingsPage(),
-        ],
-      ),
+      body: content,
       bottomNavigationBar: BottomNav(
         currentIndex: navIndex,
         onTap: (i) => ref.read(navIndexProvider.notifier).updateIndex(i),
-        items: const [
-          NavItem(label: 'Today', icon: Icons.check_box_outlined),
-          NavItem(label: 'Upcoming', icon: Icons.calendar_month_outlined),
-          NavItem(label: 'Lists', icon: Icons.format_list_bulleted),
-          NavItem(label: 'Settings', icon: Icons.tune),
-        ],
+        items: navItems,
       ),
     );
   }

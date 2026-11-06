@@ -8,7 +8,7 @@ import '../settings/settings_providers.dart';
 
 export '../../data/task_dates.dart';
 
-int _taskOrder(TodoTask a, TodoTask b) {
+int taskOrder(TodoTask a, TodoTask b) {
   if (a.done != b.done) return a.done ? 1 : -1;
   final t = (a.dueTime ?? '').compareTo(b.dueTime ?? '');
   if (t != 0) return t;
@@ -61,11 +61,11 @@ UpcomingGroups bucketTasks(
       next.add(t);
     }
   }
-  todayTasks.sort(_taskOrder);
-  overdue.sort(_taskOrder);
-  tomorrowTasks.sort(_taskOrder);
-  later.sort(_taskOrder);
-  next.sort(_taskOrder);
+  todayTasks.sort(taskOrder);
+  overdue.sort(taskOrder);
+  tomorrowTasks.sort(taskOrder);
+  later.sort(taskOrder);
+  next.sort(taskOrder);
   return (
     today: todayTasks,
     overdue: overdue,

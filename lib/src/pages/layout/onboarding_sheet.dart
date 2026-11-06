@@ -20,33 +20,33 @@ class _OnboardingSheetState extends ConsumerState<OnboardingSheet> {
   static const _slides = [
     (
       index: '01 // TODAY',
-      title: 'SWIPE THE DECK',
-      body: 'RIGHT COMPLETES A TASK. LEFT RESCHEDULES IT. '
-          'THE TOP CARD IS YOUR FOCUS.',
+      title: 'Swipe the deck',
+      body: 'Swipe right to complete a task. Swipe left to reschedule it. '
+          'The top card is your focus.',
     ),
     (
       index: '02 // FOLDERS',
-      title: 'FILE BY LIST',
-      body: 'LISTS KEEP WORK, HOME AND ERRANDS SEPARATE. '
-          'OPEN A FOLDER TO FILTER, SORT AND REORDER.',
+      title: 'File by list',
+      body: 'Lists keep work, home and errands separate. Open a list to '
+          'filter, sort and reorder.',
     ),
     (
       index: '03 // INGEST',
-      title: 'BRING YOUR TASKS',
-      body: 'SETTINGS → DATA & VAULT IMPORTS A JSON BACKUP '
-          'OR AN EASY CSV LIST. MISSING LISTS ARE CREATED.',
+      title: 'Bring tasks',
+      body: 'Settings → Data backup imports a JSON backup or an easy CSV list. '
+          'Unknown lists are created.',
     ),
     (
       index: '04 // DISPATCH',
-      title: 'NEVER MISS START',
-      body: '1H + 30M CHIMES PLUS AN ON-TIME ALARM. '
-          'MORNING BRIEFING AT 08:00, STREAK NUDGE AT 20:00.',
+      title: 'Never miss a start',
+      body: '1-hour chimes plus an on-time alarm. Morning briefing at 8:00, '
+          'streak nudge at 8:00.',
     ),
     (
       index: '05 // DENSITY',
-      title: 'DECK OR FLAT LIST',
-      body: 'THE GRID BUTTON BESIDE ADD TASK FLIPS THE STACKED '
-          'DECK INTO A FLAT SCROLLABLE LIST. SAME TASKS, DENSER.',
+      title: 'Deck or flat list',
+      body: 'The grid button beside Add task flips the stacked deck into a '
+          'flat list. Same tasks, denser.',
     ),
   ];
 
@@ -85,7 +85,7 @@ class _OnboardingSheetState extends ConsumerState<OnboardingSheet> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  'WELCOME // MATRIX',
+                  'Welcome',
                   style: theme.textTheme.labelSmall?.copyWith(
                     color: scheme.secondary,
                     fontWeight: FontWeight.w700,
@@ -94,7 +94,7 @@ class _OnboardingSheetState extends ConsumerState<OnboardingSheet> {
                 GestureDetector(
                   onTap: _finish,
                   child: Text(
-                    'SKIP',
+                    'Skip',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.secondary,
                       decoration: TextDecoration.underline,

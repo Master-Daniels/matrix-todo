@@ -46,14 +46,14 @@ class _NotificationRescueSectionState
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'NOTIFICATIONS NOT FIRING? // ${_guidance.vendor}',
+            'Notifications not firing?',
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            'SOME PHONE MAKERS KILL BACKGROUND ALARMS. FOLLOW THE STEPS FOR YOUR DEVICE:',
+            'Some phone makers kill background alarms. Follow the steps for your device:',
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
@@ -74,7 +74,7 @@ class _NotificationRescueSectionState
                 child: OutlinedButton(
                   onPressed:
                       SystemBridge.openAppNotificationSettings,
-                  child: const Text('NOTIFICATIONS'),
+                  child: const Text('Notifications'),
                 ),
               ),
               const SizedBox(width: 8),
@@ -82,14 +82,14 @@ class _NotificationRescueSectionState
                 child: OutlinedButton(
                   onPressed:
                       SystemBridge.openBatteryOptimizationSettings,
-                  child: const Text('BATTERY'),
+                  child: const Text('Battery'),
                 ),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: OutlinedButton(
                   onPressed: SystemBridge.openAppDetailsSettings,
-                  child: const Text('APP INFO'),
+                  child: const Text('App info'),
                 ),
               ),
             ],

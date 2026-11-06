@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/models.dart';
@@ -18,11 +19,12 @@ void showDoneUndo(
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text('DONE // $title // UNDO?'),
+        content: Text('Done // $title // Undo?'),
         duration: const Duration(seconds: 5),
         action: SnackBarAction(
-          label: 'UNDO',
+          label: 'Undo',
           onPressed: () {
+            HapticFeedback.mediumImpact();
             // ignore: discarded_futures
             onUndo();
           },

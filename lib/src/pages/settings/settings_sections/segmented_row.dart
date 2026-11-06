@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../../../theme/app_spacing.dart';
 
@@ -37,14 +38,14 @@ class SegmentedRow<T extends Object> extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            title.toUpperCase(),
+            title,
             style: theme.textTheme.headlineSmall?.copyWith(
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 4),
           Text(
-            subtitle.toUpperCase(),
+            subtitle,
             style: theme.textTheme.labelSmall?.copyWith(
               color: scheme.secondary,
             ),
@@ -58,37 +59,52 @@ class SegmentedRow<T extends Object> extends StatelessWidget {
               children: [
                 for (var i = 0; i < values.length; i++)
                   Expanded(
-                    child: GestureDetector(
-                      onTap: () => onSelect(values[i]),
-                      behavior: HitTestBehavior.opaque,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          vertical: AppSpacing.sm,
-                        ),
-                        decoration: BoxDecoration(
-                          color: values[i] == selected
-                              ? scheme.primary
-                              : scheme.surfaceContainerLowest,
-                          border: i < values.length - 1
-                              ? Border(
-                                  right: BorderSide(
-                                    color: scheme.primary,
-                                    width: 1,
-                                  ),
-                                )
-                              : null,
-                        ),
-                        child: Text(
-                          '[ ${label(values[i]).toUpperCase()} ]${values[i] == selected ? ' ■' : ''}',
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            color: values[i] == selected
-                                ? scheme.onPrimary
-                                : scheme.primary,
-                            fontWeight: values[i] == selected
-                                ? FontWeight.w700
-                                : FontWeight.w400,
+                    child: Semantics(
+                      button: true,
+                      selected: values[i] == selected,
+                      label:
+                          '${label(values[i])}, option ${i + 1} of ${values.length}',
+                      child: GestureDetector(
+                        onTap: () {
+                          if (values[i] != selected) {
+                            HapticFeedback.selectionClick();
+                          }
+                          onSelect(values[i]);
+                        },
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          constraints:
+                              const BoxConstraints(minHeight: 44),
+                          alignment: Alignment.center,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 10,
+                            horizontal: 4,
                           ),
-                          textAlign: TextAlign.center,
+                          decoration: BoxDecoration(
+                            color: values[i] == selected
+                                ? scheme.primary
+                                : scheme.surfaceContainerLowest,
+                            border: i < values.length - 1
+                                ? Border(
+                                    right: BorderSide(
+                                      color: scheme.primary,
+                                      width: 1,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          child: Text(
+                            '[ ${label(values[i])} ]${values[i] == selected ? ' ■' : ''}',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: values[i] == selected
+                                  ? scheme.onPrimary
+                                  : scheme.primary,
+                              fontWeight: values[i] == selected
+                                  ? FontWeight.w700
+                                  : FontWeight.w400,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
                     ),
