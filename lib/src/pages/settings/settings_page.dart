@@ -8,7 +8,6 @@ import 'appearance_page.dart';
 import 'data_page.dart';
 import 'notifications_page.dart';
 import 'settings_sections/profile_hero.dart';
-import 'settings_sections/test_alarm_section.dart';
 
 /// Settings hub — profile, four section entries, version.
 /// Detail lives in the sub-screens so this page stays scannable.
