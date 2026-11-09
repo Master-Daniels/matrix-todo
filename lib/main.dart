@@ -4,28 +4,30 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'src/data/providers.dart';
 import 'src/data/recurrence.dart';
 import 'src/notifications/reminder_service.dart';
+import 'src/pages/alarm/alarm_providers.dart';
+import 'src/pages/alarm/alarm_ringing_page.dart';
 import 'src/pages/home/home_providers.dart';
 import 'src/pages/layout/app_shell.dart';
 import 'src/pages/settings/settings_providers.dart';
 import 'src/pages/upcoming/upcoming_providers.dart';
 import 'src/theme/app_theme.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  // Load settings before the first frame so the saved theme is correct
-  // immediately — no launch flash. Single small SQLite read; the heavy
-  // work (tz data, plugin init, schedule heal) warms in the background
-  // after the first frame so the app opens instantly.
   final container = ProviderContainer();
-  try {
-    await container.read(settingsControllerProvider.notifier).refresh();
-  } catch (_) {}
+
+  // Draw first frame immediately using memory defaults so Android dismisses
+  // the splash / loading screen in milliseconds without waiting on disk I/O.
   runApp(
     UncontrolledProviderScope(container: container, child: const TodoApp()),
   );
-  // Fire-and-forget: never blocks first paint. Errors stay silent — a dead
-  // plugin must never crash launch.
-  _warmReminders(container);
+
+  // Asynchronously load settings and warm up background services after the
+  // first frame is painted and interactive.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    container.read(settingsControllerProvider.notifier).refresh();
+    _warmReminders(container);
+  });
 }
 
 /// Background reminder warmup: permission-free init (channels + tap/action
@@ -49,25 +51,61 @@ Future<void> _warmReminders(ProviderContainer container) async {
       briefing: container.read(briefingProvider),
       streak: container.read(streakReminderProvider),
     );
+    reminders.testAlarmReader = () async => int.tryParse(
+      await container
+              .read(appDatabaseProvider)
+              .getSetting('test_alarm_fire_at') ??
+          '',
+    );
+    reminders.testAlarmWriter = (ms) async {
+      await container
+          .read(appDatabaseProvider)
+          .setSetting('test_alarm_fire_at', ms?.toString() ?? '');
+    };
     await reminders.init(
       onRoute: (route) => handleReminderRoute(container, route),
     );
-    if (container.read(remindersEnabledProvider)) {
-      // Heal-only: rebuilds when schedules drifted (reboot, clock change)
-      // but never wipes a displayed ongoing reminder just for opening app.
-      await reminders.syncAll(
-        await container.read(appDatabaseProvider).getTasks(),
-        enabled: true,
-        healOnly: true,
-      );
-    }
     // AppShell already painted default_view; a cold-start route beats it.
     final launch = reminders.consumeLaunchRoute();
+    final isAlarmLaunch = launch != null &&
+        (launch.isAlarm || launch.nid == testAlarmNotificationId);
     if (launch != null) {
-      container.read(navIndexProvider.notifier).updateIndex(1);
-      if (launch.taskId != null) {
-        container.read(focusedTaskIdProvider.notifier).set(launch.taskId);
+      if (isAlarmLaunch) {
+        container.read(ringingAlarmProvider.notifier).trigger(
+          RingingAlarmInfo(
+            nid: launch.nid ?? testAlarmNotificationId,
+            taskId: launch.taskId,
+            title: launch.title ??
+                (launch.nid == testAlarmNotificationId
+                    ? 'TEST ALARM'
+                    : 'TASK ALARM'),
+            body: launch.body ?? '',
+            category: launch.category,
+            priority: launch.priority ?? 1,
+            notes: launch.notes ?? '',
+            dueTime: launch.dueTime,
+            isTest: launch.nid == testAlarmNotificationId,
+          ),
+        );
+      } else {
+        container.read(navIndexProvider.notifier).updateIndex(1);
+        if (launch.taskId != null) {
+          container.read(focusedTaskIdProvider.notifier).set(launch.taskId);
+        }
       }
+    }
+    // Defer the heavy task resync so cold start has zero thread contention.
+    // Skip delayed resync on alarm launch so we never interfere with an active alarm chime.
+    if (!isAlarmLaunch && container.read(remindersEnabledProvider)) {
+      Future.delayed(const Duration(milliseconds: 600), () async {
+        try {
+          await reminders.syncAll(
+            await container.read(appDatabaseProvider).getTasks(),
+            enabled: true,
+            healOnly: true,
+          );
+        } catch (_) {}
+      });
     }
   } catch (_) {}
 }
@@ -79,6 +117,60 @@ Future<void> handleReminderRoute(
   ProviderContainer container,
   ReminderRoute route,
 ) async {
+  if (route.isAlarm || route.nid == testAlarmNotificationId) {
+    if (route.actionId == null) {
+      container.read(ringingAlarmProvider.notifier).trigger(
+        RingingAlarmInfo(
+          nid: route.nid ?? testAlarmNotificationId,
+          taskId: route.taskId,
+          title: route.title ??
+              (route.nid == testAlarmNotificationId
+                  ? 'TEST ALARM'
+                  : 'TASK ALARM'),
+          body: route.body ?? '',
+          category: route.category,
+          priority: route.priority ?? 1,
+          notes: route.notes ?? '',
+          dueTime: route.dueTime,
+          isTest: route.nid == testAlarmNotificationId,
+        ),
+      );
+      return;
+    }
+    if (route.actionId == actionDismiss) {
+      try {
+        if (route.nid != null) {
+          await container.read(reminderServiceProvider).dismiss(route.nid!);
+        }
+        if (route.nid == testAlarmNotificationId) {
+          await container.read(reminderServiceProvider).cancelTestAlarm();
+        }
+      } catch (_) {}
+      return;
+    }
+    if (route.actionId == actionSnooze) {
+      try {
+        if (route.nid != null) {
+          await container.read(reminderServiceProvider).dismiss(route.nid!);
+        }
+        final db = container.read(appDatabaseProvider);
+        final reminders = container.read(reminderServiceProvider);
+        if (route.taskId != null) {
+          await reminders.snoozeTask(db, route.taskId!);
+          await reminders.syncAll(
+            await db.getTasks(),
+            enabled: container.read(remindersEnabledProvider),
+          );
+          container.invalidate(tasksProvider);
+          container.invalidate(todayTasksProvider);
+          container.invalidate(upcomingGroupsProvider);
+        } else if (route.nid == testAlarmNotificationId) {
+          await reminders.scheduleTestAlarm(delay: snoozeTaskDelay);
+        }
+      } catch (_) {}
+      return;
+    }
+  }
   container.read(navIndexProvider.notifier).updateIndex(1);
   container.read(focusedTaskIdProvider.notifier).set(route.taskId);
   final db = container.read(appDatabaseProvider);
@@ -100,6 +192,8 @@ Future<void> handleReminderRoute(
       await reminders.snoozeTask(db, route.taskId!);
     } else if (route.actionId == actionSnooze) {
       await reminders.snoozeDigest(db);
+    } else if (route.actionId == actionExtend && route.taskId != null) {
+      await reminders.extendTaskEstimate(db, route.taskId!);
     } else {
       return;
     }
@@ -116,13 +210,23 @@ class TodoApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = themeModeFor(ref.watch(themeSettingProvider));
+    final activeAlarm = ref.watch(ringingAlarmProvider);
+
     return MaterialApp(
       title: 'MATRIX // TODO',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light(),
       darkTheme: AppTheme.dark(),
       themeMode: mode,
-      home: const AppShell(),
+      home: Stack(
+        children: [
+          const AppShell(),
+          if (activeAlarm != null)
+            Positioned.fill(
+              child: AlarmRingingPage(alarm: activeAlarm),
+            ),
+        ],
+      ),
     );
   }
 }

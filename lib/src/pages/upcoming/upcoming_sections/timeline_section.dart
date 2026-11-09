@@ -455,6 +455,17 @@ class _UpcomingTaskRowState extends ConsumerState<UpcomingTaskRow> {
                               ),
                             ),
                           ),
+                        if (task.estimatedMinutes != null && task.estimatedMinutes! > 0)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4),
+                            child: Text(
+                              'EST: ~${task.estimatedMinutes! < 60 ? '${task.estimatedMinutes}M' : '${task.estimatedMinutes! ~/ 60}H${task.estimatedMinutes! % 60 == 0 ? '' : ' ${task.estimatedMinutes! % 60}M'}'}',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: scheme.secondary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
                       ],
                     ),
                   ),

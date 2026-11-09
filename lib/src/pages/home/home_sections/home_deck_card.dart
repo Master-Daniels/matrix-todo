@@ -87,6 +87,11 @@ class HomeDeckCard extends ConsumerWidget {
                   text: '[↻ ${task.recurrence.trim().toUpperCase()}]',
                   filled: false,
                 ),
+              if (task.estimatedMinutes != null && task.estimatedMinutes! > 0)
+                _Tag(
+                  text: '[~${task.estimatedMinutes! < 60 ? '${task.estimatedMinutes}M' : '${task.estimatedMinutes! ~/ 60}H${task.estimatedMinutes! % 60 == 0 ? '' : ' ${task.estimatedMinutes! % 60}M'}'}]',
+                  filled: false,
+                ),
               if (high)
                 Container(
                   padding: const EdgeInsets.symmetric(

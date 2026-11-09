@@ -24,20 +24,16 @@ class AppShell extends ConsumerStatefulWidget {
 
 class _AppShellState extends ConsumerState<AppShell> {
   Orientation? _lastOrientation;
+  final Set<int> _loadedTabs = {};
 
   @override
   void initState() {
     super.initState();
-    // Settings are synchronous now, so this is a plain read — deferred
-    // past mount because notifier writes are not allowed during build.
-    // Post-frame callbacks create no test timers.
-    // Cold-start notification taps are applied by main()'s background
-    // warmup (it owns the single-shot launch route); here we only paint
-    // the default_view tab immediately so first frame never waits.
+    final initialTab = ref.read(settingsControllerProvider).defaultView.tabIndex;
+    _loadedTabs.add(initialTab);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      final tab = ref.read(settingsControllerProvider).defaultView.tabIndex;
-      ref.read(navIndexProvider.notifier).updateIndex(tab);
+      ref.read(navIndexProvider.notifier).updateIndex(initialTab);
       if (!ref.read(onboardingSeenProvider)) {
         showDialog(
           context: context,
@@ -71,6 +67,7 @@ class _AppShellState extends ConsumerState<AppShell> {
   @override
   Widget build(BuildContext context) {
     final navIndex = ref.watch(navIndexProvider);
+    _loadedTabs.add(navIndex);
     final isLandscape =
         MediaQuery.orientationOf(context) == Orientation.landscape;
 
@@ -83,11 +80,11 @@ class _AppShellState extends ConsumerState<AppShell> {
 
     final content = IndexedStack(
       index: navIndex,
-      children: const [
-        HomePage(),
-        UpcomingPage(),
-        ListsPage(),
-        SettingsPage(),
+      children: [
+        _loadedTabs.contains(0) ? const HomePage() : const SizedBox.shrink(),
+        _loadedTabs.contains(1) ? const UpcomingPage() : const SizedBox.shrink(),
+        _loadedTabs.contains(2) ? const ListsPage() : const SizedBox.shrink(),
+        _loadedTabs.contains(3) ? const SettingsPage() : const SizedBox.shrink(),
       ],
     );
 

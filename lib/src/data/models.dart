@@ -311,6 +311,11 @@ class TodoTask {
   /// single deferred fire (notification SNOOZE action). Null = no snooze.
   final int? snoozedUntil;
 
+  /// Optional estimated duration in minutes (e.g. 15, 30, 45, 60).
+  /// When set on a timed task, a gentle "target elapsed" ping fires at
+  /// `dueTime + estimatedMinutes`.
+  final int? estimatedMinutes;
+
   const TodoTask({
     this.id,
     this.listId,
@@ -326,6 +331,7 @@ class TodoTask {
     this.sort = 0,
     this.recurrence = 'NONE',
     this.snoozedUntil,
+    this.estimatedMinutes,
   });
 
   factory TodoTask.fromMap(Map<String, Object?> map) => TodoTask(
@@ -343,6 +349,7 @@ class TodoTask {
     sort: (map['sort'] as int?) ?? 0,
     recurrence: ((map['recurrence'] as String?) ?? 'NONE').toUpperCase(),
     snoozedUntil: map['snoozed_until'] as int?,
+    estimatedMinutes: map['estimated_minutes'] as int?,
   );
 
   Map<String, Object?> toMap() => {
@@ -360,6 +367,7 @@ class TodoTask {
     'sort': sort,
     'recurrence': recurrence,
     'snoozed_until': snoozedUntil,
+    'estimated_minutes': estimatedMinutes,
   };
 
   TodoTask copyWith({
@@ -377,6 +385,8 @@ class TodoTask {
     int? sort,
     String? recurrence,
     int? snoozedUntil,
+    int? estimatedMinutes,
+    bool clearEstimatedMinutes = false,
   }) => TodoTask(
     id: id ?? this.id,
     listId: listId ?? this.listId,
@@ -392,6 +402,9 @@ class TodoTask {
     sort: sort ?? this.sort,
     recurrence: recurrence ?? this.recurrence,
     snoozedUntil: snoozedUntil ?? this.snoozedUntil,
+    estimatedMinutes: clearEstimatedMinutes
+        ? null
+        : (estimatedMinutes ?? this.estimatedMinutes),
   );
 }
 

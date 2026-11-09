@@ -79,31 +79,6 @@ class ActionSection extends StatelessWidget {
             ),
           ),
         ],
-        const SizedBox(height: AppSpacing.sm),
-        GestureDetector(
-          onTap: saving
-              ? null
-              : () {
-                  HapticFeedback.selectionClick();
-                  Navigator.of(context).pop();
-                },
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            height: 44,
-            decoration: BoxDecoration(
-              color: scheme.surface,
-              border: Border.all(color: scheme.primary, width: 1),
-              borderRadius: BorderRadius.zero,
-            ),
-            alignment: Alignment.center,
-            child: Text(
-              'Discard',
-              style: theme.textTheme.labelLarge?.copyWith(
-                color: scheme.primary,
-              ),
-            ),
-          ),
-        ),
       ],
     );
   }

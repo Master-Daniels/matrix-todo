@@ -1,17 +1,19 @@
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../data/app_database.dart';
 import '../data/models.dart';
+import '../data/recurrence.dart';
 import '../data/task_dates.dart';
 import 'notification_service.dart';
 
 /// Reminder slots per task. The index doubles as the notification-id suffix.
 /// Append-only: existing indexes are baked into scheduled ids.
-enum ReminderKind { hourBefore, halfHourBefore, overdue, atStart }
+enum ReminderKind { hourBefore, halfHourBefore, overdue, atStart, estimatedDone }
 
 /// Deterministic id: rescheduling the same task never duplicates.
 int notificationId(int taskId, ReminderKind kind) => taskId * 10 + kind.index;
@@ -27,16 +29,70 @@ const overdueNudgeHour = 8;
 
 /// Snooze durations for notification action buttons. DB-backed (see
 /// `snoozed_until` / `digest_snooze_until`) so the next `syncAll` rebuild
-/// — which clears everything — re-emits the snoozed fire instead of wiping
-/// it. Single place to tune.
-const snoozeTaskDelay = Duration(minutes: 15);
+/// re-emits the snoozed fire instead of wiping it. Single place to tune.
+const snoozeTaskDelay = Duration(minutes: 10);
 const snoozeDigestDelay = Duration(hours: 3);
 
-/// Foreground action ids. Handled in the main isolate (the tap opens the
-/// app), so actions can touch the DB + reschedule directly — no background
-/// isolate, no second DB open.
+/// Action ids for notification buttons.
 const actionSnooze = 'snooze';
 const actionDone = 'done';
+const actionDismiss = 'dismiss';
+const actionExtend = 'extend_10m';
+
+/// Background entry point for actions tapped when showsUserInterface is false
+/// (e.g. dismissing or snoozing an alarm or pre-reminder from the HUN).
+@pragma('vm:entry-point')
+void notificationTapBackground(NotificationResponse response) async {
+  WidgetsFlutterBinding.ensureInitialized();
+  final target = parseReminderPayload(response.payload);
+  if (response.actionId == actionSnooze) {
+    if (target.taskId != null) {
+      final db = AppDatabase();
+      await db.setTaskSnooze(
+        target.taskId!,
+        DateTime.now().add(snoozeTaskDelay).millisecondsSinceEpoch,
+      );
+    } else if (target.digest != null) {
+      final db = AppDatabase();
+      await db.setSetting(
+        'digest_snooze_until',
+        DateTime.now().add(snoozeDigestDelay).millisecondsSinceEpoch.toString(),
+      );
+    }
+  } else if (response.actionId == actionDone) {
+    if (target.taskId != null) {
+      final db = AppDatabase();
+      final task = await db.getTask(target.taskId!);
+      if (task != null) {
+        await completeTaskWithRecurrence(db, task);
+      } else {
+        await db.setTaskDone(target.taskId!, true);
+        await db.setTaskSnooze(target.taskId!, null);
+      }
+    }
+  } else if (response.actionId == actionExtend) {
+    if (target.taskId != null) {
+      final db = AppDatabase();
+      final task = await db.getTask(target.taskId!);
+      if (task != null) {
+        final day = tryParseDueDate(task.dueDate);
+        final parsed = parseEventTime(task.dueTime);
+        final now = DateTime.now();
+        var newEst = (task.estimatedMinutes ?? 0) + 10;
+        if (day != null && parsed != null) {
+          final eventAt = DateTime(day.year, day.month, day.day, parsed.hour, parsed.minute);
+          final elapsed = now.difference(eventAt).inMinutes;
+          if (elapsed >= (task.estimatedMinutes ?? 0)) {
+            newEst = elapsed + 10;
+          }
+        }
+        await db.setTaskEstimatedMinutes(target.taskId!, newEst);
+        final reminders = ReminderService();
+        await reminders.syncAll(await db.getTasks(), enabled: true);
+      }
+    }
+  }
+}
 
 /// Explicit notification group (WhatsApp-style): every reminder shares
 /// [reminderGroupKey], and a live inbox summary ([reminderGroupSummaryId])
@@ -60,7 +116,7 @@ typedef ScheduledReminder = ({
 
 /// Android channel sound names (no extension `res/raw` entries).
 String androidSoundFor(ReminderKind kind) =>
-    kind == ReminderKind.overdue ? 'overdue_tone' : 'nudge_chime';
+    kind == ReminderKind.atStart ? 'overdue_tone' : 'nudge_chime';
 
 /// iOS bundled sound filenames.
 String iosSoundFor(ReminderKind kind) => '${androidSoundFor(kind)}.aiff';
@@ -70,34 +126,112 @@ String iosSoundFor(ReminderKind kind) => '${androidSoundFor(kind)}.aiff';
 /// the `digest` morning ISO day. `nid` is the fired notification id, so the
 /// router can dismiss precisely that entry (ongoing notifications are NOT
 /// auto-dismissed by the OS). Null/legacy payloads parse to an empty target.
-String reminderPayload({int? taskId, String? digest, int? nid}) {
+String reminderPayload({
+  int? taskId,
+  String? digest,
+  int? nid,
+  bool isAlarm = false,
+  String? title,
+  String? body,
+  String? category,
+  int? priority,
+  String? notes,
+  String? dueTime,
+}) {
   final map = <String, Object?>{'v': 1};
   if (taskId != null) map['taskId'] = taskId;
   if (digest != null) map['digest'] = digest;
   if (nid != null) map['nid'] = nid;
+  if (isAlarm) map['isAlarm'] = true;
+  if (title != null) map['title'] = title;
+  if (body != null) map['body'] = body;
+  if (category != null) map['category'] = category;
+  if (priority != null) map['priority'] = priority;
+  if (notes != null && notes.isNotEmpty) map['notes'] = notes;
+  if (dueTime != null) map['dueTime'] = dueTime;
   return jsonEncode(map);
 }
 
 /// Deep-link target decoded from a payload. Pure + unit-tested.
-typedef ReminderTarget = ({int? taskId, String? digest, int? nid});
+typedef ReminderTarget = ({
+  int? taskId,
+  String? digest,
+  int? nid,
+  bool isAlarm,
+  String? title,
+  String? body,
+  String? category,
+  int? priority,
+  String? notes,
+  String? dueTime,
+});
 
 ReminderTarget parseReminderPayload(String? payload) {
   if (payload == null || payload.isEmpty) {
-    return (taskId: null, digest: null, nid: null);
+    return (
+      taskId: null,
+      digest: null,
+      nid: null,
+      isAlarm: false,
+      title: null,
+      body: null,
+      category: null,
+      priority: null,
+      notes: null,
+      dueTime: null,
+    );
   }
   try {
     final map = jsonDecode(payload);
-    if (map is! Map) return (taskId: null, digest: null, nid: null);
+    if (map is! Map) {
+      return (
+        taskId: null,
+        digest: null,
+        nid: null,
+        isAlarm: false,
+        title: null,
+        body: null,
+        category: null,
+        priority: null,
+        notes: null,
+        dueTime: null,
+      );
+    }
     final rawId = map['taskId'];
     final rawDigest = map['digest'];
     final rawNid = map['nid'];
+    final rawAlarm = map['isAlarm'];
+    final rawTitle = map['title'];
+    final rawBody = map['body'];
+    final rawCategory = map['category'];
+    final rawPriority = map['priority'];
+    final rawNotes = map['notes'];
+    final rawDueTime = map['dueTime'];
     return (
       taskId: rawId is int ? rawId : null,
       digest: rawDigest is String ? rawDigest : null,
       nid: rawNid is int ? rawNid : null,
+      isAlarm: rawAlarm is bool ? rawAlarm : false,
+      title: rawTitle is String ? rawTitle : null,
+      body: rawBody is String ? rawBody : null,
+      category: rawCategory is String ? rawCategory : null,
+      priority: rawPriority is int ? rawPriority : null,
+      notes: rawNotes is String ? rawNotes : null,
+      dueTime: rawDueTime is String ? rawDueTime : null,
     );
   } catch (_) {
-    return (taskId: null, digest: null, nid: null);
+    return (
+      taskId: null,
+      digest: null,
+      nid: null,
+      isAlarm: false,
+      title: null,
+      body: null,
+      category: null,
+      priority: null,
+      notes: null,
+      dueTime: null,
+    );
   }
 }
 
@@ -107,6 +241,13 @@ typedef ReminderRoute = ({
   String? digest,
   String? actionId,
   int? nid,
+  bool isAlarm,
+  String? title,
+  String? body,
+  String? category,
+  int? priority,
+  String? notes,
+  String? dueTime,
 });
 
 ReminderRoute routeFromResponse(NotificationResponse response) {
@@ -116,6 +257,13 @@ ReminderRoute routeFromResponse(NotificationResponse response) {
     digest: target.digest,
     actionId: response.actionId,
     nid: target.nid,
+    isAlarm: target.isAlarm,
+    title: target.title,
+    body: target.body,
+    category: target.category,
+    priority: target.priority,
+    notes: target.notes,
+    dueTime: target.dueTime,
   );
 }
 
@@ -139,15 +287,25 @@ List<ScheduledReminder> remindersFor(
   final snoozeMs = task.snoozedUntil;
   if (snoozeMs != null && snoozeMs > now.millisecondsSinceEpoch) {
     final fire = DateTime.fromMillisecondsSinceEpoch(snoozeMs);
-    final snoozeId = notificationId(task.id!, ReminderKind.halfHourBefore);
+    final snoozeId = notificationId(task.id!, ReminderKind.atStart);
     return [
       (
         id: snoozeId,
-        kind: ReminderKind.halfHourBefore,
+        kind: ReminderKind.atStart,
         fireAt: fire,
         title: task.title,
-        body: 'SNOOZED',
-        payload: reminderPayload(taskId: task.id, nid: snoozeId),
+        body: 'SNOOZED ALARM',
+        payload: reminderPayload(
+          taskId: task.id,
+          nid: snoozeId,
+          isAlarm: true,
+          title: task.title,
+          body: 'SNOOZED ALARM',
+          category: task.category,
+          priority: task.priority,
+          notes: task.notes,
+          dueTime: task.dueTime,
+        ),
       ),
     ];
   }
@@ -188,8 +346,42 @@ List<ScheduledReminder> remindersFor(
       fireAt: eventAt,
       title: task.title,
       body: 'STARTING NOW',
-      payload: reminderPayload(taskId: task.id, nid: id),
+      payload: reminderPayload(
+        taskId: task.id,
+        nid: id,
+        isAlarm: true,
+        title: task.title,
+        body: 'STARTING NOW',
+        category: task.category,
+        priority: task.priority,
+        notes: task.notes,
+        dueTime: task.dueTime,
+      ),
     ));
+  }
+  // Target completion ping: fires at start time + estimatedMinutes (standard notification chime).
+  if (task.estimatedMinutes != null && task.estimatedMinutes! > 0) {
+    final finishAt = eventAt.add(Duration(minutes: task.estimatedMinutes!));
+    if (finishAt.isAfter(now)) {
+      final id = notificationId(task.id!, ReminderKind.estimatedDone);
+      out.add((
+        id: id,
+        kind: ReminderKind.estimatedDone,
+        fireAt: finishAt,
+        title: task.title,
+        body: 'Target time elapsed: Did you finish ${task.title}?',
+        payload: reminderPayload(
+          taskId: task.id,
+          nid: id,
+          title: task.title,
+          body: 'Target time elapsed: Did you finish ${task.title}?',
+          category: task.category,
+          priority: task.priority,
+          notes: task.notes,
+          dueTime: task.dueTime,
+        ),
+      ));
+    }
   }
   return out;
 }
@@ -303,6 +495,7 @@ Set<int> desiredIdsFor(
   bool briefing = false,
   bool streak = false,
   bool includePreReminders = true,
+  bool testAlarm = false,
 }) {
   final ids = <int>{};
   for (final task in tasks) {
@@ -319,6 +512,7 @@ Set<int> desiredIdsFor(
   if (streak && remainingToday(tasks, now) > 0) {
     ids.add(streakNotificationId);
   }
+  if (testAlarm) ids.add(testAlarmNotificationId);
   if (ids.isNotEmpty) ids.add(reminderGroupSummaryId);
   return ids;
 }
@@ -327,6 +521,7 @@ Set<int> desiredIdsFor(
 /// `digestId` (-yyyymmdd ≈ -20M) and the group summary (-999999).
 const briefingNotificationId = -900001;
 const streakNotificationId = -900002;
+const testAlarmNotificationId = -900099;
 
 /// Fire hour for the daily toggles: briefing 08:00, streak nudge 20:00.
 const briefingHour = 8;
@@ -377,31 +572,100 @@ final focusedTaskIdProvider = NotifierProvider<FocusedTaskId, int?>(
   FocusedTaskId.new,
 );
 
-/// Action buttons per reminder kind. Pre-reminders map 1:1 to a task, so
-/// they get MARK DONE + SNOOZE. Digests cover N tasks (no single task to
-/// complete), so SNOOZE-only; the body tap opens Upcoming for review.
-List<AndroidNotificationAction> androidReminderActions(ReminderKind kind) => [
-  // Icons are required, not decoration: HyperOS/MIUI and several other
-  // OEM skins skip icon-less actions even in the expanded shade.
-  const AndroidNotificationAction(
-    actionSnooze,
-    'Snooze',
-    icon: DrawableResourceAndroidBitmap('ic_snooze'),
-    showsUserInterface: true,
-    cancelNotification: true,
-  ),
-  if (kind != ReminderKind.overdue)
+/// Action buttons per reminder kind.
+/// Exact alarms get Dismiss + Snooze as background pills (`showsUserInterface: false`)
+/// so the user can interact directly from the HUN without switching apps.
+/// Pre-reminders map 1:1 to a task (Mark done + Snooze); digests get Snooze-only.
+List<AndroidNotificationAction> androidReminderActions(ReminderKind kind) {
+  if (kind == ReminderKind.atStart) {
+    return const [
+      AndroidNotificationAction(
+        actionDismiss,
+        'Dismiss',
+        icon: DrawableResourceAndroidBitmap('ic_done'),
+        showsUserInterface: false,
+        cancelNotification: true,
+      ),
+      AndroidNotificationAction(
+        actionSnooze,
+        'Snooze',
+        icon: DrawableResourceAndroidBitmap('ic_snooze'),
+        showsUserInterface: false,
+        cancelNotification: true,
+      ),
+    ];
+  }
+  if (kind == ReminderKind.estimatedDone) {
+    return const [
+      AndroidNotificationAction(
+        actionDone,
+        'Mark done',
+        icon: DrawableResourceAndroidBitmap('ic_done'),
+        showsUserInterface: false,
+        cancelNotification: true,
+      ),
+      AndroidNotificationAction(
+        actionExtend,
+        'Extend (+10m)',
+        icon: DrawableResourceAndroidBitmap('ic_snooze'),
+        showsUserInterface: false,
+        cancelNotification: true,
+      ),
+    ];
+  }
+  return [
+    // Icons are required, not decoration: HyperOS/MIUI and several other
+    // OEM skins skip icon-less actions even in the expanded shade.
     const AndroidNotificationAction(
-      actionDone,
-      'Mark done',
-      icon: DrawableResourceAndroidBitmap('ic_done'),
+      actionSnooze,
+      'Snooze',
+      icon: DrawableResourceAndroidBitmap('ic_snooze'),
       showsUserInterface: true,
       cancelNotification: true,
     ),
-];
+    if (kind != ReminderKind.overdue)
+      const AndroidNotificationAction(
+        actionDone,
+        'Mark done',
+        icon: DrawableResourceAndroidBitmap('ic_done'),
+        showsUserInterface: true,
+        cancelNotification: true,
+      ),
+  ];
+}
 
 /// iOS/macOS foreground categories mirroring [androidReminderActions].
 List<DarwinNotificationCategory> darwinReminderCategories() => [
+  DarwinNotificationCategory(
+    'task_alarm',
+    actions: [
+      DarwinNotificationAction.plain(
+        actionDismiss,
+        'Dismiss',
+        options: {DarwinNotificationActionOption.destructive},
+      ),
+      DarwinNotificationAction.plain(
+        actionSnooze,
+        'Snooze',
+        options: {DarwinNotificationActionOption.foreground},
+      ),
+    ],
+  ),
+  DarwinNotificationCategory(
+    'task_estimated_done',
+    actions: [
+      DarwinNotificationAction.plain(
+        actionDone,
+        'MARK DONE',
+        options: {DarwinNotificationActionOption.foreground},
+      ),
+      DarwinNotificationAction.plain(
+        actionExtend,
+        'EXTEND (+10M)',
+        options: {DarwinNotificationActionOption.foreground},
+      ),
+    ],
+  ),
   DarwinNotificationCategory(
     'task_reminder',
     actions: [
@@ -441,10 +705,17 @@ class ReminderService {
   final NotificationService _notifications;
   bool _ready = false;
   ReminderRoute? _launchRoute;
+  DateTime? _testAlarmFireAt;
+
+  DateTime? get testAlarmFireAt => _testAlarmFireAt;
 
   /// Hook for the persisted digest snooze (`digest_snooze_until` epoch
   /// millis). Wired in `main()`; null disables digest snoozing (tests).
   Future<int?> Function()? digestSnoozeReader;
+
+  /// Hooks for persisted test alarm fire instant (epoch millis).
+  Future<int?> Function()? testAlarmReader;
+  Future<void> Function(int? epochMs)? testAlarmWriter;
 
   /// Transport init + tap/action routing. Idempotent. Permission-free.
   Future<void> init({
@@ -453,6 +724,7 @@ class ReminderService {
     if (_ready) return;
     await _notifications.init(
       onResponse: (response) => onRoute(routeFromResponse(response)),
+      onBackgroundResponse: notificationTapBackground,
       darwinCategories: darwinReminderCategories(),
     );
     final launch = await _notifications.getLaunchResponse();
@@ -478,9 +750,10 @@ class ReminderService {
   /// never throws. Call only from user interaction (settings toggle, test
   /// button, first-task rationale) — never at launch.
   Future<void> ensureReady() async {
-    await _notifications.requestNotificationsPermission();
-    await _notifications.ensureExactAlarms();
-    await _notifications.requestIosPermissions();
+    if (!_ready) {
+      await init(onRoute: (_) async {});
+    }
+    await _notifications.ensureReady();
   }
 
   /// Rebuilds one task's schedule from scratch. No-op without an id.
@@ -543,11 +816,24 @@ class ReminderService {
     final policy = await dailyPolicyReader?.call() ??
         (briefing: false, streak: false);
 
-    // Always cancel everything first, then rebuild from scratch based on
-    // whether pre-reminders are armed. The on-time (atStart) alarm is
-    // always present regardless of [enabled]; pre-reminders only appear
-    // when [enabled] is true.
-    await cancelAll();
+    if (_testAlarmFireAt == null && testAlarmReader != null) {
+      final savedMs = await testAlarmReader!();
+      if (savedMs != null && savedMs > now.millisecondsSinceEpoch) {
+        _testAlarmFireAt = DateTime.fromMillisecondsSinceEpoch(savedMs);
+      } else if (savedMs != null) {
+        await testAlarmWriter?.call(null);
+      }
+    }
+    final hasTestAlarm =
+        _testAlarmFireAt != null && _testAlarmFireAt!.isAfter(now);
+    if (!hasTestAlarm && _testAlarmFireAt != null) {
+      _testAlarmFireAt = null;
+      await testAlarmWriter?.call(null);
+    }
+
+    if (hasTestAlarm) {
+      await _scheduleTestAlarm(_testAlarmFireAt!);
+    }
     if (!enabled) {
       for (final task in tasks) {
         await syncTask(task, enabled: true, includePreReminders: false);
@@ -568,6 +854,7 @@ class ReminderService {
         briefing: policy.briefing,
         streak: policy.streak,
         includePreReminders: false,
+        testAlarm: hasTestAlarm,
       )..add(reminderGroupSummaryId);
       final pending = await _notifications.pendingIds();
       for (final id in pending) {
@@ -591,6 +878,7 @@ class ReminderService {
           briefing: policy.briefing,
           streak: policy.streak,
           includePreReminders: true,
+          testAlarm: hasTestAlarm,
         )..remove(reminderGroupSummaryId);
     if (healOnly) {
       final pending = await _notifications.pendingIds();
@@ -697,6 +985,7 @@ class ReminderService {
           android: AndroidNotificationDetails(
             NotificationService.remindersChannelId,
             'Reminders',
+            icon: 'ic_launcher_monochrome',
             importance: Importance.high,
             priority: Priority.high,
             playSound: true,
@@ -745,6 +1034,7 @@ class ReminderService {
           android: AndroidNotificationDetails(
             NotificationService.remindersChannelId,
             'Reminders',
+            icon: 'ic_launcher_monochrome',
             importance: Importance.low,
             priority: Priority.low,
             playSound: false,
@@ -783,6 +1073,37 @@ class ReminderService {
     );
   }
 
+  /// Extends a task's estimated duration by [extensionMinutes] (default 10 min).
+  /// If elapsed time from task start is already past the current estimate,
+  /// sets the new estimate relative to elapsed time so the ping is guaranteed to fire
+  /// in the future.
+  Future<void> extendTaskEstimate(
+    AppDatabase db,
+    int taskId, {
+    int extensionMinutes = 10,
+  }) async {
+    final task = await db.getTask(taskId);
+    if (task == null) return;
+    final day = tryParseDueDate(task.dueDate);
+    final parsed = parseEventTime(task.dueTime);
+    final now = DateTime.now();
+    var newEst = (task.estimatedMinutes ?? 0) + extensionMinutes;
+    if (day != null && parsed != null) {
+      final eventAt = DateTime(
+        day.year,
+        day.month,
+        day.day,
+        parsed.hour,
+        parsed.minute,
+      );
+      final elapsed = now.difference(eventAt).inMinutes;
+      if (elapsed >= (task.estimatedMinutes ?? 0)) {
+        newEst = elapsed + extensionMinutes;
+      }
+    }
+    await db.setTaskEstimatedMinutes(taskId, newEst);
+  }
+
   /// Snooze button on a morning digest: shift digest fires by
   /// [snoozeDigestDelay]. Persists in settings for the same reason.
   Future<void> snoozeDigest(AppDatabase db) async {
@@ -792,8 +1113,165 @@ class ReminderService {
     );
   }
 
+  /// Immediately tests the alarm sound/vibration channel so the user can verify
+  /// audio stream volume without waiting.
+  Future<void> testAlarmSoundNow() async {
+    await ensureReady();
+    await _notifications.show(
+      id: testAlarmNotificationId,
+      title: 'TEST ALARM (SOUND CHECK)',
+      body: 'Playing alarm chime on alarm audio stream...',
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          NotificationService.alarmsChannelId,
+          'ALARMS',
+          channelDescription: 'Urgent task alarms and test alarms',
+          icon: 'ic_launcher_monochrome',
+          importance: Importance.max,
+          priority: Priority.max,
+          category: AndroidNotificationCategory.alarm,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+          fullScreenIntent: true,
+          additionalFlags: Int32List.fromList([4]),
+          playSound: true,
+          sound: const RawResourceAndroidNotificationSound('overdue_tone'),
+          actions: androidReminderActions(ReminderKind.atStart),
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 600, 200, 600]),
+          visibility: NotificationVisibility.public,
+        ),
+        iOS: const DarwinNotificationDetails(
+          sound: 'overdue_tone.aiff',
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: true,
+          interruptionLevel: InterruptionLevel.timeSensitive,
+          categoryIdentifier: 'task_alarm',
+        ),
+        macOS: const DarwinNotificationDetails(
+          sound: 'overdue_tone.aiff',
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: true,
+          interruptionLevel: InterruptionLevel.timeSensitive,
+          categoryIdentifier: 'task_alarm',
+        ),
+      ),
+      payload: reminderPayload(
+        nid: testAlarmNotificationId,
+        isAlarm: true,
+        title: 'TEST ALARM (SOUND CHECK)',
+        body: 'Playing alarm chime on alarm audio stream...',
+      ),
+    );
+  }
+
+  /// Schedules a test alarm firing [delay] from now (default 2 minutes).
+  /// Ensures notification and exact alarm permissions are granted before
+  /// scheduling so the alarm will fire accurately.
+  Future<DateTime> scheduleTestAlarm({
+    Duration delay = const Duration(minutes: 2),
+  }) async {
+    await ensureReady();
+    final canExact = await _notifications.canScheduleExactAlarms();
+    if (!canExact) {
+      await _notifications.requestExactAlarmsPermission();
+      final retryExact = await _notifications.canScheduleExactAlarms();
+      if (!retryExact) {
+        throw StateError(
+          'EXACT_ALARM_DENIED: Exact alarm permission is disabled. Please enable "Alarms & Reminders" in system settings so the alarm can sound on time.',
+        );
+      }
+    }
+    final fireAt = DateTime.now().add(delay);
+    _testAlarmFireAt = fireAt;
+    await testAlarmWriter?.call(fireAt.millisecondsSinceEpoch);
+    await _scheduleTestAlarm(fireAt);
+    return fireAt;
+  }
+
+  /// Cancels an active or pending test alarm.
+  Future<void> cancelTestAlarm() async {
+    _testAlarmFireAt = null;
+    await testAlarmWriter?.call(null);
+    await _notifications.cancel(testAlarmNotificationId);
+  }
+
+  Future<void> _scheduleTestAlarm(DateTime fireAt) async {
+    if (fireAt.millisecondsSinceEpoch <=
+        DateTime.now().millisecondsSinceEpoch) {
+      _testAlarmFireAt = null;
+      await testAlarmWriter?.call(null);
+      return;
+    }
+    debugPrint(
+      '[ReminderService] scheduling test alarm for $fireAt on ${NotificationService.alarmsChannelId}',
+    );
+    await _notifications.zonedSchedule(
+      id: testAlarmNotificationId,
+      title: 'TEST ALARM',
+      body: 'Alarm fired as scheduled (+2 min)',
+      fireAt: fireAt,
+      notificationDetails: NotificationDetails(
+        android: AndroidNotificationDetails(
+          NotificationService.alarmsChannelId,
+          'ALARMS',
+          channelDescription: 'Urgent task alarms and test alarms',
+          icon: 'ic_launcher_monochrome',
+          importance: Importance.max,
+          priority: Priority.max,
+          category: AndroidNotificationCategory.alarm,
+          audioAttributesUsage: AudioAttributesUsage.alarm,
+          fullScreenIntent: true,
+          additionalFlags: Int32List.fromList([4]),
+          playSound: true,
+          sound: const RawResourceAndroidNotificationSound('overdue_tone'),
+          actions: androidReminderActions(ReminderKind.atStart),
+          enableVibration: true,
+          vibrationPattern: Int64List.fromList([0, 800, 300, 800, 300, 800]),
+          ongoing: false,
+          autoCancel: true,
+          visibility: NotificationVisibility.public,
+          styleInformation: const BigTextStyleInformation(
+            'Alarm fired as scheduled (+2 min). System alarm scheduling is working!',
+            contentTitle: 'TEST ALARM',
+            summaryText: 'Test',
+          ),
+        ),
+        iOS: const DarwinNotificationDetails(
+          sound: 'overdue_tone.aiff',
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: true,
+          interruptionLevel: InterruptionLevel.timeSensitive,
+          categoryIdentifier: 'task_alarm',
+        ),
+        macOS: const DarwinNotificationDetails(
+          sound: 'overdue_tone.aiff',
+          presentAlert: true,
+          presentSound: true,
+          presentBadge: true,
+          interruptionLevel: InterruptionLevel.timeSensitive,
+          categoryIdentifier: 'task_alarm',
+        ),
+      ),
+      payload: reminderPayload(
+        nid: testAlarmNotificationId,
+        isAlarm: true,
+        title: 'TEST ALARM',
+        body: 'Alarm fired as scheduled (+2 min). System alarm scheduling is working!',
+      ),
+    );
+  }
+
   Future<void> _schedule(ScheduledReminder r) async {
     final overdue = r.kind == ReminderKind.overdue;
+    final isAlarm = r.kind == ReminderKind.atStart;
+    final channelId = isAlarm
+        ? NotificationService.alarmsChannelId
+        : (overdue
+            ? NotificationService.overdueChannelId
+            : NotificationService.remindersChannelId);
     // Drop fire times that already passed between computation and now —
     // the plugin would otherwise fire immediately or drop them silently.
     final nowMs = DateTime.now().millisecondsSinceEpoch;
@@ -818,52 +1296,50 @@ class ReminderService {
         fireAt: r.fireAt,
         notificationDetails: NotificationDetails(
           android: AndroidNotificationDetails(
-            overdue
-                ? NotificationService.overdueChannelId
-                : NotificationService.remindersChannelId,
-            overdue ? 'Overdue' : 'Reminders',
-            importance: Importance.high,
-            priority: Priority.high,
+            channelId,
+            isAlarm ? 'Alarms' : (overdue ? 'Overdue' : 'Reminders'),
+            icon: 'ic_launcher_monochrome',
+            importance: isAlarm ? Importance.max : Importance.high,
+            priority: isAlarm ? Priority.max : Priority.high,
+            category: isAlarm ? AndroidNotificationCategory.alarm : null,
+            fullScreenIntent: isAlarm,
+            additionalFlags: isAlarm ? Int32List.fromList([4]) : null,
             playSound: true,
             sound: RawResourceAndroidNotificationSound(androidSoundFor(r.kind)),
-            // Alarm audio focus so the chime behaves like an alarm.
-            audioAttributesUsage: AudioAttributesUsage.alarm,
+            audioAttributesUsage: isAlarm
+                ? AudioAttributesUsage.alarm
+                : AudioAttributesUsage.notification,
             actions: androidReminderActions(r.kind),
-            // Pinned (Hotspot-style): HyperOS/MIUI render ongoing
-            // notifications expanded with their action buttons, while
-            // swipeable rows hide them until long-pressed. Dismissal is
-            // explicit — every tap/action route calls [dismiss] with the
-            // payload nid, because the OS never auto-dismisses ongoing
-            // entries (same reason deleteTask cancels explicitly).
-            ongoing: true,
-            // Shared group: the inbox summary heads the stack and the
-            // header expands into per-task children with their buttons.
+            enableVibration: true,
+            ongoing: isAlarm,
+            autoCancel: !isAlarm,
             groupKey: reminderGroupKey,
-            // Public visibility: lock-screen entries on HyperOS/AOSP hide
-            // action buttons when content is redacted; our bodies carry no
-            // sensitive data, so declare them public.
             visibility: NotificationVisibility.public,
-            // Expanded style: guarantees the full body + action buttons are
-            // reachable on every OEM skin. Collapsed shade rows on some
-            // skins (Xiaomi/HyperOS, HiOS/XOS, One UI modes) hide actions
-            // until the notification is expanded via its chevron — Android
-            // offers no API to force expansion, so a rich expanded view is
-            // the best we can do.
             styleInformation: BigTextStyleInformation(
               r.body,
               contentTitle: r.title,
-              summaryText: overdue ? 'Overdue' : 'Reminders',
+              summaryText: isAlarm ? 'Alarms' : (overdue ? 'Overdue' : 'Reminders'),
             ),
           ),
           iOS: DarwinNotificationDetails(
             sound: iosSoundFor(r.kind),
-            categoryIdentifier: overdue ? 'digest' : 'task_reminder',
+            categoryIdentifier: r.kind == ReminderKind.estimatedDone
+                ? 'task_estimated_done'
+                : (overdue
+                    ? 'digest'
+                    : (isAlarm ? 'task_alarm' : 'task_reminder')),
             threadIdentifier: reminderGroupKey,
+            interruptionLevel: isAlarm ? InterruptionLevel.timeSensitive : InterruptionLevel.active,
           ),
           macOS: DarwinNotificationDetails(
             sound: iosSoundFor(r.kind),
-            categoryIdentifier: overdue ? 'digest' : 'task_reminder',
+            categoryIdentifier: r.kind == ReminderKind.estimatedDone
+                ? 'task_estimated_done'
+                : (overdue
+                    ? 'digest'
+                    : (isAlarm ? 'task_alarm' : 'task_reminder')),
             threadIdentifier: reminderGroupKey,
+            interruptionLevel: isAlarm ? InterruptionLevel.timeSensitive : InterruptionLevel.active,
           ),
         ),
         payload: r.payload,

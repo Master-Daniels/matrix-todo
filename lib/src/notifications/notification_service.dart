@@ -16,8 +16,9 @@ class NotificationService {
   bool _ready = false;
   bool _exactAlarms = false;
 
-  static const remindersChannelId = 'matrix_reminders_v2';
-  static const overdueChannelId = 'matrix_overdue_v2';
+  static const remindersChannelId = 'matrix_reminders_v3';
+  static const overdueChannelId = 'matrix_overdue_v3';
+  static const alarmsChannelId = 'matrix_alarms_v5';
 
   bool get exactAlarms => _exactAlarms;
 
@@ -27,20 +28,23 @@ class NotificationService {
   /// the app is open and when it is resumed from background.
   Future<void> init({
     required Future<void> Function(NotificationResponse) onResponse,
+    void Function(NotificationResponse)? onBackgroundResponse,
     List<DarwinNotificationCategory> darwinCategories = const [],
   }) async {
     if (_ready) return;
-    tzdata.initializeTimeZones();
+    try {
+      tzdata.initializeTimeZones();
+    } catch (_) {}
     // UTC is a display container only — every schedule goes through epoch
     // millis, so firing is exact in every device timezone (see reminder
     // policy docs). No timezone plugin required.
-    tz.setLocalLocation(tz.getLocation('UTC'));
+    tz.setLocalLocation(tz.UTC);
     debugPrint(
       '[NotificationService] tz.local=UTC (display only); '
       'device now=${DateTime.now()} offset=${DateTime.now().timeZoneOffset} '
       'name=${DateTime.now().timeZoneName}',
     );
-    const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidInit = AndroidInitializationSettings('ic_launcher_monochrome');
     final darwinInit = DarwinInitializationSettings(
       notificationCategories: darwinCategories,
     );
@@ -51,26 +55,59 @@ class NotificationService {
         macOS: darwinInit,
       ),
       onDidReceiveNotificationResponse: onResponse,
+      onDidReceiveBackgroundNotificationResponse: onBackgroundResponse,
     );
     await ensureChannels();
+    try {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      _exactAlarms = await android?.canScheduleExactNotifications() ?? false;
+      debugPrint(
+        '[NotificationService] init probed exact alarms: $_exactAlarms',
+      );
+    } catch (_) {}
     _ready = true;
   }
 
-  /// Creates both channels with the bundled chimes. Channels are immutable
-  /// once created by the OS — any sound/description change requires a new
-  /// channel id (hence the `_v2` suffix convention).
+  /// Creates notification channels with the bundled chimes. Channels are immutable
+  /// once created by the OS — any sound/description/attribute change requires a new
+  /// channel id (hence the `_v3` suffix convention).
   Future<void> ensureChannels() async {
     final android = _plugin
         .resolvePlatformSpecificImplementation<
           AndroidFlutterLocalNotificationsPlugin
         >();
+    // Clean up older channel IDs whose sounds or attributes were superseded
+    await android?.deleteNotificationChannel(channelId: 'matrix_alarms_v3');
+    await android?.deleteNotificationChannel(channelId: 'matrix_alarms_v4');
+    await android?.deleteNotificationChannel(channelId: 'matrix_overdue_v2');
+    await android?.deleteNotificationChannel(channelId: 'matrix_reminders_v2');
+
+    await android?.createNotificationChannel(
+      const AndroidNotificationChannel(
+        alarmsChannelId,
+        'ALARMS',
+        description: 'Urgent task alarms and test alarms',
+        importance: Importance.max,
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('overdue_tone'),
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        enableVibration: true,
+        bypassDnd: true,
+      ),
+    );
     await android?.createNotificationChannel(
       const AndroidNotificationChannel(
         remindersChannelId,
         'REMINDERS',
         description: 'Task reminders before due time',
         importance: Importance.high,
+        playSound: true,
         sound: RawResourceAndroidNotificationSound('nudge_chime'),
+        audioAttributesUsage: AudioAttributesUsage.notification,
+        enableVibration: true,
       ),
     );
     await android?.createNotificationChannel(
@@ -79,9 +116,36 @@ class NotificationService {
         'OVERDUE',
         description: 'Overdue task nudges',
         importance: Importance.high,
-        sound: RawResourceAndroidNotificationSound('overdue_tone'),
+        playSound: true,
+        sound: RawResourceAndroidNotificationSound('nudge_chime'),
+        audioAttributesUsage: AudioAttributesUsage.notification,
+        enableVibration: true,
       ),
     );
+  }
+
+  Future<void> requestExactAlarmsPermission() async {
+    try {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      await android?.requestExactAlarmsPermission();
+    } catch (_) {}
+  }
+
+  Future<bool> canScheduleExactAlarms() async {
+    try {
+      final android = _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >();
+      final allowed = await android?.canScheduleExactNotifications() ?? false;
+      _exactAlarms = allowed;
+      return allowed;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// The response that cold-launched the app via a notification tap/action,
@@ -97,6 +161,19 @@ class NotificationService {
   }
 
   // ---- Permissions (all best-effort, never throw) ----
+
+  /// Ensures plugin is initialized, runtime notification permission is prompted,
+  /// exact alarm capability is probed, and iOS alert set is requested.
+  Future<void> ensureReady({
+    Future<void> Function(NotificationResponse)? onResponse,
+  }) async {
+    if (!_ready) {
+      await init(onResponse: onResponse ?? (_) async {});
+    }
+    await requestNotificationsPermission();
+    await ensureExactAlarms();
+    await requestIosPermissions();
+  }
 
   /// Android 13+ runtime prompt. Returns true when notifications are allowed
   /// afterwards. No-op (true) on other platforms.
@@ -168,7 +245,7 @@ class NotificationService {
   /// on the next `syncAll`, which runs on every launch and every mutation.
   tz.TZDateTime tzOf(DateTime local) =>
       tz.TZDateTime.fromMillisecondsSinceEpoch(
-        tz.local,
+        tz.UTC,
         local.millisecondsSinceEpoch,
       );
 
@@ -268,6 +345,22 @@ class SystemBridge {
   static Future<void> openAppNotificationSettings() async {
     try {
       await _channel.invokeMethod('openAppNotificationSettings');
+    } catch (_) {}
+  }
+
+  /// Dynamically enables or disables showing over the lockscreen.
+  /// Should only be enabled when an alarm is actively ringing.
+  static Future<void> setShowWhenLocked(bool enabled) async {
+    try {
+      await _channel.invokeMethod('setShowWhenLocked', {'enabled': enabled});
+    } catch (_) {}
+  }
+
+  /// Sends the app to the background without exiting the process, returning
+  /// the user directly to the lock screen or previous app.
+  static Future<void> minimize() async {
+    try {
+      await _channel.invokeMethod('minimize');
     } catch (_) {}
   }
 }

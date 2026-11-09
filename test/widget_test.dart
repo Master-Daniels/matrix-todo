@@ -99,10 +99,9 @@ void main() {
     expect(find.text('Target date & time'), findsOneWidget);
     expect(find.text('Time'), findsOneWidget);
     expect(find.text('Priority'), findsOneWidget);
+    expect(find.text('Repeat'), findsOneWidget);
     expect(find.text('Subtasks'), findsOneWidget);
-    expect(find.text('Task position'), findsOneWidget);
     expect(find.text('Add task'), findsOneWidget);
-    expect(find.text('Discard'), findsOneWidget);
   });
 
   testWidgets('AddTaskSheet docks flush to the bottom edge', (
@@ -177,19 +176,18 @@ void main() {
     expect(tester.testTextInput.isVisible, isTrue);
 
     // Cancel path: open the row, type, then X — keyboard hides, row closes.
-    // The sheet is taller than the test viewport: scroll the outer
-    // scrollable so the subtask trigger is hittable before tapping.
-    await tester.drag(
-      find.byType(SingleChildScrollView).first,
-      const Offset(0, -1200),
-    );
+    await tester.ensureVisible(find.text('Subtasks'));
     await tester.pump();
+    await tester.tap(find.text('Subtasks'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('+ Add subtask'));
     await tester.tap(find.text('+ Add subtask'));
     await tester.pump();
     // Opening the row autofocuses the input: keyboard up, no extra tap.
     expect(tester.testTextInput.isVisible, isTrue);
     await tester.enterText(find.byType(TextFormField).last, 'Draft one');
     await tester.pump();
+    await tester.ensureVisible(find.byKey(const ValueKey('subtask-input-cancel')));
     await tester.tap(find.byKey(const ValueKey('subtask-input-cancel')));
     await tester.pump();
     expect(tester.testTextInput.isVisible, isFalse);
@@ -197,16 +195,13 @@ void main() {
 
     // Confirm path: reopen, type, tap ADD — draft added, keyboard hides,
     // trigger returns, and the title input never regains focus.
-    await tester.drag(
-      find.byType(SingleChildScrollView).first,
-      const Offset(0, -400),
-    );
-    await tester.pump();
+    await tester.ensureVisible(find.text('+ Add subtask'));
     await tester.tap(find.text('+ Add subtask'));
     await tester.pump();
     await tester.enterText(find.byType(TextFormField).last, 'First sub');
     await tester.pump();
     expect(tester.testTextInput.isVisible, isTrue);
+    await tester.ensureVisible(find.text('Add'));
     await tester.tap(find.text('Add'));
     await tester.pump();
     expect(tester.testTextInput.isVisible, isFalse);
@@ -534,13 +529,14 @@ void main() {
     );
     await tester.pump();
 
-    await tester.drag(
-      find.byType(SingleChildScrollView).first,
-      const Offset(0, -1200),
-    );
+    await tester.ensureVisible(find.text('Subtasks'));
     await tester.pump();
+    await tester.tap(find.text('Subtasks'));
+    await tester.pump();
+    await tester.ensureVisible(find.text('+ Add subtask'));
     await tester.tap(find.text('+ Add subtask'));
     await tester.pump();
+    await tester.ensureVisible(find.text('Add'));
     await tester.tap(find.text('Add'));
     await tester.pump();
     expect(find.text('REQUIRED*'), findsOneWidget);
@@ -1195,9 +1191,11 @@ void main() {
     test('sound mapping follows reminder kind per platform', () {
       expect(androidSoundFor(ReminderKind.hourBefore), 'nudge_chime');
       expect(androidSoundFor(ReminderKind.halfHourBefore), 'nudge_chime');
-      expect(androidSoundFor(ReminderKind.overdue), 'overdue_tone');
+      expect(androidSoundFor(ReminderKind.overdue), 'nudge_chime');
+      expect(androidSoundFor(ReminderKind.atStart), 'overdue_tone');
       expect(iosSoundFor(ReminderKind.hourBefore), 'nudge_chime.aiff');
-      expect(iosSoundFor(ReminderKind.overdue), 'overdue_tone.aiff');
+      expect(iosSoundFor(ReminderKind.overdue), 'nudge_chime.aiff');
+      expect(iosSoundFor(ReminderKind.atStart), 'overdue_tone.aiff');
     });
 
     test('payload round-trips task and digest targets', () {
@@ -1311,6 +1309,18 @@ void main() {
       for (final a in [...pre, ...digestActs]) {
         expect(a.icon, isNotNull);
         expect(a.showsUserInterface, isTrue);
+      }
+      final alarmActs = androidReminderActions(ReminderKind.atStart);
+      expect(alarmActs.map((a) => a.id).toList(), [actionDismiss, actionSnooze]);
+      for (final a in alarmActs) {
+        expect(a.icon, isNotNull);
+        expect(a.showsUserInterface, isFalse);
+      }
+      final estActs = androidReminderActions(ReminderKind.estimatedDone);
+      expect(estActs.map((a) => a.id).toList(), [actionDone, actionExtend]);
+      for (final a in estActs) {
+        expect(a.icon, isNotNull);
+        expect(a.showsUserInterface, isFalse);
       }
     });
 

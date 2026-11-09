@@ -6,8 +6,6 @@ import '../../data/providers.dart';
 import '../../data/recurrence.dart';
 import '../../data/recurrence_engine.dart';
 import '../../notifications/reminder_service.dart';
-import '../../theme/app_borders.dart';
-import '../../theme/app_spacing.dart';
 import '../../widgets/animated_bottom_sheet.dart';
 import '../home/home_providers.dart';
 import '../settings/settings_providers.dart';
@@ -16,13 +14,10 @@ import '../upcoming/upcoming_providers.dart';
 import 'add_task_sections/action_section.dart';
 import 'add_task_sections/category_section.dart';
 import 'add_task_sections/datetime_section.dart';
-import 'add_task_sections/notes_section.dart';
-import 'add_task_sections/priority_section.dart';
-import 'add_task_sections/recurrence_section.dart';
-import 'add_task_sections/section_label.dart';
-import 'add_task_sections/stack_position_section.dart';
+import 'add_task_sections/estimated_duration_section.dart';
 import 'add_task_sections/subtask_section.dart';
-import 'add_task_sections/title_section.dart';
+import 'add_task_sections/task_options_section.dart';
+import 'add_task_sections/title_notes_section.dart';
 
 /// Task editor modal (`design/add_task_modal_sheet/code.html`).
 /// Always presented via `showAnimatedModalBottomSheet`, never pushed as a
@@ -74,6 +69,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   RecurrenceRule? _rule; // null = NONE (no recurrence)
   DateTime _date = DateTime.now();
   TimeOfDay? _time;
+  int? _estimatedMinutes;
   List<String> _exceptions = []; // skipped occurrence dates (ISO)
   bool _preGenerate = false; // pre-generate future occurrences
   int _preGenerateHorizon = 30; // days ahead to pre-generate
@@ -82,7 +78,8 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   bool _addingSubtask = false;
   int _editingIndex = -1;
   bool _saving = false;
-  bool _stackTop = true;
+  final bool _stackTop = true;
+  String? _activeDrawer;
 
   /// Edit scope when editing a recurring task: 'occurrence', 'future', or 'series'.
   String? _editScope;
@@ -106,6 +103,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     _categoryListId = task.listId;
     _priority = task.priority.clamp(1, 3);
     if (task.seriesId != null) {
+      _activeDrawer = 'repeat';
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _loadRule(task.seriesId!),
       );
@@ -115,6 +113,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     } else {
       final legacy = task.recurrence.trim().toUpperCase();
       if (legacy == 'DAILY' || legacy == 'WEEKLY') {
+        _activeDrawer = 'repeat';
         _rule = RecurrenceRule(
           frequency: legacy,
           interval: 1,
@@ -134,6 +133,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     if (parsedTime != null) {
       _time = TimeOfDay(hour: parsedTime.hour, minute: parsedTime.minute);
     }
+    _estimatedMinutes = task.estimatedMinutes;
     if (task.id != null) {
       WidgetsBinding.instance.addPostFrameCallback(
         (_) => _loadSubtasks(task.id!),
@@ -228,6 +228,9 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
         _initialSubtaskIds.addAll(
           subs.where((s) => s.id != null).map((s) => s.id!),
         );
+        if (_drafts.isNotEmpty && _activeDrawer == null) {
+          _activeDrawer = 'subtasks';
+        }
       });
     } catch (_) {
       // Ledger stays usable without subtasks; section shows the count as is.
@@ -257,8 +260,10 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
       child: Sheet(
         title: isEditing ? 'Edit task' : 'New task',
         children: [
-          TitleSection(controller: _titleController),
-          NotesSection(controller: _notesController),
+          TitleNotesSection(
+            titleController: _titleController,
+            notesController: _notesController,
+          ),
           CategorySection(
             selected: _category,
             locked: _locked,
@@ -268,11 +273,6 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               _categoryListId = listId;
             }),
           ),
-          if (!isEditing)
-            StackPositionSection(
-              top: _stackTop,
-              onSelect: (v) => setState(() => _stackTop = v),
-            ),
           DateTimeSection(
             date: _date,
             time: _time,
@@ -282,208 +282,33 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
             onClearTime:
                 _time == null ? null : () => setState(() => _time = null),
           ),
-          PrioritySection(
+          EstimatedDurationSection(
+            estimatedMinutes: _estimatedMinutes,
+            onSelectDuration: (m) => setState(() => _estimatedMinutes = m),
+            onPickCustom: _pickCustomDuration,
+          ),
+          TaskOptionsSection(
             priority: _priority,
-            onSelect: (p) => setState(() => _priority = p),
-          ),
-          RecurrenceSection(
+            onSelectPriority: (p) => setState(() => _priority = p),
             rule: _rule,
-            onChange: (rule) => setState(() => _rule = rule),
-          ),
-          if (_rule != null && _rule!.frequency != 'NONE') ...[
-            const SizedBox(height: AppSpacing.sm),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 1,
-                ),
-                borderRadius: AppBorders.zero,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SectionLabel('Create repeats', right: 'Optional'),
-                  const SizedBox(height: AppSpacing.xs),
-                  Row(
-                    children: [
-                      const Text(
-                        'Create future repeats',
-                        style: TextStyle(
-                          fontFamily: 'Space Mono',
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const Spacer(),
-                      GestureDetector(
-                        onTap: () =>
-                            setState(() => _preGenerate = !_preGenerate),
-                        child: Container(
-                          width: 44,
-                          height: 22,
-                          decoration: BoxDecoration(
-                            color: _preGenerate
-                                ? Theme.of(context).colorScheme.primary
-                                : Theme.of(
-                                    context,
-                                  ).colorScheme.surfaceContainerLowest,
-                            border: Border.all(
-                              color: Theme.of(context).colorScheme.primary,
-                              width: 1,
-                            ),
-                            borderRadius: AppBorders.zero,
-                          ),
-                          child: Align(
-                            alignment: _preGenerate
-                                ? Alignment.centerRight
-                                : Alignment.centerLeft,
-                            child: Container(
-                              width: 18,
-                              height: 18,
-                              decoration: BoxDecoration(
-                                color: _preGenerate
-                                    ? Theme.of(context).colorScheme.onPrimary
-                                    : Theme.of(context).colorScheme.primary,
-                                borderRadius: AppBorders.zero,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  if (_preGenerate) ...[
-                    const SizedBox(height: AppSpacing.xs),
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 1,
-                        ),
-                        borderRadius: AppBorders.zero,
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          _IntervalButton(
-                            icon: Icons.remove,
-                            onTap: _preGenerateHorizon > 1
-                                ? () => setState(() => _preGenerateHorizon--)
-                                : null,
-                          ),
-                          Container(
-                            width: 1,
-                            height: 44,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.md,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              '$_preGenerateHorizon',
-                              style: const TextStyle(
-                                fontFamily: 'Space Mono',
-                                fontWeight: FontWeight.w700,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ),
-                          Container(
-                            width: 1,
-                            height: 44,
-                            color: Theme.of(context).colorScheme.primary,
-                          ),
-                          _IntervalButton(
-                            icon: Icons.add,
-                            onTap: _preGenerateHorizon < 90
-                                ? () => setState(() => _preGenerateHorizon++)
-                                : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-          ],
-          if (isEditing && _rule != null && _rule!.frequency != 'NONE') ...[
-            const SizedBox(height: AppSpacing.sm),
-            Container(
-              padding: const EdgeInsets.all(AppSpacing.sm),
-              decoration: BoxDecoration(
-                border: Border.all(
-                  color: Theme.of(context).colorScheme.primary,
-                  width: 1,
-                ),
-                borderRadius: AppBorders.zero,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const SectionLabel('Skipped dates', right: 'Manage'),
-                  const SizedBox(height: AppSpacing.xs),
-                  if (_exceptions.isEmpty)
-                    Container(
-                      padding: const EdgeInsets.all(AppSpacing.sm),
-                      child: const Text(
-                        'No skipped dates',
-                        style: TextStyle(
-                          fontFamily: 'Space Mono',
-                          fontSize: 11,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: AppSpacing.xs.toDouble(),
-                      runSpacing: AppSpacing.xs.toDouble(),
-                      children: [
-                        for (final exc in _exceptions)
-                          _ExceptionChip(
-                            date: exc,
-                            onRemove: () => _toggleException(exc),
-                          ),
-                        GestureDetector(
-                          onTap: _pickSkipDate,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: AppSpacing.sm,
-                              vertical: AppSpacing.sm,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Theme.of(context).colorScheme.primary,
-                              borderRadius: AppBorders.zero,
-                            ),
-                            child: const Icon(
-                              Icons.add,
-                              size: 18,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                ],
-              ),
-            ),
-          ],
-          SubtaskSection(
+            onChangeRule: (rule) => setState(() => _rule = rule),
+            preGenerate: _preGenerate,
+            onTogglePreGenerate: (v) => setState(() => _preGenerate = v),
+            preGenerateHorizon: _preGenerateHorizon,
+            onChangePreGenerateHorizon: (h) =>
+                setState(() => _preGenerateHorizon = h),
+            isEditing: isEditing,
+            exceptions: _exceptions,
+            onToggleException: _toggleException,
+            onPickSkipDate: _pickSkipDate,
             drafts: _drafts,
-            adding: _addingSubtask,
-            editingIndex: _editingIndex,
-            controller: _subtaskController,
-            focusNode: _subtaskFocus,
-            inputFormKey: _subtaskFormKey,
-            onToggle: (i, v) => setState(() => _drafts[i].done = v),
-            onDelete: (i) => setState(() {
+            addingSubtask: _addingSubtask,
+            editingSubtaskIndex: _editingIndex,
+            subtaskController: _subtaskController,
+            subtaskFocus: _subtaskFocus,
+            subtaskFormKey: _subtaskFormKey,
+            onToggleSubtask: (i, v) => setState(() => _drafts[i].done = v),
+            onDeleteSubtask: (i) => setState(() {
               _drafts.removeAt(i);
               if (_editingIndex == i) {
                 _editingIndex = -1;
@@ -492,11 +317,13 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
                 _editingIndex -= 1;
               }
             }),
-            onStartEdit: _startEdit,
-            onStartAdd: _startAdd,
-            onCancelInput: _cancelInput,
-            onConfirmAdd: _confirmAdd,
-            onConfirmEdit: _confirmEdit,
+            onStartEditSubtask: _startEdit,
+            onStartAddSubtask: _startAdd,
+            onCancelSubtaskInput: _cancelInput,
+            onConfirmAddSubtask: _confirmAdd,
+            onConfirmEditSubtask: _confirmEdit,
+            activeDrawer: _activeDrawer,
+            onToggleDrawer: (drawer) => setState(() => _activeDrawer = drawer),
           ),
           ActionSection(
             saving: _saving,
@@ -647,6 +474,29 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     if (picked != null) setState(() => _time = picked);
   }
 
+  Future<void> _pickCustomDuration() async {
+    final baseTime = _time ?? TimeOfDay.now();
+    final currentMins = _estimatedMinutes ?? 30;
+    final initialEnd = TimeOfDay(
+      hour: (baseTime.hour + (baseTime.minute + currentMins) ~/ 60) % 24,
+      minute: (baseTime.minute + currentMins) % 60,
+    );
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: initialEnd,
+      helpText: 'SELECT ESTIMATED FINISH TIME',
+      confirmText: 'SET DURATION',
+    );
+    if (picked != null) {
+      var diff = (picked.hour * 60 + picked.minute) -
+          (baseTime.hour * 60 + baseTime.minute);
+      if (diff <= 0) {
+        diff += 24 * 60; // Spans past midnight
+      }
+      setState(() => _estimatedMinutes = diff);
+    }
+  }
+
   String get _isoDate =>
       '${_date.year}-${_date.month.toString().padLeft(2, '0')}-${_date.day.toString().padLeft(2, '0')}';
 
@@ -735,6 +585,8 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               focus: _priority == 3,
               recurrence: _rule?.frequency ?? 'NONE',
               seriesId: seriesId,
+              estimatedMinutes: _estimatedMinutes,
+              clearEstimatedMinutes: _estimatedMinutes == null,
             ),
           );
           final exceptions = await db.getRecurrenceExceptions(seriesId!);
@@ -760,6 +612,8 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               focus: _priority == 3,
               recurrence: _rule?.frequency ?? 'NONE',
               seriesId: seriesId,
+              estimatedMinutes: _estimatedMinutes,
+              clearEstimatedMinutes: _estimatedMinutes == null,
             ),
           );
         }
@@ -813,6 +667,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               recurrence: _rule?.frequency ?? 'NONE',
               seriesId: seriesId,
               sort: sort + i,
+              estimatedMinutes: _estimatedMinutes,
             );
             final id = await db.insertTask(created);
             for (final d in _drafts) {
@@ -834,6 +689,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
             recurrence: _rule?.frequency ?? 'NONE',
             seriesId: seriesId,
             sort: sort,
+            estimatedMinutes: _estimatedMinutes,
           );
           final id = await db.insertTask(created);
           for (final d in _drafts) {
@@ -879,6 +735,7 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               recurrence: _rule!.frequency,
               seriesId: seriesId,
               sort: nextSort++,
+              estimatedMinutes: _estimatedMinutes,
             );
             final id = await db.insertTask(created);
             for (final d in _drafts) {
@@ -954,92 +811,5 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
     ref.invalidate(listTasksProvider);
     ref.invalidate(listCountsProvider);
     ref.invalidate(listsSummaryProvider);
-  }
-}
-
-/// Skipped-date chip for the exceptions manager in AddTaskSheet.
-class _ExceptionChip extends StatelessWidget {
-  final String date; // yyyy-MM-dd
-  final VoidCallback onRemove;
-
-  const _ExceptionChip({required this.date, required this.onRemove});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final months = const [
-      'JAN',
-      'FEB',
-      'MAR',
-      'APR',
-      'MAY',
-      'JUN',
-      'JUL',
-      'AUG',
-      'SEP',
-      'OCT',
-      'NOV',
-      'DEC',
-    ];
-    final parts = date.split('-');
-    final label = '${months[int.parse(parts[1]) - 1]} ${int.parse(parts[2])}';
-    return GestureDetector(
-      onTap: onRemove,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        decoration: BoxDecoration(
-          color: scheme.primary,
-          borderRadius: AppBorders.zero,
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              label,
-              style: const TextStyle(
-                color: Colors.white,
-                fontFamily: 'Space Mono',
-                fontWeight: FontWeight.w700,
-                fontSize: 12,
-              ),
-            ),
-            const SizedBox(width: 6),
-            GestureDetector(
-              onTap: onRemove,
-              child: const Icon(Icons.close, size: 14, color: Colors.white),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Small + / - stepper button used for the pre-generation horizon picker.
-class _IntervalButton extends StatelessWidget {
-  final IconData icon;
-  final VoidCallback? onTap;
-
-  const _IntervalButton({required this.icon, this.onTap});
-
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 44,
-        height: 44,
-        color: onTap != null ? scheme.primary : scheme.surfaceContainerLowest,
-        alignment: Alignment.center,
-        child: Icon(
-          icon,
-          size: 18,
-          color: onTap != null
-              ? scheme.onPrimary
-              : scheme.primary.withValues(alpha: 0.3),
-        ),
-      ),
-    );
   }
 }

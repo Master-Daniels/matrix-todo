@@ -5,7 +5,7 @@ import 'models.dart';
 
 class AppDatabase {
   static const _name = 'todo.db';
-  static const version = 6;
+  static const version = 7;
 
   static const tableLists = 'lists';
   static const tableTasks = 'tasks';
@@ -112,6 +112,12 @@ class AppDatabase {
         'CREATE INDEX IF NOT EXISTS idx_tasks_category ON $tableTasks(category)',
       );
     }
+    if (oldVersion < 7) {
+      // Estimated duration in minutes for target-done reminders.
+      await db.execute(
+        'ALTER TABLE $tableTasks ADD COLUMN estimated_minutes INTEGER',
+      );
+    }
   }
 
   Future<void> _create(Database db, int version) async {
@@ -139,7 +145,8 @@ class AppDatabase {
         focus INTEGER NOT NULL DEFAULT 0,
         sort INTEGER NOT NULL DEFAULT 0,
         recurrence TEXT NOT NULL DEFAULT 'NONE',
-        snoozed_until INTEGER
+        snoozed_until INTEGER,
+        estimated_minutes INTEGER
       )
     ''');
     await db.execute('''
@@ -358,6 +365,17 @@ class AppDatabase {
     return db.update(
       tableTasks,
       {'snoozed_until': epochMillis},
+      where: 'id = ?',
+      whereArgs: [id],
+    );
+  }
+
+  /// Sets or updates a task's estimated duration in minutes, or clears it (null).
+  Future<int> setTaskEstimatedMinutes(int id, int? minutes) async {
+    final db = await open();
+    return db.update(
+      tableTasks,
+      {'estimated_minutes': minutes},
       where: 'id = ?',
       whereArgs: [id],
     );

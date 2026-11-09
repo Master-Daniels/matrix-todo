@@ -19,6 +19,60 @@ import io.flutter.plugin.common.MethodChannel
  * exemptions directly (Play policy).
  */
 class MainActivity : FlutterActivity() {
+	override fun onCreate(savedInstanceState: android.os.Bundle?) {
+		super.onCreate(savedInstanceState)
+		if (isAlarmOrNotificationIntent(intent)) {
+			configureLockscreenFlags(true)
+		} else {
+			configureLockscreenFlags(false)
+		}
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+			splashScreen.setOnExitAnimationListener { splashScreenView ->
+				splashScreenView.remove()
+			}
+		}
+	}
+
+	override fun onNewIntent(intent: Intent) {
+		super.onNewIntent(intent)
+		if (isAlarmOrNotificationIntent(intent)) {
+			configureLockscreenFlags(true)
+		}
+	}
+
+	private fun isAlarmOrNotificationIntent(intent: Intent?): Boolean {
+		if (intent == null) return false
+		val isLauncher = Intent.ACTION_MAIN == intent.action &&
+				intent.categories?.contains(Intent.CATEGORY_LAUNCHER) == true
+		if (isLauncher && !intent.hasExtra("notification_id") && !intent.hasExtra("payload")) {
+			return false
+		}
+		return intent.hasExtra("notification_id") ||
+				intent.hasExtra("payload") ||
+				intent.hasExtra("action_id") ||
+				(intent.action != null && intent.action != Intent.ACTION_MAIN)
+	}
+
+	private fun configureLockscreenFlags(show: Boolean) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1) {
+			setShowWhenLocked(show)
+			setTurnScreenOn(show)
+		} else {
+			@Suppress("DEPRECATION")
+			if (show) {
+				window.addFlags(
+					android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+					android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+				)
+			} else {
+				window.clearFlags(
+					android.view.WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED or
+					android.view.WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
+				)
+			}
+		}
+	}
+
 	override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
 		super.configureFlutterEngine(flutterEngine)
 		MethodChannel(
@@ -26,6 +80,11 @@ class MainActivity : FlutterActivity() {
 			"matrix_todo/system"
 		).setMethodCallHandler { call, result ->
 			when (call.method) {
+				"setShowWhenLocked" -> {
+					val enabled = call.argument<Boolean>("enabled") ?: false
+					configureLockscreenFlags(enabled)
+					result.success(true)
+				}
 				"getManufacturer" -> {
 					result.success(Build.MANUFACTURER ?: "")
 				}
@@ -45,6 +104,10 @@ class MainActivity : FlutterActivity() {
 				}
 				"openAppNotificationSettings" -> {
 					openAppNotificationSettings(result)
+				}
+				"minimize" -> {
+					moveTaskToBack(true)
+					result.success(true)
 				}
 				else -> result.notImplemented()
 			}

@@ -8,6 +8,7 @@ import '../../widgets/app_bar.dart';
 import '../../widgets/section_header.dart';
 import 'settings_providers.dart';
 import 'settings_sections/notification_rescue.dart';
+import 'settings_sections/test_alarm_section.dart';
 import 'settings_sections/toggle_row.dart';
 
 /// Notifications sub-screen: briefing, streak, master reminders,
@@ -56,6 +57,8 @@ class NotificationsPage extends ConsumerWidget {
             onChanged: (v) => _toggleReminders(ref, v),
           ),
           const NotificationRescueSection(),
+          const SectionHeader(title: 'Diagnostics', index: null),
+          const TestAlarmSection(),
           const SizedBox(height: AppSpacing.md),
         ],
       ),
