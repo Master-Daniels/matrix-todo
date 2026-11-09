@@ -7,7 +7,6 @@ import 'package:matrix_todo/src/notifications/reminder_service.dart';
 import 'package:matrix_todo/src/pages/alarm/alarm_providers.dart';
 import 'package:matrix_todo/src/pages/alarm/alarm_ringing_page.dart';
 import 'package:matrix_todo/src/pages/settings/notifications_page.dart';
-import 'package:matrix_todo/src/pages/settings/settings_page.dart';
 import 'package:matrix_todo/src/theme/app_theme.dart';
 import 'package:timezone/timezone.dart' as tz;
 
