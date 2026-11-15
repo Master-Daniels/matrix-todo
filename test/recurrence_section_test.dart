@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:matrix_todo/src/data/models.dart';
 import 'package:matrix_todo/src/pages/add_task/add_task_sections/recurrence_section.dart';

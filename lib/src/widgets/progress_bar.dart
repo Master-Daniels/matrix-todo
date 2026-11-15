@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Segmented blueprint progress: N sharp cells sharing 1px rules,
 /// filled = black, empty = white. No rounded bars.

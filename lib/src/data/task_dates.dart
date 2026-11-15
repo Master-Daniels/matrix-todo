@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 // Shared date helpers for schedule bucketing. ISO `yyyy-MM-dd` is the
 // canonical stored form (`TodoTask.dueDate` is non-nullable).
