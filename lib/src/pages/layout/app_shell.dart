@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/providers.dart';
 import '../../widgets/bottom_nav.dart';
+import '../alarm/alarm_providers.dart';
 import '../home/home_page.dart';
 import '../lists/lists_page.dart';
 import '../settings/settings_page.dart';
@@ -34,7 +35,8 @@ class _AppShellState extends ConsumerState<AppShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       ref.read(navIndexProvider.notifier).updateIndex(initialTab);
-      if (!ref.read(onboardingSeenProvider)) {
+      final isAlarmActive = ref.read(ringingAlarmProvider) != null;
+      if (!ref.read(onboardingSeenProvider) && !isAlarmActive) {
         showDialog(
           context: context,
           barrierDismissible: false,

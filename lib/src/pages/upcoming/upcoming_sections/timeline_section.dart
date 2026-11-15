@@ -511,6 +511,9 @@ class _UpcomingTaskRowState extends ConsumerState<UpcomingTaskRow> {
     int? cloneId;
     if (done) {
       HapticFeedback.mediumImpact();
+      final reminders = ref.read(reminderServiceProvider);
+      await reminders.cancelTask(id);
+      await reminders.dismiss(notificationId(id, ReminderKind.atStart));
       cloneId = await completeTaskWithRecurrence(db, task);
     } else {
       HapticFeedback.selectionClick();

@@ -67,123 +67,131 @@ class _OnboardingSheetState extends ConsumerState<OnboardingSheet> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final scheme = theme.colorScheme;
-    return Dialog(
-      shape: RoundedRectangleBorder(
-        side: BorderSide(color: scheme.primary, width: 1),
-        borderRadius: BorderRadius.zero,
-      ),
-      elevation: 0,
-      backgroundColor: scheme.surface,
-      insetPadding: const EdgeInsets.all(AppSpacing.lg),
-      child: Padding(
-        padding: const EdgeInsets.all(AppSpacing.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Welcome',
-                  style: theme.textTheme.labelSmall?.copyWith(
-                    color: scheme.secondary,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                GestureDetector(
-                  onTap: _finish,
-                  child: Text(
-                    'Skip',
+    return PopScope(
+      canPop: true,
+      onPopInvokedWithResult: (didPop, _) {
+        if (didPop) {
+          ref.read(settingsControllerProvider.notifier).setOnboardingSeen(true);
+        }
+      },
+      child: Dialog(
+        shape: RoundedRectangleBorder(
+          side: BorderSide(color: scheme.primary, width: 1),
+          borderRadius: BorderRadius.zero,
+        ),
+        elevation: 0,
+        backgroundColor: scheme.surface,
+        insetPadding: const EdgeInsets.all(AppSpacing.lg),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSpacing.lg),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Welcome',
                     style: theme.textTheme.labelSmall?.copyWith(
                       color: scheme.secondary,
-                      decoration: TextDecoration.underline,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
+                  GestureDetector(
+                    onTap: _finish,
+                    child: Text(
+                      'Skip',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: scheme.secondary,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 220,
+                child: PageView.builder(
+                  controller: _pages,
+                  itemCount: _slides.length,
+                  onPageChanged: (i) => setState(() => _page = i),
+                  itemBuilder: (_, i) {
+                    final s = _slides[i];
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(height: 12),
+                        Text(
+                          s.index,
+                          style: theme.textTheme.labelSmall?.copyWith(
+                            color: scheme.secondary,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          s.title,
+                          style: theme.textTheme.headlineMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          s.body,
+                          style: theme.textTheme.bodyMedium,
+                        ),
+                      ],
+                    );
+                  },
                 ),
-              ],
-            ),
-            SizedBox(
-              height: 220,
-              child: PageView.builder(
-                controller: _pages,
-                itemCount: _slides.length,
-                onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (_, i) {
-                  final s = _slides[i];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(height: 12),
-                      Text(
-                        s.index,
-                        style: theme.textTheme.labelSmall?.copyWith(
-                          color: scheme.secondary,
-                        ),
+              ),
+              Row(
+                children: [
+                  for (var i = 0; i < _slides.length; i++)
+                    Container(
+                      width: 24,
+                      height: 6,
+                      margin: EdgeInsets.only(
+                        right: i < _slides.length - 1 ? 4 : 0,
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        s.title,
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        s.body,
-                        style: theme.textTheme.bodyMedium,
-                      ),
-                    ],
-                  );
+                      color: i == _page
+                          ? scheme.primary
+                          : scheme.surfaceContainerHigh,
+                    ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: () {
+                  if (_page < _slides.length - 1) {
+                    _pages.nextPage(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeOut,
+                    );
+                  } else {
+                    _finish();
+                  }
                 },
-              ),
-            ),
-            Row(
-              children: [
-                for (var i = 0; i < _slides.length; i++)
-                  Container(
-                    width: 24,
-                    height: 6,
-                    margin: EdgeInsets.only(
-                      right: i < _slides.length - 1 ? 4 : 0,
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: scheme.primary,
+                    border: Border.all(color: scheme.primary, width: 1),
+                  ),
+                  child: Text(
+                    _page < _slides.length - 1 ? 'NEXT ->' : 'START ->',
+                    style: theme.textTheme.labelMedium?.copyWith(
+                      color: scheme.onPrimary,
+                      fontWeight: FontWeight.w700,
                     ),
-                    color: i == _page
-                        ? scheme.primary
-                        : scheme.surfaceContainerHigh,
-                  ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              onTap: () {
-                if (_page < _slides.length - 1) {
-                  _pages.nextPage(
-                    duration: const Duration(milliseconds: 250),
-                    curve: Curves.easeOut,
-                  );
-                } else {
-                  _finish();
-                }
-              },
-              child: Container(
-                constraints: const BoxConstraints(minHeight: 48),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: scheme.primary,
-                  border: Border.all(color: scheme.primary, width: 1),
-                ),
-                child: Text(
-                  _page < _slides.length - 1 ? 'NEXT ->' : 'START ->',
-                  style: theme.textTheme.labelMedium?.copyWith(
-                    color: scheme.onPrimary,
-                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -18,7 +18,7 @@ class HomeDeck extends StatefulWidget {
   final Widget Function(int index, TodoTask task) cardBuilder;
 
   /// Fixed card height: every page is identical, keeping the pile tight.
-  static const double fixedCardHeight = 340;
+  static const double fixedCardHeight = 360;
 
   final double cardHeight;
 

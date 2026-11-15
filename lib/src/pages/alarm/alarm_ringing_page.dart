@@ -6,6 +6,7 @@ import '../../data/providers.dart';
 import '../../data/recurrence.dart';
 import '../../notifications/notification_service.dart';
 import '../../notifications/reminder_service.dart';
+import '../../platform/alarm_bridge.dart';
 import '../../theme/app_borders.dart';
 import '../../theme/app_spacing.dart';
 import '../../theme/app_typography.dart';
@@ -41,6 +42,11 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage>
   void initState() {
     super.initState();
     SystemBridge.setShowWhenLocked(true);
+    AlarmBridge.startAlarm(
+      title: widget.alarm.title,
+      body: widget.alarm.body,
+      nid: widget.alarm.nid,
+    );
     _currentTime = DateTime.now();
     _clockTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() => _currentTime = DateTime.now());
@@ -53,6 +59,7 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage>
 
   @override
   void dispose() {
+    AlarmBridge.stopAlarm();
     SystemBridge.setShowWhenLocked(false);
     _clockTimer?.cancel();
     _pulseController.dispose();
@@ -73,22 +80,26 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage>
   }
 
   Future<void> _dismiss() async {
+    await AlarmBridge.stopAlarm();
     final reminders = ref.read(reminderServiceProvider);
     await reminders.dismiss(widget.alarm.nid);
     if (widget.alarm.isTest) {
       await reminders.cancelTestAlarm();
     }
-    ref.read(ringingAlarmProvider.notifier).dismiss();
     await SystemBridge.setShowWhenLocked(false);
     await SystemBridge.minimize();
+    ref.read(ringingAlarmProvider.notifier).dismiss();
   }
 
   Future<void> _snooze() async {
+    await AlarmBridge.stopAlarm();
     final reminders = ref.read(reminderServiceProvider);
     final db = ref.read(appDatabaseProvider);
     await reminders.dismiss(widget.alarm.nid);
-    if (widget.alarm.taskId != null) {
-      await reminders.snoozeTask(db, widget.alarm.taskId!);
+    final taskId = widget.alarm.taskId ??
+        (!widget.alarm.isTest && widget.alarm.nid > 0 ? widget.alarm.nid ~/ 10 : null);
+    if (taskId != null) {
+      await reminders.snoozeTask(db, taskId);
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
       ref.invalidate(upcomingGroupsProvider);
@@ -99,22 +110,27 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage>
     } else if (widget.alarm.isTest) {
       await reminders.scheduleTestAlarm(delay: snoozeTaskDelay);
     }
-    ref.read(ringingAlarmProvider.notifier).dismiss();
     await SystemBridge.setShowWhenLocked(false);
     await SystemBridge.minimize();
+    ref.read(ringingAlarmProvider.notifier).dismiss();
   }
 
   Future<void> _markDone() async {
+    await AlarmBridge.stopAlarm();
     final reminders = ref.read(reminderServiceProvider);
     final db = ref.read(appDatabaseProvider);
     await reminders.dismiss(widget.alarm.nid);
-    if (widget.alarm.taskId != null) {
-      final task = await db.getTask(widget.alarm.taskId!);
+    final taskId = widget.alarm.taskId ??
+        (!widget.alarm.isTest && widget.alarm.nid > 0 ? widget.alarm.nid ~/ 10 : null);
+    if (taskId != null) {
+      await reminders.cancelTask(taskId);
+      await reminders.dismiss(notificationId(taskId, ReminderKind.atStart));
+      final task = await db.getTask(taskId);
       if (task != null) {
         await completeTaskWithRecurrence(db, task);
       } else {
-        await db.setTaskDone(widget.alarm.taskId!, true);
-        await db.setTaskSnooze(widget.alarm.taskId!, null);
+        await db.setTaskDone(taskId, true);
+        await db.setTaskSnooze(taskId, null);
       }
       ref.invalidate(tasksProvider);
       ref.invalidate(todayTasksProvider);
@@ -126,9 +142,9 @@ class _AlarmRingingPageState extends ConsumerState<AlarmRingingPage>
     } else if (widget.alarm.isTest) {
       await reminders.cancelTestAlarm();
     }
-    ref.read(ringingAlarmProvider.notifier).dismiss();
     await SystemBridge.setShowWhenLocked(false);
     await SystemBridge.minimize();
+    ref.read(ringingAlarmProvider.notifier).dismiss();
   }
 
   @override

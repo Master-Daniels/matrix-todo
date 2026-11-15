@@ -467,11 +467,26 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
   }
 
   Future<void> _pickTime() async {
+    final now = DateTime.now();
+    final isTodayDate = dayOf(_date).isAtSameMomentAs(dayOf(now));
+    final initial = isTodayDate && (_time == null || isPastTimeToday(_date, _time!, now))
+        ? TimeOfDay(hour: (now.hour + 1) % 24, minute: 0)
+        : (_time ?? const TimeOfDay(hour: 15, minute: 0));
     final picked = await showTimePicker(
       context: context,
-      initialTime: _time ?? const TimeOfDay(hour: 15, minute: 0),
+      initialTime: initial,
     );
-    if (picked != null) setState(() => _time = picked);
+    if (picked != null) {
+      if (isTodayDate && isPastTimeToday(_date, picked, now)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot select past time for today.')),
+          );
+        }
+        return;
+      }
+      setState(() => _time = picked);
+    }
   }
 
   Future<void> _pickCustomDuration() async {
@@ -548,6 +563,22 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
 
   Future<void> _submit() async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
+    final now = DateTime.now();
+    final isTodayDate = dayOf(_date).isAtSameMomentAs(dayOf(now));
+    if (isTodayDate) {
+      if (_time == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a future time for today.')),
+        );
+        return;
+      }
+      if (isPastTimeToday(_date, _time!, now)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Scheduled time has already passed today.')),
+        );
+        return;
+      }
+    }
     setState(() => _saving = true);
     try {
       final db = ref.read(appDatabaseProvider);
@@ -555,6 +586,8 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
       if (isEditing && editingId != null) {
         final task = widget.task!;
         final scope = _editScope ?? 'occurrence';
+        final isFuture = isFutureDateTime(_date, _time, now);
+        final reactivate = task.done && isFuture;
 
         // Save/update the rule (unless scope is occurrence-only and rule unchanged).
         final seriesId = await _saveOrUpdateRule(task.seriesId);
@@ -582,6 +615,8 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               dueDate: _isoDate,
               dueTime: _timeValue,
               priority: _priority,
+              done: reactivate ? false : task.done,
+              clearSnooze: reactivate,
               focus: _priority == 3,
               recurrence: _rule?.frequency ?? 'NONE',
               seriesId: seriesId,
@@ -609,6 +644,8 @@ class _AddTaskSheetState extends ConsumerState<AddTaskSheet> {
               dueDate: _isoDate,
               dueTime: _timeValue,
               priority: _priority,
+              done: reactivate ? false : task.done,
+              clearSnooze: reactivate,
               focus: _priority == 3,
               recurrence: _rule?.frequency ?? 'NONE',
               seriesId: seriesId,

@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 // Shared date helpers for schedule bucketing. ISO `yyyy-MM-dd` is the
 // canonical stored form (`TodoTask.dueDate` is non-nullable).
 
@@ -26,6 +28,25 @@ bool isToday(DateTime day, DateTime now) =>
 
 bool isOverdueDay(DateTime day, DateTime now) =>
     day.isBefore(dayOf(now));
+
+/// Returns true if [date] is today and [time] is earlier than or equal to current wall-clock hour/minute.
+bool isPastTimeToday(DateTime date, TimeOfDay time, [DateTime? nowOverride]) {
+  final now = nowOverride ?? DateTime.now();
+  if (!dayOf(date).isAtSameMomentAs(dayOf(now))) return false;
+  return (time.hour * 60 + time.minute) <= (now.hour * 60 + now.minute);
+}
+
+/// Returns true if [date] is strictly in the future (after today), or if [date]
+/// is today and [time] is strictly in the future (not past).
+bool isFutureDateTime(DateTime date, TimeOfDay? time, [DateTime? nowOverride]) {
+  final now = nowOverride ?? DateTime.now();
+  final targetDay = dayOf(date);
+  final currentDay = dayOf(now);
+  if (targetDay.isAfter(currentDay)) return true;
+  if (targetDay.isBefore(currentDay)) return false;
+  if (time == null) return false;
+  return !isPastTimeToday(date, time, now);
+}
 
 /// `HH:MM` 24h match within free-text `dueTime` (`10:00 AM`, `15:00 HRS`,
 /// `DUE 14:00`). Null when unparseable.

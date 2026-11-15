@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../data/models.dart';
 import '../../../data/providers.dart';
 import '../../../notifications/reminder_service.dart';
+import '../../../theme/app_colors.dart';
 import '../../../theme/app_spacing.dart';
 import '../../lists/lists_providers.dart';
 import '../../settings/settings_providers.dart';
@@ -18,7 +19,7 @@ Future<void> showRescheduleDialog(
 ) {
   return showDialog<void>(
     context: context,
-    barrierColor: Colors.black.withValues(alpha: 0.65),
+    barrierColor: AppColors.modalBarrier,
     builder: (_) => RescheduleDialog(task: task),
   );
 }
@@ -60,11 +61,26 @@ class _RescheduleDialogState extends ConsumerState<RescheduleDialog> {
   }
 
   Future<void> _pickTime() async {
+    final now = DateTime.now();
+    final isTodayDate = dayOf(_date).isAtSameMomentAs(dayOf(now));
+    final initial = isTodayDate && (_time == null || isPastTimeToday(_date, _time!, now))
+        ? TimeOfDay(hour: (now.hour + 1) % 24, minute: 0)
+        : (_time ?? const TimeOfDay(hour: 15, minute: 0));
     final picked = await showTimePicker(
       context: context,
-      initialTime: _time ?? const TimeOfDay(hour: 15, minute: 0),
+      initialTime: initial,
     );
-    if (picked != null && mounted) setState(() => _time = picked);
+    if (picked != null) {
+      if (isTodayDate && isPastTimeToday(_date, picked, now)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Cannot select past time for today.')),
+          );
+        }
+        return;
+      }
+      if (mounted) setState(() => _time = picked);
+    }
   }
 
   Future<void> _save() async {
@@ -73,10 +89,28 @@ class _RescheduleDialogState extends ConsumerState<RescheduleDialog> {
       if (mounted) Navigator.of(context).pop();
       return;
     }
+    final now = DateTime.now();
+    final isTodayDate = dayOf(_date).isAtSameMomentAs(dayOf(now));
+    if (isTodayDate) {
+      if (_time == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Please select a future time for today.')),
+        );
+        return;
+      }
+      if (isPastTimeToday(_date, _time!, now)) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Scheduled time has already passed today.')),
+        );
+        return;
+      }
+    }
     setState(() => _saving = true);
     try {
       final db = ref.read(appDatabaseProvider);
       final t = widget.task;
+      final isFuture = isFutureDateTime(_date, _time, now);
+      final reactivate = t.done && isFuture;
       final updated = TodoTask(
         id: t.id,
         listId: t.listId,
@@ -88,10 +122,10 @@ class _RescheduleDialogState extends ConsumerState<RescheduleDialog> {
             ? null
             : '${_time!.hour.toString().padLeft(2, '0')}:${_time!.minute.toString().padLeft(2, '0')} HRS',
         priority: t.priority,
-        done: t.done,
+        done: reactivate ? false : t.done,
         focus: t.focus,
         sort: t.sort,
-        snoozedUntil: t.snoozedUntil,
+        snoozedUntil: reactivate ? null : t.snoozedUntil,
       );
       await db.updateTask(updated);
       await ref.read(reminderServiceProvider).syncAll(

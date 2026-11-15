@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import '../theme/app_colors.dart';
 import '../theme/app_spacing.dart';
 
 ///  bottom-sheet system (single home for all sheet APIs).
@@ -26,7 +27,7 @@ Future<T?> showAnimatedModalBottomSheet<T>({
     },
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.4),
+    barrierColor: barrierColor ?? AppColors.modalBarrier,
     elevation: 0,
     shape: const RoundedRectangleBorder(),
     // Cap width on tablets/landscape so rows never stretch edge to edge.

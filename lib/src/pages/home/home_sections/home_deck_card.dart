@@ -68,7 +68,7 @@ class HomeDeckCard extends ConsumerWidget {
         borderRadius: BorderRadius.zero,
         border: Border.all(color: scheme.primary, width: 2),
       ),
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -118,9 +118,9 @@ class HomeDeckCard extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 10),
           Container(height: 1, color: scheme.primary.withValues(alpha: 0.35)),
-          const SizedBox(height: 16),
+          const SizedBox(height: 12),
           Text(
             task.title,
             maxLines: 2,
@@ -132,7 +132,7 @@ class HomeDeckCard extends ConsumerWidget {
             ),
           ),
           if (task.notes.isNotEmpty) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(
               task.notes,
               maxLines: 2,
@@ -149,7 +149,7 @@ class HomeDeckCard extends ConsumerWidget {
                   data: (subs) => subs.isEmpty
                       ? const SizedBox.shrink()
                       : Padding(
-                          padding: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.only(top: 6),
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -214,9 +214,9 @@ class HomeDeckCard extends ConsumerWidget {
                         ),
                   orElse: () => const SizedBox.shrink(),
                 ),
-          const SizedBox(height: 16),
-          Container(height: 1, color: scheme.primary.withValues(alpha: 0.35)),
           const SizedBox(height: 12),
+          Container(height: 1, color: scheme.primary.withValues(alpha: 0.35)),
+          const SizedBox(height: 8),
           Row(
             children: [
               Expanded(
@@ -236,7 +236,7 @@ class HomeDeckCard extends ConsumerWidget {
                         },
                   behavior: HitTestBehavior.opaque,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Row(
                       children: [
                         CustomCheckbox(value: done, onChanged: null),

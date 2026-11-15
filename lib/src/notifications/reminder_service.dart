@@ -9,6 +9,7 @@ import '../data/app_database.dart';
 import '../data/models.dart';
 import '../data/recurrence.dart';
 import '../data/task_dates.dart';
+import '../platform/alarm_bridge.dart';
 import 'notification_service.dart';
 
 /// Reminder slots per task. The index doubles as the notification-id suffix.
@@ -46,12 +47,12 @@ void notificationTapBackground(NotificationResponse response) async {
   WidgetsFlutterBinding.ensureInitialized();
   final target = parseReminderPayload(response.payload);
   if (response.actionId == actionSnooze) {
+    await AlarmBridge.stopAlarm();
     if (target.taskId != null) {
       final db = AppDatabase();
-      await db.setTaskSnooze(
-        target.taskId!,
-        DateTime.now().add(snoozeTaskDelay).millisecondsSinceEpoch,
-      );
+      final reminders = ReminderService();
+      await reminders.snoozeTask(db, target.taskId!);
+      await reminders.syncAll(await db.getTasks(), enabled: true);
     } else if (target.digest != null) {
       final db = AppDatabase();
       await db.setSetting(
@@ -69,7 +70,13 @@ void notificationTapBackground(NotificationResponse response) async {
         await db.setTaskDone(target.taskId!, true);
         await db.setTaskSnooze(target.taskId!, null);
       }
+      final reminders = ReminderService();
+      await reminders.cancelTask(target.taskId!);
+      await reminders.dismiss(notificationId(target.taskId!, ReminderKind.atStart));
+      await AlarmBridge.stopAlarm();
     }
+  } else if (response.actionId == actionDismiss) {
+    await AlarmBridge.stopAlarm();
   } else if (response.actionId == actionExtend) {
     if (target.taskId != null) {
       final db = AppDatabase();
@@ -990,7 +997,7 @@ class ReminderService {
             priority: Priority.high,
             playSound: true,
             sound: const RawResourceAndroidNotificationSound('nudge_chime'),
-            audioAttributesUsage: AudioAttributesUsage.alarm,
+            audioAttributesUsage: AudioAttributesUsage.notification,
             groupKey: reminderGroupKey,
             visibility: NotificationVisibility.public,
             styleInformation: BigTextStyleInformation(
@@ -1064,13 +1071,27 @@ class ReminderService {
     }
   }
 
-  /// Snooze button on a pre-reminder: defer this task's fires by
-  /// [snoozeTaskDelay]. Persists so the next `syncAll` re-emits it.
+  /// Snooze button on a pre-reminder or high-priority screen: defer this task's fires by
+  /// [snoozeTaskDelay], updating the task's due date/time to now + 10min.
+  /// Persists so the next `syncAll` re-emits it.
   Future<void> snoozeTask(AppDatabase db, int taskId) async {
-    await db.setTaskSnooze(
-      taskId,
-      DateTime.now().add(snoozeTaskDelay).millisecondsSinceEpoch,
-    );
+    final task = await db.getTask(taskId);
+    final snoozedTarget = DateTime.now().add(snoozeTaskDelay);
+    final epochMs = snoozedTarget.millisecondsSinceEpoch;
+    if (task != null) {
+      final newDueDate = isoDay(snoozedTarget);
+      final newDueTime =
+          '${snoozedTarget.hour.toString().padLeft(2, '0')}:${snoozedTarget.minute.toString().padLeft(2, '0')} HRS';
+      await db.updateTask(
+        task.copyWith(
+          dueDate: newDueDate,
+          dueTime: newDueTime,
+          snoozedUntil: epochMs,
+        ),
+      );
+    } else {
+      await db.setTaskSnooze(taskId, epochMs);
+    }
   }
 
   /// Extends a task's estimated duration by [extensionMinutes] (default 10 min).
@@ -1313,7 +1334,7 @@ class ReminderService {
             enableVibration: true,
             ongoing: isAlarm,
             autoCancel: !isAlarm,
-            groupKey: reminderGroupKey,
+            groupKey: isAlarm ? null : reminderGroupKey,
             visibility: NotificationVisibility.public,
             styleInformation: BigTextStyleInformation(
               r.body,
@@ -1328,7 +1349,7 @@ class ReminderService {
                 : (overdue
                     ? 'digest'
                     : (isAlarm ? 'task_alarm' : 'task_reminder')),
-            threadIdentifier: reminderGroupKey,
+            threadIdentifier: isAlarm ? null : reminderGroupKey,
             interruptionLevel: isAlarm ? InterruptionLevel.timeSensitive : InterruptionLevel.active,
           ),
           macOS: DarwinNotificationDetails(

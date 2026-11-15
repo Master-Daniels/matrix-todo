@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models.dart';
@@ -108,8 +109,19 @@ final weekStripProvider = FutureProvider<List<StripDay>>((ref) async {
 Future<void> pauseTask(WidgetRef ref, TodoTask task) async {
   final db = ref.read(appDatabaseProvider);
   final base = tryParseDueDate(task.dueDate) ?? dayOf(DateTime.now());
-  final next = isoDay(base.add(const Duration(days: 1)));
-  await db.updateTask(task.copyWith(dueDate: next));
+  final nextDate = base.add(const Duration(days: 1));
+  final next = isoDay(nextDate);
+  final parsedTime = parseEventTime(task.dueTime);
+  final timeOfDay = parsedTime != null ? TimeOfDay(hour: parsedTime.hour, minute: parsedTime.minute) : null;
+  final isFuture = isFutureDateTime(nextDate, timeOfDay);
+  final reactivate = task.done && isFuture;
+  await db.updateTask(
+    task.copyWith(
+      dueDate: next,
+      done: reactivate ? false : task.done,
+      clearSnooze: reactivate,
+    ),
+  );
   await ref.read(reminderServiceProvider).syncAll(
         await db.getTasks(),
         enabled: ref.read(remindersEnabledProvider),

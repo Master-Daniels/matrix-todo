@@ -126,12 +126,14 @@ abstract final class AppTheme {
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        modalBarrierColor: AppColors.modalBarrier,
         shape: Border(top: BorderSide(color: scheme.primary, width: 2)),
       ),
       dialogTheme: DialogThemeData(
         backgroundColor: scheme.surface,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
+        barrierColor: AppColors.modalBarrier,
         shape: AppBorders.outlinedSharp(side: thin),
       ),
       dividerTheme: DividerThemeData(

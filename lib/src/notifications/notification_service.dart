@@ -356,11 +356,13 @@ class SystemBridge {
     } catch (_) {}
   }
 
-  /// Sends the app to the background without exiting the process, returning
-  /// the user directly to the lock screen or previous app.
-  static Future<void> minimize() async {
+  /// Sends the app to the background or closes it completely when launched
+  /// from an alarm, returning the user directly to the lock screen or previous app.
+  static Future<void> minimize({bool? closeApp}) async {
     try {
-      await _channel.invokeMethod('minimize');
+      await _channel.invokeMethod('minimize', {
+        'closeApp': ?closeApp,
+      });
     } catch (_) {}
   }
 }

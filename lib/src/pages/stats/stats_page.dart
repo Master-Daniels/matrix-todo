@@ -118,6 +118,7 @@ class StatsPage extends ConsumerWidget {
               return Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  const SizedBox(height: AppSpacing.md),
                   for (var i = 0; i < lists.length; i++)
                     _ListRow(
                       list: lists[i],

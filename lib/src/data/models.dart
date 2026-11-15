@@ -387,6 +387,7 @@ class TodoTask {
     int? snoozedUntil,
     int? estimatedMinutes,
     bool clearEstimatedMinutes = false,
+    bool clearSnooze = false,
   }) => TodoTask(
     id: id ?? this.id,
     listId: listId ?? this.listId,
@@ -401,7 +402,7 @@ class TodoTask {
     focus: focus ?? this.focus,
     sort: sort ?? this.sort,
     recurrence: recurrence ?? this.recurrence,
-    snoozedUntil: snoozedUntil ?? this.snoozedUntil,
+    snoozedUntil: clearSnooze ? null : (snoozedUntil ?? this.snoozedUntil),
     estimatedMinutes: clearEstimatedMinutes
         ? null
         : (estimatedMinutes ?? this.estimatedMinutes),

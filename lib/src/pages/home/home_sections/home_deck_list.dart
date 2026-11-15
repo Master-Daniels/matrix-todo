@@ -198,6 +198,9 @@ class HomeDeckList extends ConsumerWidget {
     final db = ref.read(appDatabaseProvider);
     int? cloneId;
     if (done) {
+      final reminders = ref.read(reminderServiceProvider);
+      await reminders.cancelTask(id);
+      await reminders.dismiss(notificationId(id, ReminderKind.atStart));
       cloneId = await completeTaskWithRecurrence(db, task);
     } else {
       await db.setTaskDone(id, false);

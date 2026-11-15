@@ -8,6 +8,9 @@ abstract final class AppColors {
   static const black = Color(0xFF000000);
   static const white = Color(0xFFFFFFFF);
 
+  /// Canonical darker modal barrier overlay (75% opacity black).
+  static const modalBarrier = Color(0xBF000000);
+
   // Core surfaces
   static const surface = Color(0xFFF9F9F9);
   static const surfaceDim = Color(0xFFDADADA);

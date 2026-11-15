@@ -1,14 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:matrix_todo/main.dart';
 import 'package:matrix_todo/src/data/models.dart';
+import 'package:matrix_todo/src/data/task_dates.dart';
 import 'package:matrix_todo/src/notifications/notification_service.dart';
 import 'package:matrix_todo/src/notifications/reminder_service.dart';
 import 'package:matrix_todo/src/pages/alarm/alarm_providers.dart';
 import 'package:matrix_todo/src/pages/alarm/alarm_ringing_page.dart';
+import 'package:matrix_todo/src/pages/home/home_providers.dart';
+import 'package:matrix_todo/src/pages/layout/onboarding_sheet.dart';
 import 'package:matrix_todo/src/pages/settings/notifications_page.dart';
 import 'package:matrix_todo/src/theme/app_theme.dart';
 import 'package:timezone/timezone.dart' as tz;
+
+class _FixedRingingAlarmNotifier extends RingingAlarmNotifier {
+  final RingingAlarmInfo? _initial;
+  _FixedRingingAlarmNotifier(this._initial);
+  @override
+  RingingAlarmInfo? build() => _initial;
+}
 
 void main() {
   test('timezone initialization with tz.UTC without initializeTimeZones', () {
@@ -185,6 +196,77 @@ void main() {
         expect(a.cancelNotification, isTrue);
         expect(a.icon, isNotNull);
       }
+    },
+  );
+
+  test('snooze adds 10 minutes to current time and schedules alarm', () {
+    final now = DateTime(2026, 11, 12, 14, 0);
+    const task = TodoTask(
+      id: 10,
+      title: 'Review PR',
+      dueDate: '2026-11-12',
+      dueTime: '14:00 HRS',
+    );
+
+    final snoozedTarget = now.add(snoozeTaskDelay);
+    final updatedTask = task.copyWith(
+      dueDate: isoDay(snoozedTarget),
+      dueTime:
+          '${snoozedTarget.hour.toString().padLeft(2, '0')}:${snoozedTarget.minute.toString().padLeft(2, '0')} HRS',
+      snoozedUntil: snoozedTarget.millisecondsSinceEpoch,
+    );
+
+    expect(updatedTask.dueTime, '14:10 HRS');
+    expect(updatedTask.dueDate, '2026-11-12');
+    expect(updatedTask.snoozedUntil, snoozedTarget.millisecondsSinceEpoch);
+
+    final fires = remindersFor(updatedTask, now);
+    expect(fires, hasLength(1));
+    expect(fires.first.kind, ReminderKind.atStart);
+    expect(fires.first.fireAt, snoozedTarget);
+    expect(fires.first.body, 'SNOOZED ALARM');
+    final target = parseReminderPayload(fires.first.payload);
+    expect(target.isAlarm, isTrue);
+    expect(target.dueTime, '14:10 HRS');
+  });
+
+  testWidgets(
+    'TodoApp with activeAlarm renders high-priority screen and does not show AppShell or OnboardingSheet',
+    (WidgetTester tester) async {
+      const alarm = RingingAlarmInfo(
+        nid: 101,
+        taskId: 10,
+        title: 'URGENT CLIENT CALL',
+        body: 'STARTING NOW',
+        isTest: false,
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            ringingAlarmProvider.overrideWith(
+              () => _FixedRingingAlarmNotifier(alarm),
+            ),
+            todayTasksProvider.overrideWith((ref) async => []),
+            todayBaseTasksProvider.overrideWith((ref) async => []),
+            todayCategoryCountsProvider.overrideWith(
+              (ref) async => <String?, int>{null: 0},
+            ),
+            todayCountsProvider.overrideWith(
+              (ref) async => (total: 0, completed: 0, remaining: 0),
+            ),
+          ],
+          child: const TodoApp(),
+        ),
+      );
+      await tester.pump();
+
+      // High priority screen must be visible
+      expect(find.byType(AlarmRingingPage), findsOneWidget);
+      expect(find.text('URGENT CLIENT CALL'), findsOneWidget);
+
+      // OnboardingSheet must NOT be present
+      expect(find.byType(OnboardingSheet), findsNothing);
     },
   );
 }

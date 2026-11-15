@@ -19,9 +19,13 @@ import io.flutter.plugin.common.MethodChannel
  * exemptions directly (Play policy).
  */
 class MainActivity : FlutterActivity() {
+	private var isAlarmLaunch = false
+	private var isAppForeground = false
+
 	override fun onCreate(savedInstanceState: android.os.Bundle?) {
 		super.onCreate(savedInstanceState)
 		if (isAlarmOrNotificationIntent(intent)) {
+			isAlarmLaunch = true
 			configureLockscreenFlags(true)
 		} else {
 			configureLockscreenFlags(false)
@@ -33,9 +37,22 @@ class MainActivity : FlutterActivity() {
 		}
 	}
 
+	override fun onResume() {
+		super.onResume()
+		isAppForeground = true
+	}
+
+	override fun onPause() {
+		super.onPause()
+		isAppForeground = false
+	}
+
 	override fun onNewIntent(intent: Intent) {
 		super.onNewIntent(intent)
 		if (isAlarmOrNotificationIntent(intent)) {
+			if (!isAppForeground) {
+				isAlarmLaunch = true
+			}
 			configureLockscreenFlags(true)
 		}
 	}
@@ -77,6 +94,42 @@ class MainActivity : FlutterActivity() {
 		super.configureFlutterEngine(flutterEngine)
 		MethodChannel(
 			flutterEngine.dartExecutor.binaryMessenger,
+			"matrix_todo/alarm"
+		).setMethodCallHandler { call, result ->
+			when (call.method) {
+				"startAlarm" -> {
+					val title = call.argument<String>("title") ?: "Task Alarm"
+					val body = call.argument<String>("body") ?: "Task is starting now"
+					val nid = call.argument<Int>("nid") ?: AlarmService.DEFAULT_NOTIFICATION_ID
+					val intent = Intent(this, AlarmService::class.java).apply {
+						action = AlarmService.ACTION_START_ALARM
+						putExtra(AlarmService.EXTRA_TITLE, title)
+						putExtra(AlarmService.EXTRA_BODY, body)
+						putExtra(AlarmService.EXTRA_NID, nid)
+					}
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+						startForegroundService(intent)
+					} else {
+						startService(intent)
+					}
+					result.success(true)
+				}
+				"stopAlarm" -> {
+					val intent = Intent(this, AlarmService::class.java).apply {
+						action = AlarmService.ACTION_STOP_ALARM
+					}
+					stopService(intent)
+					result.success(true)
+				}
+				"isAlarmActive" -> {
+					result.success(AlarmService.isActive())
+				}
+				else -> result.notImplemented()
+			}
+		}
+
+		MethodChannel(
+			flutterEngine.dartExecutor.binaryMessenger,
 			"matrix_todo/system"
 		).setMethodCallHandler { call, result ->
 			when (call.method) {
@@ -106,7 +159,18 @@ class MainActivity : FlutterActivity() {
 					openAppNotificationSettings(result)
 				}
 				"minimize" -> {
-					moveTaskToBack(true)
+					val closeApp = call.argument<Boolean>("closeApp") ?: isAlarmLaunch
+					if (closeApp) {
+						isAlarmLaunch = false
+						moveTaskToBack(true)
+						if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+							finishAndRemoveTask()
+						} else {
+							finish()
+						}
+					} else {
+						moveTaskToBack(true)
+					}
 					result.success(true)
 				}
 				else -> result.notImplemented()

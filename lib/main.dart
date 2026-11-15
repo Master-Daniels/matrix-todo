@@ -6,28 +6,30 @@ import 'src/data/recurrence.dart';
 import 'src/notifications/reminder_service.dart';
 import 'src/pages/alarm/alarm_providers.dart';
 import 'src/pages/alarm/alarm_ringing_page.dart';
+import 'src/platform/alarm_bridge.dart';
 import 'src/pages/home/home_providers.dart';
 import 'src/pages/layout/app_shell.dart';
 import 'src/pages/settings/settings_providers.dart';
 import 'src/pages/upcoming/upcoming_providers.dart';
 import 'src/theme/app_theme.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final container = ProviderContainer();
 
-  // Draw first frame immediately using memory defaults so Android dismisses
-  // the splash / loading screen in milliseconds without waiting on disk I/O.
+  // Load settings first so theme, default view, and onboarding status
+  // are resolved accurately from SQLite before first paint.
+  try {
+    await container.read(settingsControllerProvider.notifier).refresh();
+  } catch (_) {}
+
+  // Initialize reminders and check for cold-start launch intent (e.g. ringing alarm)
+  // before mounting widgets.
+  await _warmReminders(container);
+
   runApp(
     UncontrolledProviderScope(container: container, child: const TodoApp()),
   );
-
-  // Asynchronously load settings and warm up background services after the
-  // first frame is painted and interactive.
-  WidgetsBinding.instance.addPostFrameCallback((_) {
-    container.read(settingsControllerProvider.notifier).refresh();
-    _warmReminders(container);
-  });
 }
 
 /// Background reminder warmup: permission-free init (channels + tap/action
@@ -139,6 +141,7 @@ Future<void> handleReminderRoute(
     }
     if (route.actionId == actionDismiss) {
       try {
+        await AlarmBridge.stopAlarm();
         if (route.nid != null) {
           await container.read(reminderServiceProvider).dismiss(route.nid!);
         }
@@ -150,6 +153,7 @@ Future<void> handleReminderRoute(
     }
     if (route.actionId == actionSnooze) {
       try {
+        await AlarmBridge.stopAlarm();
         if (route.nid != null) {
           await container.read(reminderServiceProvider).dismiss(route.nid!);
         }
@@ -188,6 +192,9 @@ Future<void> handleReminderRoute(
         await db.setTaskDone(route.taskId!, true);
         await db.setTaskSnooze(route.taskId!, null);
       }
+      await reminders.cancelTask(route.taskId!);
+      await reminders.dismiss(notificationId(route.taskId!, ReminderKind.atStart));
+      await AlarmBridge.stopAlarm();
     } else if (route.actionId == actionSnooze && route.taskId != null) {
       await reminders.snoozeTask(db, route.taskId!);
     } else if (route.actionId == actionSnooze) {
@@ -204,13 +211,24 @@ Future<void> handleReminderRoute(
   } catch (_) {}
 }
 
-class TodoApp extends ConsumerWidget {
+class TodoApp extends ConsumerStatefulWidget {
   const TodoApp({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodoApp> createState() => _TodoAppState();
+}
+
+class _TodoAppState extends ConsumerState<TodoApp> {
+  bool _shellLoaded = false;
+
+  @override
+  Widget build(BuildContext context) {
     final mode = themeModeFor(ref.watch(themeSettingProvider));
     final activeAlarm = ref.watch(ringingAlarmProvider);
+
+    if (activeAlarm == null) {
+      _shellLoaded = true;
+    }
 
     return MaterialApp(
       title: 'MATRIX // TODO',
@@ -220,7 +238,7 @@ class TodoApp extends ConsumerWidget {
       themeMode: mode,
       home: Stack(
         children: [
-          const AppShell(),
+          if (_shellLoaded) const AppShell(),
           if (activeAlarm != null)
             Positioned.fill(
               child: AlarmRingingPage(alarm: activeAlarm),

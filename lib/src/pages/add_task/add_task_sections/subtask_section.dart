@@ -63,10 +63,7 @@ class SubtaskSection extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        SectionLabel(
-          'Subtasks',
-          right: '${drafts.length} items',
-        ),
+        SectionLabel('Subtasks', right: '${drafts.length} items'),
         const SizedBox(height: AppSpacing.sm),
         Container(
           decoration: BoxDecoration(
@@ -225,49 +222,46 @@ class _InputRow extends StatelessWidget {
       padding: const EdgeInsets.all(AppSpacing.sm),
       child: Form(
         key: formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: CustomTextField(
-                    label: 'Subtask title',
-                    hint: 'Subtask title',
-                    controller: controller,
-                    focusNode: focusNode,
-                    required: true,
-                    checks: [FieldChecks.required()],
-                    textInputAction: TextInputAction.done,
-                    onSubmitted: (_) => onConfirm(),
+            Expanded(
+              child: CustomTextField(
+                hint: 'Subtask title',
+                controller: controller,
+                focusNode: focusNode,
+                required: true,
+                checks: [FieldChecks.required()],
+                textInputAction: TextInputAction.done,
+                onSubmitted: (_) => onConfirm(),
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              onTap: onConfirm,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 14,
+                ),
+                color: scheme.primary,
+                child: Text(
+                  confirmLabel,
+                  style: theme.textTheme.labelSmall?.copyWith(
+                    color: scheme.onPrimary,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  onTap: onConfirm,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 12,
-                    ),
-                    color: scheme.primary,
-                    child: Text(
-                      confirmLabel,
-                      style: theme.textTheme.labelSmall?.copyWith(
-                        color: scheme.onPrimary,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                GestureDetector(
-                  key: const ValueKey('subtask-input-cancel'),
-                  onTap: onCancel,
-                  child: const Icon(Icons.close, size: 16),
-                ),
-              ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            GestureDetector(
+              key: const ValueKey('subtask-input-cancel'),
+              onTap: onCancel,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+                child: Icon(Icons.close, size: 16),
+              ),
             ),
           ],
         ),
