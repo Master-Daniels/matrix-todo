@@ -807,8 +807,11 @@ void main() {
     await tester.tap(find.text('[ Later ]'));
     await tester.pump();
     expect(find.text('Later task'), findsOneWidget);
-    expect(find.textContaining('Later this week'), findsOneWidget);
-    // The later bucket is populated in this test, so there is no empty-state CTA to assert.
+    expect(
+      find.textContaining(RegExp(r'later this week', caseSensitive: false)),
+      findsOneWidget,
+    );
+    // On weekends (Sat/Sun), today+2 lands in next-beyond, showing the empty state for later-this-week.
   });
 
   test('todayTasksProvider shows due-today plus overdue undone', () async {
